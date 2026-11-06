@@ -13,6 +13,7 @@ import '../features/focus/focus_page.dart';
 import '../features/focus/mode_editor_page.dart';
 import '../features/prompts/care_prompts.dart';
 import '../features/prompts/limit_prompts.dart';
+import '../features/settings/settings_pages.dart';
 import '../features/sleep/alarm_pages.dart';
 import '../features/sleep/sleep_page.dart';
 import '../features/tasks/task_detail_page.dart';
@@ -101,6 +102,21 @@ GoRouter router(Ref ref) {
           ),
         ],
       ),
+      GoRoute(
+        path: Routes.settings,
+        pageBuilder: (context, state) => slidePage(state, const SettingsPage()),
+      ),
+      for (final (path, page) in const [
+        (Routes.settingsPermissions, PermissionsSettingsPage()),
+        (Routes.settingsGlyph, GlyphSettingsPage()),
+        (Routes.settingsVoice, VoiceSettingsPage()),
+        (Routes.settingsWidgets, WidgetsSettingsPage()),
+        (Routes.settingsData, DataSettingsPage()),
+      ])
+        GoRoute(
+          path: path,
+          pageBuilder: (context, state) => slidePage(state, page),
+        ),
       GoRoute(
         path: Routes.weekly,
         pageBuilder: (context, state) => slidePage(state, const WeeklyPage()),
