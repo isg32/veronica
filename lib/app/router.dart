@@ -4,6 +4,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../core/theme/v_tokens.dart';
 import '../data/providers.dart';
+import '../features/care/care_page.dart';
+import '../features/care/mantra_library_page.dart';
+import '../features/care/medicine_pages.dart';
 import '../features/focus/active_mode_page.dart';
 import '../features/focus/app_pages.dart';
 import '../features/focus/focus_page.dart';
@@ -74,10 +77,16 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          for (final (path, title) in const [
-            (Routes.care, 'Care'),
-            (Routes.sleep, 'Sleep'),
-          ])
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.care,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: CarePage()),
+              ),
+            ],
+          ),
+          for (final (path, title) in const [(Routes.sleep, 'Sleep')])
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -114,6 +123,22 @@ GoRouter router(Ref ref) {
         path: '/task/:id',
         pageBuilder: (context, state) =>
             slidePage(state, TaskDetailPage(id: state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/medicine/:id',
+        pageBuilder: (context, state) => slidePage(
+          state,
+          MedicineEditorPage(id: state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: Routes.doses,
+        pageBuilder: (context, state) => slidePage(state, const DosesPage()),
+      ),
+      GoRoute(
+        path: Routes.mantras,
+        pageBuilder: (context, state) =>
+            slidePage(state, const MantraLibraryPage()),
       ),
       GoRoute(
         path: Routes.activeMode,
