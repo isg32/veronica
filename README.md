@@ -4,8 +4,8 @@
 
 **A calm Android companion for using your phone less and looking after yourself more.**
 
-![Version](https://img.shields.io/badge/version-0.0.1-000000?style=flat-square)
-![Phase](https://img.shields.io/badge/phase-0%20%C2%B7%20UI%20on%20mock%20data-000000?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.1.0-000000?style=flat-square)
+![Phase](https://img.shields.io/badge/phase-1%20%C2%B7%20usage%20watcher-000000?style=flat-square)
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-000000?style=flat-square&logo=flutter&logoColor=white)
 ![Platform](https://img.shields.io/badge/platform-Android-000000?style=flat-square&logo=android&logoColor=white)
 ![License](https://img.shields.io/badge/license-GPL--3.0-000000?style=flat-square)
@@ -53,7 +53,7 @@ Veronica is a personal, sideloaded app. It is not distributed through the Play S
 | **Daily mantra** | A line of your choosing at a set time, with a one-minute breathing session (in for four, out for six). |
 | **Voice** | Veronica can speak key moments in a soft, fully offline voice (Kokoro-82M via sherpa-onnx), falling back to system speech. |
 | **Glyph** | Seven patterns for the Phone (2a): alarm sunrise, put it down, time's up, water progress, medicine due, mantra breathing and focus countdown. |
-| **Home widgets** | Six widgets in Nothing's grid style: screen time, water, mode switch, oldest tasks, next alarm and mantra. |
+| **Home widgets** | Six widgets in Nothing's grid style: screen time, water, mode switch, oldest tasks, next alarm and mantra. Tinted glass, or a frosted blur made from your own wallpaper; they follow light and dark mode instantly. |
 
 ---
 
@@ -227,11 +227,11 @@ Phase 0 runs entirely on sample data, which resets on every launch. In debug bui
 
 | Phase | Scope | Status |
 | --- | --- | --- |
-| **0 · UI on mocks** | Every page, prompt and widget layout from the design, on sample data | In progress: all in-app screens built, native home widgets remaining |
-| **1 · Usage watcher** | Native watcher, accessibility detection, limits, nudges, prompts over other apps | Planned |
+| **0 · UI on mocks** | Every page, prompt and widget layout from the design, on sample data | Done (0.1.0) |
+| **1 · Usage watcher** | Native watcher, accessibility detection, limits, nudges, prompts over other apps | In progress |
 | **2 · Modes and phone control** | Modes and schedules, quick-settings tile, Do Not Disturb, greyscale, brightness, volume, wallpaper | Planned |
 | **3 · Care, tasks and sleep** | On-device storage, notifications, wind-down, calm alarm with imported sounds | Planned |
-| **4 · Glyph, voice and widgets** | Glyph patterns, offline voice, the six home widgets | Planned |
+| **4 · Glyph, voice and widgets** | Glyph patterns, offline voice, background widget updates | Planned |
 
 The full plan, including each phase's definition of done, is in [`docs/PLAN.md`](docs/PLAN.md).
 

@@ -27,7 +27,7 @@ The canvas also shows the widgets over two wallpapers (`wallpaper-dark.png` and 
 | Widget, light set | white @ 0.50 | 30* | none |
 | Disabled primary button | whole button @ 0.35 | – | – |
 
-\* Home-screen widgets can't blur live. v1 ships the tint without blur ("Tinted"); the "Fake blur" option comes later.
+\* Home-screen widgets can't blur live. "Tinted" (the default) is the tint alone; "Blur" reads the wallpaper (with All files access) and blurs the part behind each widget into its image, using positions the user sets in Settings → Widgets → Place widgets.
 
 ## Type
 
