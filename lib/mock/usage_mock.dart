@@ -116,6 +116,9 @@ class MockUsageRepository implements UsageRepository {
   );
 
   @override
+  void refresh() {}
+
+  @override
   Future<void> recordNudge(String packageName) async => _nudges.update(
     (n) => NudgeStats(
       shown: n.shown + 1,

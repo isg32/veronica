@@ -37,6 +37,9 @@ abstract interface class UsageRepository {
   /// Logs an emergency override past a hard block.
   Future<void> logOverride(String packageName);
 
+  /// Re-reads minutes now (e.g. after usage access was granted).
+  void refresh();
+
   /// Counts a soft nudge (or a Put it down card) shown for the app today.
   Future<void> recordNudge(String packageName);
 

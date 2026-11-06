@@ -11,6 +11,7 @@ import '../mock/tasks_mock.dart';
 import '../mock/usage_mock.dart';
 import '../mock/voice_mock.dart';
 import '../mock/water_mock.dart';
+import '../platform/android_usage.dart';
 import 'db/database.dart';
 import 'models/models.dart';
 import 'usage/drift_usage_repository.dart';
@@ -34,9 +35,11 @@ VeronicaDatabase database(Ref ref) {
   return db;
 }
 
-/// Minutes and installed apps. Android usage stats arrive in the next step.
+/// Minutes and installed apps: Android's usage stats on the phone, the
+/// sample source in tests and on the desktop.
 @Riverpod(keepAlive: true)
-UsageSource usageSource(Ref ref) => const MockUsageSource();
+UsageSource usageSource(Ref ref) =>
+    isAndroid ? const AndroidUsageSource() : const MockUsageSource();
 
 @Riverpod(keepAlive: true)
 ProfileRepository profileRepository(Ref ref) => MockProfileRepository();

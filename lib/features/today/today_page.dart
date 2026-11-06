@@ -14,6 +14,7 @@ import '../../core/widgets/v_surface.dart';
 import '../../core/widgets/v_tiles.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
+import '../focus/usage_access_banner.dart';
 import '../selectors.dart';
 import 'mode_switch_sheet.dart';
 
@@ -35,6 +36,7 @@ class TodayPage extends ConsumerWidget {
         onTap: () => context.push(Routes.settings),
       ),
       children: const [
+        UsageAccessBanner(),
         _ModeCard(),
         _ScreenTimeCard(),
         _WaterCard(),

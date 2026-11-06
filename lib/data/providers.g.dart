@@ -100,17 +100,20 @@ final class DatabaseProvider
 
 String _$databaseHash() => r'9071f0816f2eb654bc1323e2ac30305ffb366284';
 
-/// Minutes and installed apps. Android usage stats arrive in the next step.
+/// Minutes and installed apps: Android's usage stats on the phone, the
+/// sample source in tests and on the desktop.
 
 @ProviderFor(usageSource)
 final usageSourceProvider = UsageSourceProvider._();
 
-/// Minutes and installed apps. Android usage stats arrive in the next step.
+/// Minutes and installed apps: Android's usage stats on the phone, the
+/// sample source in tests and on the desktop.
 
 final class UsageSourceProvider
     extends $FunctionalProvider<UsageSource, UsageSource, UsageSource>
     with $Provider<UsageSource> {
-  /// Minutes and installed apps. Android usage stats arrive in the next step.
+  /// Minutes and installed apps: Android's usage stats on the phone, the
+  /// sample source in tests and on the desktop.
   UsageSourceProvider._()
     : super(
         from: null,
@@ -144,7 +147,7 @@ final class UsageSourceProvider
   }
 }
 
-String _$usageSourceHash() => r'36a1131899c4469d5672ddabe005d9b68f39fe35';
+String _$usageSourceHash() => r'601cff96e7f648cbe8cbd01be41b27ed96861b58';
 
 @ProviderFor(profileRepository)
 final profileRepositoryProvider = ProfileRepositoryProvider._();

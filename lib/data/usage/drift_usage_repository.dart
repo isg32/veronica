@@ -25,6 +25,12 @@ class DriftUsageRepository implements UsageRepository {
   /// them only when the stored data changes (tests).
   final Duration? refreshEvery;
 
+  /// Fires [refresh] into every open [watchWatched] stream.
+  final StreamController<void> _refresh = StreamController<void>.broadcast();
+
+  @override
+  void refresh() => _refresh.add(null);
+
   String get _today => VeronicaDatabase.dayKey(_now());
 
   String _daysAgo(int days) =>
@@ -37,6 +43,7 @@ class DriftUsageRepository implements UsageRepository {
     List<UsageDayRow>? days;
     StreamSubscription<List<WatchedAppRow>>? appsSub;
     StreamSubscription<List<UsageDayRow>>? daysSub;
+    StreamSubscription<void>? refreshSub;
     Timer? timer;
     var generation = 0;
 
@@ -72,6 +79,7 @@ class DriftUsageRepository implements UsageRepository {
           days = v;
           unawaited(emit());
         });
+        refreshSub = _refresh.stream.listen((_) => unawaited(emit()));
         final every = refreshEvery;
         if (every != null) {
           timer = Timer.periodic(every, (_) => unawaited(emit()));
@@ -79,6 +87,7 @@ class DriftUsageRepository implements UsageRepository {
       },
       onCancel: () async {
         timer?.cancel();
+        await refreshSub?.cancel();
         await appsSub?.cancel();
         await daysSub?.cancel();
       },
