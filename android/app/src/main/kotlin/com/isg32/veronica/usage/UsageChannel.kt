@@ -86,8 +86,13 @@ object UsageChannel {
     }
 
     /**
-     * Foreground minutes per app for the seven days ending today. Sums the
-     * time between an app's activity resuming and pausing, split at midnight.
+     * Foreground minutes per app for the seven days ending today.
+     *
+     * An app counts as in use while any of its activities is resumed. Each
+     * activity is tracked on its own, because apps often resume a new screen
+     * before pausing the old one. Every session ends when the screen turns
+     * off, the keyguard shows or the phone shuts down. Time is split at
+     * midnight; an app still open now counts up to now.
      */
     fun lastSevenDays(context: Context, packages: Set<String>): Map<String, List<Int>> {
         val days = 7
@@ -110,15 +115,26 @@ object UsageChannel {
         val windowStart = dayStarts[0]
 
         val totals = packages.associateWith { LongArray(days) }
-        val resumedAt = HashMap<String, Long>()
 
         fun add(pkg: String, from: Long, to: Long) {
             val sums = totals[pkg] ?: return
+            val start = maxOf(from, windowStart)
             for (i in 0 until days) {
-                val s = maxOf(from, dayStarts[i])
+                val s = maxOf(start, dayStarts[i])
                 val e = minOf(to, dayStarts[i + 1])
                 if (e > s) sums[i] += e - s
             }
+        }
+
+        // Per app: which activities are resumed, and since when the app has
+        // had at least one resumed.
+        val open = HashMap<String, MutableSet<String>>()
+        val since = HashMap<String, Long>()
+
+        fun closeAll(at: Long) {
+            for ((pkg, start) in since) add(pkg, start, at)
+            since.clear()
+            open.clear()
         }
 
         val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
@@ -128,21 +144,35 @@ object UsageChannel {
         val event = UsageEvents.Event()
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
-            val pkg = event.packageName ?: continue
-            if (pkg !in packages) continue
+            val t = event.timeStamp
             when (event.eventType) {
-                UsageEvents.Event.ACTIVITY_RESUMED ->
-                    resumedAt.putIfAbsent(pkg, maxOf(event.timeStamp, windowStart))
+                UsageEvents.Event.SCREEN_NON_INTERACTIVE,
+                UsageEvents.Event.KEYGUARD_SHOWN,
+                UsageEvents.Event.DEVICE_SHUTDOWN -> closeAll(t)
+
+                UsageEvents.Event.ACTIVITY_RESUMED -> {
+                    val pkg = event.packageName ?: continue
+                    if (pkg !in packages) continue
+                    val activities = open.getOrPut(pkg) { mutableSetOf() }
+                    if (activities.isEmpty()) since[pkg] = t
+                    activities.add(event.className ?: "")
+                }
+
                 UsageEvents.Event.ACTIVITY_PAUSED,
                 UsageEvents.Event.ACTIVITY_STOPPED -> {
-                    val start = resumedAt.remove(pkg) ?: continue
-                    add(pkg, start, event.timeStamp)
+                    val pkg = event.packageName ?: continue
+                    val activities = open[pkg] ?: continue
+                    activities.remove(event.className ?: "")
+                    if (activities.isEmpty()) {
+                        since.remove(pkg)?.let { add(pkg, it, t) }
+                        open.remove(pkg)
+                    }
                 }
             }
         }
-        // Still open right now.
-        for ((pkg, start) in resumedAt) add(pkg, start, now)
+        closeAll(now)
 
-        return totals.mapValues { (_, ms) -> ms.map { (it / 60_000).toInt() } }
+        // Round to the nearest minute, as Digital Wellbeing does.
+        return totals.mapValues { (_, ms) -> ms.map { ((it + 30_000) / 60_000).toInt() } }
     }
 }
