@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- View visibility values: 0 = visible, 8 = gone. Light mode shows the
-         light-glass widget image. -->
+    <!-- android:visibility takes an index into (visible, invisible, gone),
+         so 0 = visible and 2 = gone, not the View.GONE constant (8).
+         Light mode shows the light-glass widget image. -->
     <integer name="widget_light_visibility">0</integer>
-    <integer name="widget_dark_visibility">8</integer>
+    <integer name="widget_dark_visibility">2</integer>
 </resources>
