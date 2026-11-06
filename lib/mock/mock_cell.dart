@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../core/ids.dart';
+
 /// The moment all mock data is anchored to (see `mockdata.md`).
 final DateTime mockNow = DateTime(2026, 11, 6, 21, 4);
 
@@ -27,8 +29,7 @@ class MockCell<T> {
 }
 
 /// Short unique ids for things created while the app runs.
-String mockId(String prefix) =>
-    '$prefix-${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}';
+String mockId(String prefix) => newId(prefix);
 
 /// A date relative to [mockNow].
 DateTime daysAgo(int days, {int hour = 9, int minute = 0}) {

@@ -4,6 +4,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../core/theme/v_tokens.dart';
 import '../data/providers.dart';
+import '../features/focus/active_mode_page.dart';
+import '../features/focus/app_pages.dart';
+import '../features/focus/focus_page.dart';
+import '../features/focus/mode_editor_page.dart';
 import '../features/today/today_page.dart';
 import '../features/today/weekly_page.dart';
 import 'placeholder_page.dart';
@@ -50,8 +54,16 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.focus,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: FocusPage()),
+              ),
+            ],
+          ),
           for (final (path, title) in const [
-            (Routes.focus, 'Focus'),
             (Routes.tasks, 'Tasks'),
             (Routes.care, 'Care'),
             (Routes.sleep, 'Sleep'),
@@ -70,6 +82,28 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: Routes.weekly,
         pageBuilder: (context, state) => slidePage(state, const WeeklyPage()),
+      ),
+      GoRoute(
+        path: '/app/:package',
+        pageBuilder: (context, state) => slidePage(
+          state,
+          AppDetailPage(packageName: state.pathParameters['package']!),
+        ),
+      ),
+      GoRoute(
+        path: Routes.addApp,
+        pageBuilder: (context, state) =>
+            slidePage(state, const AppPickerPage()),
+      ),
+      GoRoute(
+        path: '/mode/:id',
+        pageBuilder: (context, state) =>
+            slidePage(state, ModeEditorPage(id: state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: Routes.activeMode,
+        pageBuilder: (context, state) =>
+            fadePage(state, const ActiveModePage()),
       ),
       GoRoute(
         path: Routes.onboarding,
