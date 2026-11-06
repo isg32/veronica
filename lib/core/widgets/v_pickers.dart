@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../data/models/day_time.dart';
+import '../format.dart';
 import 'v_buttons.dart';
 import 'v_glass.dart';
 import 'v_wheel.dart';
@@ -115,6 +116,86 @@ class _TextPromptState extends State<_TextPrompt> {
         ),
         const SizedBox(height: 14),
         VButton.primary(widget.action, onPressed: _submit),
+      ],
+    );
+  }
+}
+
+/// Glass sheet with a Doto wheel of days starting at [from] (e.g. today).
+/// Returns the chosen date (at midnight), or null if dismissed.
+Future<DateTime?> showDatePickerSheet(
+  BuildContext context, {
+  required String title,
+  required DateTime from,
+  DateTime? initial,
+  int days = 120,
+}) {
+  final start = DateTime(from.year, from.month, from.day);
+  return showVSheet<DateTime>(
+    context,
+    title: title,
+    builder: (context) => _DatePicker(
+      start: start,
+      initialOffset: initial == null
+          ? 1
+          : DateTime(
+              initial.year,
+              initial.month,
+              initial.day,
+            ).difference(start).inDays.clamp(0, days - 1),
+      days: days,
+    ),
+  );
+}
+
+class _DatePicker extends StatefulWidget {
+  const _DatePicker({
+    required this.start,
+    required this.initialOffset,
+    required this.days,
+  });
+
+  final DateTime start;
+  final int initialOffset;
+  final int days;
+
+  @override
+  State<_DatePicker> createState() => _DatePickerState();
+}
+
+class _DatePickerState extends State<_DatePicker> {
+  late int _offset = widget.initialOffset;
+
+  DateTime _at(int offset) => DateTime(
+    widget.start.year,
+    widget.start.month,
+    widget.start.day + offset,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        VWheelFrame(
+          child: VWheel(
+            values: [for (var i = 0; i < widget.days; i++) i],
+            selected: _offset,
+            width: 260,
+            format: (i) => switch (i) {
+              0 => 'Today',
+              1 => 'Tomorrow',
+              _ => VFormat.shortDate(_at(i)),
+            },
+            onChanged: (i) => setState(() => _offset = i),
+          ),
+        ),
+        const SizedBox(height: 20),
+        VButton.primary(
+          'Done',
+          onPressed: () => Navigator.of(context).pop(_at(_offset)),
+        ),
       ],
     );
   }

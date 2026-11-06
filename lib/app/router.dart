@@ -8,6 +8,8 @@ import '../features/focus/active_mode_page.dart';
 import '../features/focus/app_pages.dart';
 import '../features/focus/focus_page.dart';
 import '../features/focus/mode_editor_page.dart';
+import '../features/tasks/task_detail_page.dart';
+import '../features/tasks/tasks_page.dart';
 import '../features/today/today_page.dart';
 import '../features/today/weekly_page.dart';
 import 'placeholder_page.dart';
@@ -63,8 +65,16 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.tasks,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: TasksPage()),
+              ),
+            ],
+          ),
           for (final (path, title) in const [
-            (Routes.tasks, 'Tasks'),
             (Routes.care, 'Care'),
             (Routes.sleep, 'Sleep'),
           ])
@@ -99,6 +109,11 @@ GoRouter router(Ref ref) {
         path: '/mode/:id',
         pageBuilder: (context, state) =>
             slidePage(state, ModeEditorPage(id: state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/task/:id',
+        pageBuilder: (context, state) =>
+            slidePage(state, TaskDetailPage(id: state.pathParameters['id']!)),
       ),
       GoRoute(
         path: Routes.activeMode,
