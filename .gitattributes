@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.ttf binary
+*.png binary
+*.g.dart linguist-generated=true
+design/support.js linguist-vendored=true
+design/*.dc.html linguist-documentation=true
