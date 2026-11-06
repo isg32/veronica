@@ -95,6 +95,10 @@ abstract final class VFormat {
     return days(d);
   }
 
+  /// "1 app", "4 apps".
+  static String count(int n, String singular, [String? plural]) =>
+      '$n ${n == 1 ? singular : (plural ?? '${singular}s')}';
+
   /// "Good morning", "Good afternoon", "Good evening".
   static String greeting(DateTime now) {
     final h = now.hour;

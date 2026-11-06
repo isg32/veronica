@@ -35,6 +35,11 @@ void main() {
     expect(VFormat.daysWord({6, 7}), 'weekends');
   });
 
+  test('counts', () {
+    expect(VFormat.count(1, 'app'), '1 app');
+    expect(VFormat.count(4, 'app'), '4 apps');
+  });
+
   test('greeting', () {
     expect(VFormat.greeting(friday), 'Good evening');
     expect(VFormat.greeting(DateTime(2026, 11, 6, 7)), 'Good morning');

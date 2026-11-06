@@ -505,7 +505,7 @@ class _WatchFooter extends ConsumerWidget {
         Text(
           apps.isEmpty
               ? 'Pick at least one app'
-              : '${apps.length} apps · ${VFormat.minutes(total)} a day in total',
+              : '${VFormat.count(apps.length, 'app')} · ${VFormat.minutes(total)} a day in total',
           style: VText.inter(12, weight: 300),
         ),
         const SizedBox(height: 10),

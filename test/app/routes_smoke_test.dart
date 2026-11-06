@@ -117,7 +117,7 @@ void main() {
     expect(find.text('Pick at least one app'), findsOneWidget);
     await tester.tap(find.byType(VSwitch).first);
     await settle();
-    expect(find.textContaining('1 apps'), findsOneWidget);
+    expect(find.textContaining('1 app ·'), findsOneWidget);
     await tap('Continue');
 
     await tap('Continue'); // water

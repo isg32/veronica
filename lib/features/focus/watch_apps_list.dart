@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/format.dart';
 import '../../core/icons/v_icons.dart';
 import '../../core/theme/v_colors.dart';
 import '../../core/theme/v_text.dart';
@@ -62,7 +63,7 @@ class _WatchAppsListState extends ConsumerState<WatchAppsList> {
           radius: VRadius.pill,
           child: CupertinoTextField(
             controller: _search,
-            placeholder: 'Search ${installed.length} apps',
+            placeholder: 'Search ${VFormat.count(installed.length, 'app')}',
             placeholderStyle: VText.inter(14, weight: 300).copyWith(color: ink),
             style: VText.inter(14).copyWith(color: ink),
             cursorColor: ink,

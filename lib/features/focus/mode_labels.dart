@@ -26,7 +26,9 @@ abstract final class ModeLabels {
       if (mode.dnd == DndPolicy.starred) const ModeChip('DND · starred'),
       if (mode.dnd == DndPolicy.calls) const ModeChip('DND · calls'),
       switch (mode.appPolicy) {
-        AppPolicy.blocked => ModeChip('Block ${mode.blockedApps.length} apps'),
+        AppPolicy.blocked => ModeChip(
+          'Block ${VFormat.count(mode.blockedApps.length, 'app')}',
+        ),
         AppPolicy.nudgeAfter => ModeChip(
           'Nudge after ${mode.nudgeAfterMin} min',
         ),
@@ -58,7 +60,7 @@ abstract final class ModeLabels {
     if (mode.greyscale) 'Greyscale',
     if (mode.dnd != DndPolicy.off) 'DND',
     if (mode.appPolicy == AppPolicy.blocked)
-      '${mode.blockedApps.length} apps blocked',
+      '${VFormat.count(mode.blockedApps.length, 'app')} blocked',
     if (mode.ringer == RingerMode.silent) 'Silent',
   ];
 }

@@ -135,7 +135,7 @@ class _ScreenTimeCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'of ${VFormat.minutes(limit)} across ${apps.length} apps',
+                      'of ${VFormat.minutes(limit)} across ${VFormat.count(apps.length, 'app')}',
                       style: VText.inter(13, weight: 300),
                     ),
                   ],
