@@ -11,6 +11,8 @@ import '../features/focus/active_mode_page.dart';
 import '../features/focus/app_pages.dart';
 import '../features/focus/focus_page.dart';
 import '../features/focus/mode_editor_page.dart';
+import '../features/prompts/care_prompts.dart';
+import '../features/prompts/limit_prompts.dart';
 import '../features/sleep/alarm_pages.dart';
 import '../features/sleep/sleep_page.dart';
 import '../features/tasks/task_detail_page.dart';
@@ -155,6 +157,41 @@ GoRouter router(Ref ref) {
         path: Routes.activeMode,
         pageBuilder: (context, state) =>
             fadePage(state, const ActiveModePage()),
+      ),
+      GoRoute(
+        path: '/now/put-it-down/:package',
+        pageBuilder: (context, state) => fadePage(
+          state,
+          PutItDownPage(packageName: state.pathParameters['package']!),
+        ),
+      ),
+      GoRoute(
+        path: Routes.timesUp,
+        pageBuilder: (context, state) => fadePage(state, const TimesUpPage()),
+      ),
+      GoRoute(
+        path: '/now/medicine/:id',
+        pageBuilder: (context, state) => fadePage(
+          state,
+          MedicineDuePage(medicineId: state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/now/alarm/:id',
+        pageBuilder: (context, state) => fadePage(
+          state,
+          AlarmRingingPage(alarmId: state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: Routes.mantraSession,
+        pageBuilder: (context, state) =>
+            fadePage(state, const MantraSessionPage()),
+      ),
+      GoRoute(
+        path: Routes.mantraTime,
+        pageBuilder: (context, state) =>
+            fadePage(state, const MantraTimePage()),
       ),
       GoRoute(
         path: Routes.onboarding,
