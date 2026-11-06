@@ -639,6 +639,7 @@ class DataSettingsPage extends ConsumerWidget {
               title: 'Veronica',
               value: '$kAppVersion · build $kAppBuild',
             ),
+            const VListRow(title: 'Licence', value: 'GPL-3.0'),
             for (final (name, licence) in licences)
               VListRow(title: name, value: licence),
           ],

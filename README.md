@@ -53,3 +53,11 @@ Re-run both commands after a factory reset.
 History is linear on `main` and uses [Conventional Commits](https://www.conventionalcommits.org/) (`feat(today): …`, `fix(tasks): …`, `docs: …`). Each commit must pass `flutter analyze` and `flutter test`.
 
 When a phase is completed, bump `version:` in `pubspec.yaml` and `lib/app/version.dart` in a `chore(release): …` commit: 0.1.0 after Phase 0, then 0.2.0, 0.3.0, 0.4.0, and 1.0.0 after Phase 4. The build number (after `+`) goes up by one every time. See [Versioning](docs/PLAN.md#roadmap).
+
+## License
+
+Copyright (C) 2026 Sapan Gajjar
+
+Veronica is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License v3.0](LICENSE) as published by the Free Software Foundation. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [LICENSE](LICENSE) for details.
+
+Bundled third-party assets keep their own licences: Doto and Inter are under the SIL Open Font License ([`assets/fonts/`](assets/fonts/)), and `design/support.js` is the Claude Design canvas runtime, included only to view the design export.
