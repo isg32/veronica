@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -275,7 +278,10 @@ class WidgetPreviewGrid extends ConsumerWidget {
   }
 }
 
-/// A dotted stand-in wallpaper so the tinted glass is visible in previews.
+/// A stand-in wallpaper for the widget previews: dim, scattered dots of
+/// different sizes, a frosted blur panel over them, and the widgets on top.
+/// The blur turns the dots into a soft glow so they never compete with the
+/// widgets.
 class WidgetPreviewBackdrop extends StatelessWidget {
   const WidgetPreviewBackdrop({
     super.key,
@@ -286,47 +292,69 @@ class WidgetPreviewBackdrop extends StatelessWidget {
   final bool light;
   final Widget child;
 
+  /// How visible the dots are before the blur; low keeps the backdrop dim.
+  static const double dotOpacity = 0.45;
+
   @override
   Widget build(BuildContext context) {
+    final paper = light ? VColors.white : VColors.black;
+    final dot = light ? VColors.black : VColors.white;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: CustomPaint(
-        painter: _DotsPainter(
-          background: light ? VColors.white : VColors.black,
-          dot: light ? VColors.black : VColors.white,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: FittedBox(
-            child: SizedBox(
-              width: WidgetPreviewGrid.cell * 4 + WidgetPreviewGrid.gap * 3,
-              child: child,
+      borderRadius: BorderRadius.circular(28),
+      child: ColoredBox(
+        color: paper,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Opacity(
+                opacity: dotOpacity,
+                child: CustomPaint(painter: _ScatterPainter(dot)),
+              ),
             ),
-          ),
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                child: const SizedBox.expand(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 22),
+              child: FittedBox(
+                child: SizedBox(
+                  width: WidgetPreviewGrid.cell * 4 + WidgetPreviewGrid.gap * 3,
+                  child: child,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _DotsPainter extends CustomPainter {
-  _DotsPainter({required this.background, required this.dot});
+/// Dots scattered at fixed pseudo-random places (the same every frame), a few
+/// large and many small, like out-of-focus lights.
+class _ScatterPainter extends CustomPainter {
+  _ScatterPainter(this.color);
 
-  final Color background;
-  final Color dot;
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = background);
-    final paint = Paint()..color = dot;
-    for (double y = 7; y < size.height; y += 14) {
-      for (double x = 7; x < size.width; x += 14) {
-        canvas.drawCircle(Offset(x, y), 1.2, paint);
-      }
+    final random = math.Random(2026);
+    final paint = Paint()..color = color;
+    for (var i = 0; i < 90; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height;
+      final big = random.nextDouble() < 0.15;
+      final r = big
+          ? 10 + random.nextDouble() * 18
+          : 1 + random.nextDouble() * 3.5;
+      canvas.drawCircle(Offset(x, y), r, paint);
     }
   }
 
   @override
-  bool shouldRepaint(_DotsPainter old) =>
-      old.background != background || old.dot != dot;
+  bool shouldRepaint(_ScatterPainter old) => old.color != color;
 }
