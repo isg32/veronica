@@ -14,6 +14,7 @@ The canvas also shows the widgets over two wallpapers (`wallpaper-dark.png` and 
 
 1. **Two colours only:** `#000000` and `#FFFFFF`, with no greys. The Nothing OS reference uses grey cards, but Veronica does not.
    Veronica follows the system theme, with no in-app toggle. Dark mode is white ink on black (as designed) and light mode is black ink on white; every component draws in the current ink, so the two are exact inverses.
+   The one exception is the stand-in wallpaper behind the home-widget previews in Settings: dim, colourful, blurred light spots, since real widgets sit on a colourful wallpaper. The hues are named in `VColors.previewWallpaperSpots` and used nowhere else.
 2. **Hierarchy** comes from size, weight, outline vs fill, dashed vs solid, and inversion.
 3. **Translucency** is allowed only in the cases below. They are the only alpha values in `VColors`, and the banned-colour test enforces that.
 

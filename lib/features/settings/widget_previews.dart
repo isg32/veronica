@@ -278,10 +278,10 @@ class WidgetPreviewGrid extends ConsumerWidget {
   }
 }
 
-/// A stand-in wallpaper for the widget previews: dim, scattered dots of
-/// different sizes, a frosted blur panel over them, and the widgets on top.
-/// The blur turns the dots into a soft glow so they never compete with the
-/// widgets.
+/// A stand-in wallpaper for the widget previews: lots of dim, colourful,
+/// out-of-focus light spots, a frosted blur panel over them, and the widgets
+/// on top. This is the only place Veronica shows colour (it stands in for the
+/// user's wallpaper).
 class WidgetPreviewBackdrop extends StatelessWidget {
   const WidgetPreviewBackdrop({
     super.key,
@@ -292,13 +292,12 @@ class WidgetPreviewBackdrop extends StatelessWidget {
   final bool light;
   final Widget child;
 
-  /// How visible the dots are before the blur; low keeps the backdrop dim.
-  static const double dotOpacity = 0.45;
+  /// Keeps the spots dim so the widgets stay the focus.
+  static const double spotOpacity = 0.5;
 
   @override
   Widget build(BuildContext context) {
     final paper = light ? VColors.white : VColors.black;
-    final dot = light ? VColors.black : VColors.white;
     // A hairline in the page's ink frames the preview as its own section.
     return DecoratedBox(
       position: DecorationPosition.foreground,
@@ -314,13 +313,13 @@ class WidgetPreviewBackdrop extends StatelessWidget {
             children: [
               Positioned.fill(
                 child: Opacity(
-                  opacity: dotOpacity,
-                  child: CustomPaint(painter: _ScatterPainter(dot)),
+                  opacity: spotOpacity,
+                  child: CustomPaint(painter: _LightSpotsPainter()),
                 ),
               ),
               Positioned.fill(
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                   child: const SizedBox.expand(),
                 ),
               ),
@@ -345,28 +344,32 @@ class WidgetPreviewBackdrop extends StatelessWidget {
   }
 }
 
-/// Dots scattered at fixed pseudo-random places (the same every frame), a few
-/// large and many small, like out-of-focus lights.
-class _ScatterPainter extends CustomPainter {
-  _ScatterPainter(this.color);
-
-  final Color color;
-
+/// Soft round light spots (bokeh) at fixed pseudo-random places, in mixed
+/// colours and sizes, each fading out from its centre.
+class _LightSpotsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final random = math.Random(2026);
-    final paint = Paint()..color = color;
-    for (var i = 0; i < 90; i++) {
-      final x = random.nextDouble() * size.width;
-      final y = random.nextDouble() * size.height;
-      final big = random.nextDouble() < 0.15;
-      final r = big
-          ? 10 + random.nextDouble() * 18
-          : 1 + random.nextDouble() * 3.5;
-      canvas.drawCircle(Offset(x, y), r, paint);
+    const colors = VColors.previewWallpaperSpots;
+    for (var i = 0; i < 70; i++) {
+      final center = Offset(
+        random.nextDouble() * size.width,
+        random.nextDouble() * size.height,
+      );
+      final radius = random.nextDouble() < 0.3
+          ? 40 + random.nextDouble() * 50
+          : 8 + random.nextDouble() * 22;
+      final color = colors[random.nextInt(colors.length)];
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..shader = RadialGradient(colors: [color, color.withValues(alpha: 0)])
+              .createShader(Rect.fromCircle(center: center, radius: radius)),
+      );
     }
   }
 
   @override
-  bool shouldRepaint(_ScatterPainter old) => old.color != color;
+  bool shouldRepaint(_LightSpotsPainter old) => false;
 }

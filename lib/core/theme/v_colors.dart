@@ -36,6 +36,20 @@ abstract final class VColors {
   /// Home-screen widget, light set: white at 50 %.
   static const Color widgetLight = Color(0x80FFFFFF);
 
+  /// The one exception to black and white: soft light spots in the
+  /// stand-in wallpaper behind the home-widget previews in Settings, because
+  /// real widgets sit on a colourful wallpaper. Used nowhere else.
+  static const List<Color> previewWallpaperSpots = [
+    Color(0xFFFF6B6B), // coral
+    Color(0xFFFFB347), // amber
+    Color(0xFFFEE440), // gold
+    Color(0xFFA8E063), // lime
+    Color(0xFF2EC4B6), // teal
+    Color(0xFF4DA3FF), // sky
+    Color(0xFF9B5DE5), // violet
+    Color(0xFFF15BB5), // pink
+  ];
+
   /// Opacity of a disabled primary action.
   static const double disabledOpacity = 0.35;
 
