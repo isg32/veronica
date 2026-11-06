@@ -193,6 +193,7 @@ class VPill extends StatelessWidget {
           ink: filled ? VColors.onColor(ink) : ink,
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (leading != null) ...[leading!, const SizedBox(width: 6)],
               Text(label, style: textStyle),
