@@ -37,6 +37,12 @@ abstract interface class UsageRepository {
   /// Logs an emergency override past a hard block.
   Future<void> logOverride(String packageName);
 
+  /// Counts a soft nudge (or a Put it down card) shown for the app today.
+  Future<void> recordNudge(String packageName);
+
+  /// Counts a "Close app" from Put it down: the phone was put down.
+  Future<void> recordPutDown(String packageName);
+
   /// Nudges for the last seven days.
   Stream<NudgeStats> watchWeekNudges();
 }
@@ -112,4 +118,14 @@ abstract interface class SettingsRepository {
   Future<void> saveVoice(VoiceSettings settings);
   Stream<GlyphSettings> watchGlyph();
   Future<void> saveGlyph(GlyphSettings settings);
+}
+
+/// Where minutes of use and the list of installed apps come from: Android's
+/// usage statistics on the phone, a fixed set in tests and Phase 0.
+abstract interface class UsageSource {
+  Future<List<InstalledApp>> installedApps();
+
+  /// Minutes in each app for each of the seven days ending today, oldest
+  /// first, keyed by package name.
+  Future<Map<String, List<int>>> lastSevenDays(Set<String> packageNames);
 }

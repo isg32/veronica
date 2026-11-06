@@ -40,7 +40,7 @@ final class WidgetGlassControllerProvider
 }
 
 String _$widgetGlassControllerHash() =>
-    r'c849e11e0109007be60dd5f882f40577d91b842f';
+    r'8a39692b81bda288b1762f4b1e6a7a3c7dcfefd9';
 
 /// Persisted in the widgets' native shared preferences (via home_widget), so
 /// it survives restarts and needs no extra storage.

@@ -12,8 +12,10 @@ part of 'home_widgets.dart';
 ///
 /// Each widget is drawn from [HomeWidgetView] into a transparent PNG; the
 /// native provider shows that image and turns taps into `veronica://` links.
-/// Widgets re-render when their data changes, when the system switches
-/// between light and dark, and once a minute while the app runs (for
+/// Every widget is rendered twice, dark glass and light glass; Android
+/// shows the one matching the system theme, so switching light or dark needs
+/// no re-render. Widgets re-render when their data or glass settings change,
+/// when the app is left or reopened, and once a minute while it runs (for
 /// countdowns and "alarm in").
 
 @ProviderFor(homeWidgetSync)
@@ -23,8 +25,10 @@ final homeWidgetSyncProvider = HomeWidgetSyncProvider._();
 ///
 /// Each widget is drawn from [HomeWidgetView] into a transparent PNG; the
 /// native provider shows that image and turns taps into `veronica://` links.
-/// Widgets re-render when their data changes, when the system switches
-/// between light and dark, and once a minute while the app runs (for
+/// Every widget is rendered twice, dark glass and light glass; Android
+/// shows the one matching the system theme, so switching light or dark needs
+/// no re-render. Widgets re-render when their data or glass settings change,
+/// when the app is left or reopened, and once a minute while it runs (for
 /// countdowns and "alarm in").
 
 final class HomeWidgetSyncProvider extends $FunctionalProvider<void, void, void>
@@ -33,8 +37,10 @@ final class HomeWidgetSyncProvider extends $FunctionalProvider<void, void, void>
   ///
   /// Each widget is drawn from [HomeWidgetView] into a transparent PNG; the
   /// native provider shows that image and turns taps into `veronica://` links.
-  /// Widgets re-render when their data changes, when the system switches
-  /// between light and dark, and once a minute while the app runs (for
+  /// Every widget is rendered twice, dark glass and light glass; Android
+  /// shows the one matching the system theme, so switching light or dark needs
+  /// no re-render. Widgets re-render when their data or glass settings change,
+  /// when the app is left or reopened, and once a minute while it runs (for
   /// countdowns and "alarm in").
   HomeWidgetSyncProvider._()
     : super(
@@ -69,7 +75,7 @@ final class HomeWidgetSyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$homeWidgetSyncHash() => r'110d2a0001437c37f71f45ae8acf87337cd5e499';
+String _$homeWidgetSyncHash() => r'e9cd18ca8487632851e8adc010600d74e87440ec';
 
 /// Turns taps on the home widgets (`veronica://…` links) into actions.
 ///

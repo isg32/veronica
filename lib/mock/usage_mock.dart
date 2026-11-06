@@ -116,5 +116,43 @@ class MockUsageRepository implements UsageRepository {
   );
 
   @override
+  Future<void> recordNudge(String packageName) async => _nudges.update(
+    (n) => NudgeStats(
+      shown: n.shown + 1,
+      accepted: n.accepted,
+      overrides: n.overrides,
+    ),
+  );
+
+  @override
+  Future<void> recordPutDown(String packageName) async => _nudges.update(
+    (n) => NudgeStats(
+      shown: n.shown,
+      accepted: n.accepted + 1,
+      overrides: n.overrides,
+    ),
+  );
+
+  @override
   Stream<NudgeStats> watchWeekNudges() => _nudges.watch();
+}
+
+/// A fixed [UsageSource]: the sample apps and their minutes. Used in tests
+/// and wherever the phone's usage stats are not available.
+class MockUsageSource implements UsageSource {
+  const MockUsageSource();
+
+  @override
+  Future<List<InstalledApp>> installedApps() async => mockInstalledApps;
+
+  @override
+  Future<Map<String, List<int>>> lastSevenDays(Set<String> packageNames) async {
+    final byPackage = {
+      for (final a in mockWatchedApps) a.packageName: a.lastSevenDays,
+    };
+    return {
+      for (final p in packageNames)
+        p: byPackage[p] ?? const [0, 0, 0, 0, 0, 0, 0],
+    };
+  }
 }
