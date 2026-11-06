@@ -2,13 +2,13 @@
 
 This file lists every fake dataset in the app. In Phase 0, every screen reads from a `Mock…Repository` in `lib/mock/`, and no widget hard-codes values. When a later phase wires a feature to real data, its **Status** flips from `Mock` to `Real`, and the mock file is kept only for tests.
 
-The values match the design canvas ([`design/DESIGN.md`](design/DESIGN.md)), so screens can be compared side by side. "Now" in the mocks is **Fri 6 Nov 2026, 21:04** (`mockNow` in `lib/mock/mock_cell.dart`); the clock runs forward from there, so countdowns move. Everything resets when the app restarts.
+The values match the design canvas ([`design/DESIGN.md`](design/DESIGN.md)), so screens can be compared side by side. The app clock is real time. The remaining mock data is anchored to the moment the app started (`mockNow` in `lib/mock/mock_cell.dart`), so ages, logs and timers are relative to launch, and it resets when the app restarts. Real data (marked below) is kept in the on-device database.
 
 | Dataset | File | Used on | Contents | Status |
 | --- | --- | --- | --- | --- |
 | Profile | `lib/mock/profile_mock.dart` | Onboarding, Today, overlays | Name "Sapan" | Mock |
 | Permissions | `lib/mock/permissions_mock.dart` | Onboarding, Settings | 7 permissions (Usage access, Accessibility, Display over apps, DND, Notifications, Exact alarms, Battery unrestricted); 5 granted (exact alarms and battery still to do); ADB greyscale granted; Glyph debug shown as needed and expiring in 31 h so its UI can be reviewed | Mock |
-| Watched apps | `lib/mock/usage_mock.dart` | Today, Focus, App detail, Put it down, Weekly | YouTube 75/60, Instagram 42/60, X 18/30, Reddit 9/20 min; 12 installed apps; 7-day history per app; 7 of 9 nudges accepted; 0 overrides | Mock |
+| Watched apps | `lib/data/usage/drift_usage_repository.dart` (rules, counters); `lib/mock/usage_mock.dart` (`MockUsageSource`: minutes, installed apps) | Today, Focus, App detail, Put it down, Weekly, widgets | Watched apps, limits, nudges, put-downs, extensions and overrides are stored in drift and persist. Minutes per app and the installed-app list still come from the sample source (YouTube 75, Instagram 42, X 18, Reddit 9; 12 apps) until Android usage stats are wired in | Partly real |
 | Tasks | `lib/mock/tasks_mock.dart` | Today, Tasks, Task detail, widget | 8 tasks, 6 open (ages 10, 8, 5, 4, 1, 0 days) and 2 done; "Renew passport" is due Fri 20 Nov, priority High, with notes | Mock |
 | Water log | `lib/mock/water_mock.dart` | Today, Care, Weekly, widget | 5 of 8 glasses (250 ml) at 08:10–15:40; window 07:00–23:00, every 2 h; week total 45 of 56 | Mock |
 | Medicines | `lib/mock/medicine_mock.dart` | Today, Care, Medicine editor, Dose history, Medicine due | Vitamin D (1 tablet, 09:00, 24 left) and Magnesium (200 mg, 22:00, 6 left); 13 of 14 taken this week, 1 missed (Thu 22:00); medicine switched on so its screens show | Mock |

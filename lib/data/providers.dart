@@ -3,7 +3,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../core/clock.dart';
 import '../mock/medicine_mock.dart';
 import '../mock/mantra_mock.dart';
-import '../mock/mock_cell.dart';
 import '../mock/modes_mock.dart';
 import '../mock/permissions_mock.dart';
 import '../mock/profile_mock.dart';
@@ -12,7 +11,9 @@ import '../mock/tasks_mock.dart';
 import '../mock/usage_mock.dart';
 import '../mock/voice_mock.dart';
 import '../mock/water_mock.dart';
+import 'db/database.dart';
 import 'models/models.dart';
+import 'usage/drift_usage_repository.dart';
 import 'repositories/repositories.dart';
 
 part 'providers.g.dart';
@@ -23,7 +24,19 @@ part 'providers.g.dart';
 // ---------------------------------------------------------------------------
 
 @Riverpod(keepAlive: true)
-Clock clock(Ref ref) => Clock.from(mockNow);
+Clock clock(Ref ref) => const Clock.system();
+
+/// The on-device database, opened once for the app's lifetime.
+@Riverpod(keepAlive: true)
+VeronicaDatabase database(Ref ref) {
+  final db = VeronicaDatabase();
+  ref.onDispose(db.close);
+  return db;
+}
+
+/// Minutes and installed apps. Android usage stats arrive in the next step.
+@Riverpod(keepAlive: true)
+UsageSource usageSource(Ref ref) => const MockUsageSource();
 
 @Riverpod(keepAlive: true)
 ProfileRepository profileRepository(Ref ref) => MockProfileRepository();
@@ -33,7 +46,11 @@ PermissionRepository permissionRepository(Ref ref) =>
     MockPermissionRepository();
 
 @Riverpod(keepAlive: true)
-UsageRepository usageRepository(Ref ref) => MockUsageRepository();
+UsageRepository usageRepository(Ref ref) => DriftUsageRepository(
+  ref.watch(databaseProvider),
+  ref.watch(usageSourceProvider),
+  ref.watch(clockProvider).now,
+);
 
 @Riverpod(keepAlive: true)
 TaskRepository taskRepository(Ref ref) =>

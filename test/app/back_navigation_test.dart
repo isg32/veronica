@@ -7,6 +7,7 @@ import 'package:veronica/app/app.dart';
 import 'package:veronica/app/router.dart';
 import 'package:veronica/app/routes.dart';
 
+import '../helpers/app.dart';
 import '../helpers/fonts.dart';
 
 void main() {
@@ -28,8 +29,7 @@ void main() {
       },
     );
 
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+    final container = testContainer();
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -60,8 +60,7 @@ void main() {
   });
 
   testWidgets('back on a detail page just closes it', (tester) async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+    final container = testContainer();
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,

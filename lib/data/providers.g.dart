@@ -47,7 +47,104 @@ final class ClockProvider extends $FunctionalProvider<Clock, Clock, Clock>
   }
 }
 
-String _$clockHash() => r'6fe155f7abd7df25caaa39ce3525e301ed0427c7';
+String _$clockHash() => r'18e43e031d4e8b35f980f763d2c734f26a4c47a4';
+
+/// The on-device database, opened once for the app's lifetime.
+
+@ProviderFor(database)
+final databaseProvider = DatabaseProvider._();
+
+/// The on-device database, opened once for the app's lifetime.
+
+final class DatabaseProvider
+    extends
+        $FunctionalProvider<
+          VeronicaDatabase,
+          VeronicaDatabase,
+          VeronicaDatabase
+        >
+    with $Provider<VeronicaDatabase> {
+  /// The on-device database, opened once for the app's lifetime.
+  DatabaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'databaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$databaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<VeronicaDatabase> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  VeronicaDatabase create(Ref ref) {
+    return database(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(VeronicaDatabase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<VeronicaDatabase>(value),
+    );
+  }
+}
+
+String _$databaseHash() => r'9071f0816f2eb654bc1323e2ac30305ffb366284';
+
+/// Minutes and installed apps. Android usage stats arrive in the next step.
+
+@ProviderFor(usageSource)
+final usageSourceProvider = UsageSourceProvider._();
+
+/// Minutes and installed apps. Android usage stats arrive in the next step.
+
+final class UsageSourceProvider
+    extends $FunctionalProvider<UsageSource, UsageSource, UsageSource>
+    with $Provider<UsageSource> {
+  /// Minutes and installed apps. Android usage stats arrive in the next step.
+  UsageSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'usageSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$usageSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<UsageSource> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UsageSource create(Ref ref) {
+    return usageSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UsageSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UsageSource>(value),
+    );
+  }
+}
+
+String _$usageSourceHash() => r'36a1131899c4469d5672ddabe005d9b68f39fe35';
 
 @ProviderFor(profileRepository)
 final profileRepositoryProvider = ProfileRepositoryProvider._();
@@ -184,7 +281,7 @@ final class UsageRepositoryProvider
   }
 }
 
-String _$usageRepositoryHash() => r'c0a6f5127d996ea099a5c573a2da9023b96db0de';
+String _$usageRepositoryHash() => r'78fa81ef06a94c12af29253b3a71aa301688beae';
 
 @ProviderFor(taskRepository)
 final taskRepositoryProvider = TaskRepositoryProvider._();

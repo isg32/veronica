@@ -21,8 +21,9 @@ class DriftUsageRepository implements UsageRepository {
   final UsageSource _source;
   final DateTime Function() _now;
 
-  /// How often minutes are re-read while someone is watching.
-  final Duration refreshEvery;
+  /// How often minutes are re-read while someone is watching; null reads
+  /// them only when the stored data changes (tests).
+  final Duration? refreshEvery;
 
   String get _today => VeronicaDatabase.dayKey(_now());
 
@@ -71,7 +72,10 @@ class DriftUsageRepository implements UsageRepository {
           days = v;
           unawaited(emit());
         });
-        timer = Timer.periodic(refreshEvery, (_) => unawaited(emit()));
+        final every = refreshEvery;
+        if (every != null) {
+          timer = Timer.periodic(every, (_) => unawaited(emit()));
+        }
       },
       onCancel: () async {
         timer?.cancel();

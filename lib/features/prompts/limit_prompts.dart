@@ -64,7 +64,10 @@ class PutItDownPage extends ConsumerWidget {
                   VButton.primary(
                     'Close app',
                     enabled: left == 0,
-                    onPressed: () => _leave(context),
+                    onPressed: () async {
+                      await repo.recordPutDown(app.packageName);
+                      if (context.mounted) _leave(context);
+                    },
                   ),
                   const SizedBox(height: 10),
                   if (app.extensionsLeft > 0)

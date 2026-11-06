@@ -4,9 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:veronica/app/app.dart';
 import 'package:veronica/app/router.dart';
 import 'package:veronica/app/routes.dart';
+import 'package:veronica/core/widgets/v_controls.dart';
 import 'package:veronica/data/models/models.dart';
 import 'package:veronica/data/providers.dart';
 
+import '../helpers/app.dart';
 import '../helpers/fonts.dart';
 
 /// Opens every screen on a phone-sized view and fails on any exception or
@@ -54,8 +56,7 @@ void main() {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+    final container = testContainer();
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -102,18 +103,25 @@ void main() {
       }
     }
 
-    await tester.enterText(find.byType(EditableText), 'Sapan');
-    for (final label in [
-      'Begin',
-      'Continue',
-      'Skip for now',
-      'Continue',
-      'Continue',
-      'Done',
-    ]) {
+    Future<void> tap(String label) async {
       await tester.tap(find.text(label).last);
       await settle();
     }
-    expect(find.text('Good evening, Sapan'), findsOneWidget);
+
+    await tester.enterText(find.byType(EditableText), 'Sapan');
+    await tap('Begin');
+    await tap('Continue'); // permissions
+    await tap('Skip for now'); // ADB
+
+    // Watch apps: Continue stays disabled until an app is picked.
+    expect(find.text('Pick at least one app'), findsOneWidget);
+    await tester.tap(find.byType(VSwitch).first);
+    await settle();
+    expect(find.textContaining('1 apps'), findsOneWidget);
+    await tap('Continue');
+
+    await tap('Continue'); // water
+    await tap('Done'); // sleep
+    expect(find.textContaining(', Sapan'), findsOneWidget);
   });
 }
