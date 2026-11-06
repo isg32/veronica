@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 
 import '../icons/v_icons.dart';
 import '../theme/v_colors.dart';
@@ -61,9 +62,13 @@ class VTabItem {
   final VIcon icon;
 }
 
-/// The floating glass capsule tab bar. The active tab is a white pill with
-/// icon and label; the others show only their icon.
-class VTabBar extends StatelessWidget {
+/// The floating glass capsule tab bar.
+///
+/// A single white pill slides and stretches to the active tab. The bar is
+/// drawn twice: white icons on the glass, and a black copy (with the label)
+/// clipped to the pill, so ink and label only ever appear inside the pill as
+/// it moves.
+class VTabBar extends StatefulWidget {
   const VTabBar({
     super.key,
     required this.items,
@@ -75,27 +80,263 @@ class VTabBar extends StatelessWidget {
   final int index;
   final ValueChanged<int> onTap;
 
+  static const Duration duration = Duration(milliseconds: 420);
+  static const Curve curve = Curves.easeInOutCubic;
+
+  @override
+  State<VTabBar> createState() => _VTabBarState();
+}
+
+/// Where each tab sits, how selected it is (0–1) and where the pill is.
+class _TabFrame {
+  const _TabFrame(this.lefts, this.widths, this.sel, this.pill);
+
+  final List<double> lefts;
+  final List<double> widths;
+  final List<double> sel;
+  final Rect pill;
+
+  static _TabFrame lerp(_TabFrame a, _TabFrame b, double t) {
+    double l(double x, double y) => x + (y - x) * t;
+    return _TabFrame(
+      [for (var i = 0; i < b.lefts.length; i++) l(a.lefts[i], b.lefts[i])],
+      [for (var i = 0; i < b.widths.length; i++) l(a.widths[i], b.widths[i])],
+      [for (var i = 0; i < b.sel.length; i++) l(a.sel[i], b.sel[i])],
+      Rect.lerp(a.pill, b.pill, t)!,
+    );
+  }
+}
+
+class _VTabBarState extends State<VTabBar> with SingleTickerProviderStateMixin {
+  static const double _barHeight = 62;
+  static const double _pillHeight = 44;
+  static const double _iconOnlyWidth = 44;
+  static const double _padX = 14;
+  static const double _iconGap = 6;
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: VTabBar.duration,
+    value: 1,
+  );
+  late final Animation<double> _t = CurvedAnimation(
+    parent: _controller,
+    curve: VTabBar.curve,
+  );
+
+  /// The frame the current animation starts from, and the last one drawn.
+  _TabFrame? _from;
+  _TabFrame? _shown;
+
+  @override
+  void didUpdateWidget(VTabBar old) {
+    super.didUpdateWidget(old);
+    if (old.index != widget.index) {
+      // Start from wherever the pill is now, even mid-flight.
+      _from = _shown;
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  TextStyle get _labelStyle => VText.inter(12, weight: 600);
+
+  _TabFrame _target(int selected, double maxWidth, TextScaler scaler) {
+    final widths = <double>[];
+    for (var i = 0; i < widget.items.length; i++) {
+      if (i != selected) {
+        widths.add(_iconOnlyWidth);
+        continue;
+      }
+      final label = TextPainter(
+        text: TextSpan(text: widget.items[i].label, style: _labelStyle),
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+      )..layout();
+      widths.add(_padX * 2 + 18 + _iconGap + label.width.ceilToDouble());
+    }
+    final used = widths.fold<double>(0, (s, w) => s + w);
+    final gap = ((maxWidth - used) / widths.length).clamp(0.0, double.infinity);
+    final lefts = <double>[];
+    var x = gap / 2;
+    for (final w in widths) {
+      lefts.add(x);
+      x += w + gap;
+    }
+    const top = (_barHeight - _pillHeight) / 2;
+    return _TabFrame(lefts, widths, [
+      for (var i = 0; i < widths.length; i++) i == selected ? 1.0 : 0.0,
+    ], Rect.fromLTWH(lefts[selected], top, widths[selected], _pillHeight));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 22),
       child: VGlass(
-        radius: 31,
+        radius: _barHeight / 2,
         child: SizedBox(
-          height: 62,
+          height: _barHeight,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                for (var i = 0; i < items.length; i++)
-                  _Tab(
-                    item: items[i],
-                    selected: i == index,
-                    onTap: () => onTap(i),
-                  ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final to = _target(widget.index, box.maxWidth, scaler);
+                return AnimatedBuilder(
+                  animation: _t,
+                  builder: (context, _) {
+                    final frame = _from == null
+                        ? to
+                        : _TabFrame.lerp(_from!, to, _t.value);
+                    _shown = frame;
+                    return _frame(frame, to);
+                  },
+                );
+              },
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _frame(_TabFrame f, _TabFrame to) {
+    const top = (_barHeight - _pillHeight) / 2;
+    final n = widget.items.length;
+    final lefts = f.lefts;
+    final widths = f.widths;
+    final sel = f.sel;
+    final pill = f.pill;
+
+    Widget layer({required Color ink, required bool labels}) {
+      return Stack(
+        children: [
+          for (var i = 0; i < n; i++)
+            Positioned(
+              left: lefts[i],
+              top: top,
+              width: widths[i],
+              height: _pillHeight,
+              child: _TabContent(
+                item: widget.items[i],
+                selected: sel[i],
+                ink: ink,
+                showLabel: labels,
+                labelStyle: _labelStyle,
+              ),
+            ),
+        ],
+      );
+    }
+
+    return Stack(
+      children: [
+        Positioned.fromRect(
+          rect: pill,
+          child: const DecoratedBox(
+            decoration: BoxDecoration(
+              color: VColors.white,
+              borderRadius: BorderRadius.all(Radius.circular(_pillHeight / 2)),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: ExcludeSemantics(
+            child: ClipPath(
+              clipper: _OutsideClipper(pill),
+              child: layer(ink: VColors.white, labels: false),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: ExcludeSemantics(
+            child: ClipRRect(
+              clipper: _PillClipper(pill),
+              child: layer(ink: VColors.black, labels: true),
+            ),
+          ),
+        ),
+        // Tap targets on top, one per tab at its final place.
+        for (var i = 0; i < n; i++)
+          Positioned(
+            left: to.lefts[i],
+            top: 0,
+            width: to.widths[i],
+            height: _barHeight,
+            child: Semantics(
+              selected: i == widget.index,
+              button: true,
+              label: widget.items[i].label,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (i != widget.index) HapticFeedback.selectionClick();
+                  widget.onTap(i);
+                },
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// One tab's icon (and, inside the pill, its label). [selected] slides the
+/// icon from the centre to the start as the tab becomes active.
+class _TabContent extends StatelessWidget {
+  const _TabContent({
+    required this.item,
+    required this.selected,
+    required this.ink,
+    required this.showLabel,
+    required this.labelStyle,
+  });
+
+  final VTabItem item;
+  final double selected;
+  final Color ink;
+  final bool showLabel;
+  final TextStyle labelStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = selected;
+    return ClipRect(
+      child: OverflowBox(
+        minWidth: 0,
+        maxWidth: double.infinity,
+        alignment: Alignment.lerp(Alignment.center, Alignment.centerLeft, s)!,
+        child: Padding(
+          padding: EdgeInsets.only(left: _VTabBarState._padX * s),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              VIconView(
+                item.icon,
+                size: 20 - 2 * s,
+                strokeWidth: 1.5 + 0.5 * s,
+                color: ink,
+              ),
+              SizedBox(width: _VTabBarState._iconGap * s),
+              Align(
+                alignment: Alignment.centerLeft,
+                widthFactor: s,
+                child: showLabel && s > 0
+                    ? Text(
+                        item.label,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: labelStyle.copyWith(color: ink),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
           ),
         ),
       ),
@@ -103,57 +344,33 @@ class VTabBar extends StatelessWidget {
   }
 }
 
-class _Tab extends StatelessWidget {
-  const _Tab({required this.item, required this.selected, required this.onTap});
+class _PillClipper extends CustomClipper<RRect> {
+  _PillClipper(this.pill);
 
-  final VTabItem item;
-  final bool selected;
-  final VoidCallback onTap;
+  final Rect pill;
 
   @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      selected: selected,
-      button: true,
-      label: item.label,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: VMotion.standard,
-          curve: VMotion.curve,
-          padding: selected
-              ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
-              : const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: selected ? VColors.white : VColors.transparent,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              VIconView(
-                item.icon,
-                size: selected ? 18 : 20,
-                strokeWidth: selected ? 2 : 1.5,
-                color: selected ? VColors.black : VColors.white,
-              ),
-              if (selected) ...[
-                const SizedBox(width: 6),
-                Text(
-                  item.label,
-                  style: VText.inter(
-                    12,
-                    weight: 600,
-                  ).copyWith(color: VColors.black),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  RRect getClip(Size size) =>
+      RRect.fromRectAndRadius(pill, Radius.circular(pill.height / 2));
+
+  @override
+  bool shouldReclip(_PillClipper old) => old.pill != pill;
+}
+
+/// Everything except the pill.
+class _OutsideClipper extends CustomClipper<Path> {
+  _OutsideClipper(this.pill);
+
+  final Rect pill;
+
+  @override
+  Path getClip(Size size) => Path()
+    ..fillType = PathFillType.evenOdd
+    ..addRect(Offset.zero & size)
+    ..addRRect(RRect.fromRectAndRadius(pill, Radius.circular(pill.height / 2)));
+
+  @override
+  bool shouldReclip(_OutsideClipper old) => old.pill != pill;
 }
 
 /// Shows a glass bottom sheet with a handle and an eyebrow title.
