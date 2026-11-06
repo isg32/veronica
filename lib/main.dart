@@ -4,20 +4,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
-import 'core/theme/v_colors.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   _registerFontLicences();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: VColors.transparent,
-      systemNavigationBarColor: VColors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
   runApp(const ProviderScope(child: VeronicaApp()));
 }
 

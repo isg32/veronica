@@ -65,15 +65,26 @@ void main() {
     return container;
   }
 
-  for (final route in routes) {
-    testWidgets('opens $route', (tester) async {
-      final container = await boot(tester);
-      container.read(routerProvider).go(route);
-      for (var i = 0; i < 5; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-      expect(tester.takeException(), isNull);
-    });
+  for (final light in [false, true]) {
+    for (final route in routes) {
+      testWidgets('opens $route in ${light ? 'light' : 'dark'} mode', (
+        tester,
+      ) async {
+        if (light) {
+          tester.platformDispatcher.platformBrightnessTestValue =
+              Brightness.light;
+          addTearDown(
+            tester.platformDispatcher.clearPlatformBrightnessTestValue,
+          );
+        }
+        final container = await boot(tester);
+        container.read(routerProvider).go(route);
+        for (var i = 0; i < 5; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
   }
 
   testWidgets('reset sends you through onboarding to Today', (tester) async {

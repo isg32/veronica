@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/routes.dart';
 import '../../core/format.dart';
 import '../../core/icons/v_icons.dart';
-import '../../core/theme/v_colors.dart';
+import '../../core/widgets/v_ink.dart';
 import '../../core/theme/v_text.dart';
 import '../../core/theme/v_tokens.dart';
 import '../../core/widgets/v_buttons.dart';
@@ -168,12 +168,15 @@ class _SwipeLayer extends StatelessWidget {
       alignment: alignment,
       padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
-        color: VColors.white,
+        color: VInk.of(context),
         borderRadius: BorderRadius.circular(VRadius.taskRow),
       ),
       child: Text(
         label,
-        style: VText.inter(13, weight: 600).copyWith(color: VColors.black),
+        style: VText.inter(
+          13,
+          weight: 600,
+        ).copyWith(color: VInk.surfaceOf(context)),
       ),
     );
   }

@@ -12,7 +12,7 @@ Veronica is a calm Android companion that helps you use your phone less and look
 - **You choose what is watched.** Only apps the user selects are tracked.
 - **Offline and private.** All data stays on the phone; no account. Personal use only: sideloaded, never on the Play Store, so ADB-granted permissions are fine.
 - **Glanceable.** Anything that can be said with a Glyph pattern instead of lighting the screen should be.
-- **Nothing-style UI.** pure black and white only (no other colours, no greys), dot-matrix type, so the app itself feels distraction-free.
+- **Nothing-style UI.** pure black and white only (no other colours, no greys), dot-matrix type, so the app itself feels distraction-free. It follows the system light or dark mode, with no toggle.
 
 ## Features
 

@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/icons/v_icons.dart';
-import '../core/theme/v_colors.dart';
+import '../core/widgets/v_ink.dart';
 import '../core/theme/v_text.dart';
 import '../core/theme/v_tokens.dart';
 import '../core/widgets/v_glass.dart';
@@ -99,7 +99,7 @@ class _AppShellState extends State<AppShell> {
                         style: VText.inter(
                           13,
                           weight: 500,
-                        ).copyWith(color: VColors.white),
+                        ).copyWith(color: VInk.of(context)),
                       ),
                     ),
                   ),

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../icons/v_icons.dart';
-import '../theme/v_colors.dart';
+import 'v_ink.dart';
 import '../theme/v_text.dart';
 import '../theme/v_tokens.dart';
 import 'v_buttons.dart';
@@ -106,7 +106,7 @@ class VTabPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: VColors.black,
+      backgroundColor: VInk.surfaceOf(context),
       child: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -165,7 +165,7 @@ class VDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: VColors.black,
+      backgroundColor: VInk.surfaceOf(context),
       child: SafeArea(
         child: CustomScrollView(
           slivers: [

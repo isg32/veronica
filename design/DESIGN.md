@@ -13,14 +13,15 @@ The canvas also shows the widgets over two wallpapers (`wallpaper-dark.png` and 
 ## Rules
 
 1. **Two colours only:** `#000000` and `#FFFFFF`, with no greys. The Nothing OS reference uses grey cards, but Veronica does not.
+   Veronica follows the system theme, with no in-app toggle. Dark mode is white ink on black (as designed) and light mode is black ink on white; every component draws in the current ink, so the two are exact inverses.
 2. **Hierarchy** comes from size, weight, outline vs fill, dashed vs solid, and inversion.
 3. **Translucency** is allowed only in the cases below. They are the only alpha values in `VColors`, and the banned-colour test enforces that.
 
 | Surface | Fill | Blur | Border |
 | --- | --- | --- | --- |
-| Tab bar | white @ 0.10 | 18 | 1 px white |
-| Overlay card (Mantra time) | white @ 0.08 | 16 | 1 px white |
-| Bottom sheet | black @ 0.55 | 14 | 1 px white, top only |
+| Tab bar | white @ 0.10 (light: black @ 0.06) | 18 | 1 px ink |
+| Overlay card (Mantra time) | white @ 0.08 (light: black @ 0.05) | 16 | 1 px ink |
+| Bottom sheet | black @ 0.55 (light: white @ 0.60) | 14 | 1 px ink, top only |
 | Widget, dark set | black @ 0.40 | 30* | none |
 | Widget, light set | white @ 0.50 | 30* | none |
 | Disabled primary button | whole button @ 0.35 | – | – |

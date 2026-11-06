@@ -2,7 +2,8 @@ import 'package:flutter/widgets.dart';
 
 /// The only colours Veronica may use.
 ///
-/// The app is pure black and white. Translucency exists only for the glass
+/// The app is pure black and white: white on black in dark mode, black on
+/// white in light mode (it follows the system; see `VPalette`). Translucency exists only for the glass
 /// surfaces listed in `design/DESIGN.md`; each has its own named constant so
 /// nothing else can sneak in. `test/design/no_banned_colors_test.dart` fails
 /// the build if a colour is created anywhere outside this file.
@@ -19,6 +20,15 @@ abstract final class VColors {
 
   /// Bottom sheet: black at 55 %.
   static const Color glassSheet = Color(0x8C000000);
+
+  /// Light mode: tab bar is black at 6 %.
+  static const Color glassBarLight = Color(0x0F000000);
+
+  /// Light mode: glass card is black at 5 %.
+  static const Color glassCardLight = Color(0x0D000000);
+
+  /// Light mode: bottom sheet is white at 60 %.
+  static const Color glassSheetLight = Color(0x99FFFFFF);
 
   /// Home-screen widget, dark set: black at 40 %.
   static const Color widgetDark = Color(0x66000000);

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 
-import '../../core/theme/v_colors.dart';
+import '../../core/widgets/v_ink.dart';
 import '../../core/theme/v_text.dart';
 
 /// Black full-screen frame shared by every prompt.
@@ -14,7 +14,7 @@ class PromptScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: VColors.black,
+      backgroundColor: VInk.surfaceOf(context),
       child: SafeArea(child: child),
     );
   }

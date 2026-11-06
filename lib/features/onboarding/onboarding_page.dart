@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/v_ink.dart';
 import '../../core/format.dart';
 import '../../core/icons/v_icons.dart';
 import '../../core/theme/v_colors.dart';
@@ -66,7 +67,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         if (!didPop && _step > 0) _go(_step - 1);
       },
       child: CupertinoPageScaffold(
-        backgroundColor: VColors.black,
+        backgroundColor: VInk.surfaceOf(context),
         child: SafeArea(
           child: PageView(
             controller: _pages,
@@ -272,7 +273,7 @@ class _Waveform extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           for (final h in const [6.0, 12.0, 16.0, 9.0, 13.0, 5.0]) ...[
-            Container(width: 2, height: h, color: VColors.white),
+            Container(width: 2, height: h, color: VInk.of(context)),
             const SizedBox(width: 3),
           ],
         ],
@@ -299,7 +300,7 @@ class _StepDots extends StatelessWidget {
             child: VOutlined(
               radius: 3,
               outline: i == current ? VOutline.none : VOutline.solid,
-              fill: i == current ? VColors.white : VColors.transparent,
+              fill: i == current ? VInk.of(context) : VColors.transparent,
               child: const SizedBox.expand(),
             ),
           ),

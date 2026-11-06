@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/v_ink.dart';
 import '../../app/routes.dart';
-import '../../core/theme/v_colors.dart';
 import '../../core/theme/v_text.dart';
 import '../../core/widgets/v_buttons.dart';
 import '../../core/widgets/v_progress.dart';
@@ -35,7 +35,7 @@ class ActiveModePage extends ConsumerWidget {
 
     if (mode == null || active == null) {
       return CupertinoPageScaffold(
-        backgroundColor: VColors.black,
+        backgroundColor: VInk.surfaceOf(context),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -54,7 +54,7 @@ class ActiveModePage extends ConsumerWidget {
 
     final p = ModeProgress.of(mode, active, now);
     return CupertinoPageScaffold(
-      backgroundColor: VColors.black,
+      backgroundColor: VInk.surfaceOf(context),
       child: SafeArea(
         child: Column(
           children: [

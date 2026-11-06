@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../app/routes.dart';
 import '../../core/format.dart';
 import '../../core/theme/v_colors.dart';
+import '../../core/theme/v_palette.dart';
+import '../../core/widgets/v_ink.dart';
 import '../../core/theme/v_text.dart';
 import '../../core/widgets/v_breathe.dart';
 import '../../core/widgets/v_buttons.dart';
@@ -229,7 +231,7 @@ class _FadeMeter extends StatelessWidget {
               child: VOutlined(
                 radius: 0,
                 outline: i < lit ? VOutline.none : VOutline.solid,
-                fill: i < lit ? VColors.white : VColors.transparent,
+                fill: i < lit ? VInk.of(context) : VColors.transparent,
                 child: const SizedBox.expand(),
               ),
             ),
@@ -272,8 +274,8 @@ class MantraSessionPage extends ConsumerWidget {
                     height: 6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: voiceOn ? VColors.white : VColors.transparent,
-                      border: Border.all(color: VColors.white),
+                      color: voiceOn ? VInk.of(context) : VColors.transparent,
+                      border: Border.all(color: VInk.of(context)),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -393,7 +395,7 @@ class MantraTimePage extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: VGlass(
             radius: 28,
-            tint: VColors.glassCard,
+            tint: VPalette.of(context).glassCard,
             blur: 16,
             child: Padding(
               padding: const EdgeInsets.all(24),

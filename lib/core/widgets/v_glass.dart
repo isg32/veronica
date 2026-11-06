@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../icons/v_icons.dart';
 import '../theme/v_colors.dart';
+import '../theme/v_palette.dart';
 import '../theme/v_text.dart';
 import '../theme/v_tokens.dart';
 import 'v_ink.dart';
@@ -17,7 +18,7 @@ class VGlass extends StatelessWidget {
     super.key,
     required this.child,
     required this.radius,
-    this.tint = VColors.glassBar,
+    this.tint,
     this.blur = 18,
     this.border = true,
     this.borderRadius,
@@ -25,7 +26,9 @@ class VGlass extends StatelessWidget {
 
   final Widget child;
   final double radius;
-  final Color tint;
+
+  /// Defaults to the tab-bar glass for the current brightness.
+  final Color? tint;
   final double blur;
   final bool border;
 
@@ -41,7 +44,7 @@ class VGlass extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: tint,
+            color: tint ?? VPalette.of(context).glassBar,
             borderRadius: shape,
             border: border
                 ? Border.all(color: VInk.of(context), width: VSpace.hairline)
@@ -208,6 +211,8 @@ class _VTabBarState extends State<VTabBar> with SingleTickerProviderStateMixin {
 
   Widget _frame(_TabFrame f, _TabFrame to) {
     const top = (_barHeight - _pillHeight) / 2;
+    final ink = VInk.of(context);
+    final paper = VInk.surfaceOf(context);
     final n = widget.items.length;
     final lefts = f.lefts;
     final widths = f.widths;
@@ -239,10 +244,12 @@ class _VTabBarState extends State<VTabBar> with SingleTickerProviderStateMixin {
       children: [
         Positioned.fromRect(
           rect: pill,
-          child: const DecoratedBox(
+          child: DecoratedBox(
             decoration: BoxDecoration(
-              color: VColors.white,
-              borderRadius: BorderRadius.all(Radius.circular(_pillHeight / 2)),
+              color: ink,
+              borderRadius: const BorderRadius.all(
+                Radius.circular(_pillHeight / 2),
+              ),
             ),
           ),
         ),
@@ -250,7 +257,7 @@ class _VTabBarState extends State<VTabBar> with SingleTickerProviderStateMixin {
           child: ExcludeSemantics(
             child: ClipPath(
               clipper: _OutsideClipper(pill),
-              child: layer(ink: VColors.white, labels: false),
+              child: layer(ink: ink, labels: false),
             ),
           ),
         ),
@@ -258,7 +265,7 @@ class _VTabBarState extends State<VTabBar> with SingleTickerProviderStateMixin {
           child: ExcludeSemantics(
             child: ClipRRect(
               clipper: _PillClipper(pill),
-              child: layer(ink: VColors.black, labels: true),
+              child: layer(ink: paper, labels: true),
             ),
           ),
         ),
@@ -398,19 +405,18 @@ class VSheet extends StatelessWidget {
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
-      child: VInkScope(
-        ink: VColors.white,
-        child: VGlass(
+      child: Builder(
+        builder: (context) => VGlass(
           radius: VRadius.sheet,
           borderRadius: const BorderRadius.vertical(
             top: Radius.circular(VRadius.sheet),
           ),
-          tint: VColors.glassSheet,
+          tint: VPalette.of(context).glassSheet,
           blur: 14,
           border: false,
           child: DecoratedBox(
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: VColors.white)),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: VInk.of(context))),
             ),
             child: SafeArea(
               top: false,
@@ -425,7 +431,7 @@ class VSheet extends StatelessWidget {
                         width: 36,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: VColors.white,
+                          color: VInk.of(context),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
