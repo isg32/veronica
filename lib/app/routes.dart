@@ -15,6 +15,7 @@ abstract final class Routes {
   static const settingsGlyph = '/settings/glyph';
   static const settingsVoice = '/settings/voice';
   static const settingsWidgets = '/settings/widgets';
+  static const settingsWidgetsPlace = '/settings/widgets/place';
   static const settingsData = '/settings/data';
   static const weekly = '/weekly';
   static String app(String packageName) => '/app/$packageName';

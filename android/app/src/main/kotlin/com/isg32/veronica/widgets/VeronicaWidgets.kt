@@ -15,9 +15,10 @@ import es.antonborri.home_widget.HomeWidgetProvider
 /**
  * Veronica's home widgets.
  *
- * Flutter draws each widget into a transparent PNG (see
- * lib/platform/home_widgets.dart) and stores its path under
- * `widget_<kind>_image`. These providers show that image and lay invisible
+ * Flutter draws each widget into two transparent PNGs, dark and light glass
+ * (see lib/platform/home_widgets.dart), stored under
+ * `widget_<kind>_<dark|light>_image`. The layouts show the one matching the
+ * system theme. These providers show that image and lay invisible
  * tap areas over it that open `veronica://` links in the app.
  */
 abstract class ImageWidget(
@@ -35,12 +36,15 @@ abstract class ImageWidget(
     ) {
         for (id in appWidgetIds) {
             val views = RemoteViews(context.packageName, layout)
-            val image = widgetData.getString("widget_${kind}_image", null)
-                ?.let { BitmapFactory.decodeFile(it) }
-            if (image != null) {
-                views.setImageViewBitmap(R.id.widget_image, image)
-            } else {
-                views.setImageViewResource(R.id.widget_image, preview)
+            // Both variants; the layout shows the one for the system theme.
+            for ((variant, view) in VARIANTS) {
+                val image = widgetData.getString("widget_${kind}_${variant}_image", null)
+                    ?.let { BitmapFactory.decodeFile(it) }
+                if (image != null) {
+                    views.setImageViewBitmap(view, image)
+                } else {
+                    views.setImageViewResource(view, preview)
+                }
             }
             bindTaps(context, views, widgetData)
             appWidgetManager.updateAppWidget(id, views)
@@ -49,6 +53,13 @@ abstract class ImageWidget(
 
     /** Wires the tap areas of [views] to `veronica://` links. */
     abstract fun bindTaps(context: Context, views: RemoteViews, data: SharedPreferences)
+
+    private companion object {
+        val VARIANTS = listOf(
+            "dark" to R.id.widget_image_dark,
+            "light" to R.id.widget_image_light,
+        )
+    }
 
     protected fun link(context: Context, uri: String): PendingIntent =
         HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java, Uri.parse(uri))

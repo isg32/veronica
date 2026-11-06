@@ -24,6 +24,7 @@ import '../../data/providers.dart';
 import '../selectors.dart';
 import '../home_widgets/home_widget_views.dart';
 import 'glyph_frames.dart';
+import 'widget_glass_pages.dart';
 import 'widget_previews.dart';
 
 /// Settings, behind the gear on Today.
@@ -529,21 +530,7 @@ class _WidgetsSettingsPageState extends State<WidgetsSettingsPage> {
             ],
           ),
         ),
-        const VListSection(
-          header: VEyebrow('Glass style'),
-          children: [
-            VListRow(
-              title: 'Tinted',
-              subtitle:
-                  'Black or white at low opacity; works with any wallpaper',
-              trailing: _Check(),
-            ),
-            VListRow(
-              title: 'Fake blur',
-              subtitle: 'A blurred crop of your wallpaper. Coming later.',
-            ),
-          ],
-        ),
+        const GlassStyleSection(),
       ],
     );
   }

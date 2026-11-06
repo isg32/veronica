@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View visibility values: 0 = visible, 8 = gone. Light mode shows the
+         light-glass widget image. -->
+    <integer name="widget_light_visibility">0</integer>
+    <integer name="widget_dark_visibility">8</integer>
+</resources>

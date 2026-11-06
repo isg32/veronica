@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/widgets.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -41,8 +43,10 @@ enum HomeWidgetKind {
 
   Size get size => Size(span(cols), span(rows));
 
-  /// Shared-preferences key for the rendered image path.
-  String get imageKey => 'widget_${name}_image';
+  /// Shared-preferences key for the rendered image path. Both variants are
+  /// rendered; Android shows the one matching the system theme.
+  String imageKey({required bool light}) =>
+      'widget_${name}_${light ? 'light' : 'dark'}_image';
 
   String get qualifiedAndroidName => 'com.isg32.veronica.widgets.$androidClass';
 
@@ -162,19 +166,42 @@ HomeWidgetSnapshot homeWidgetSnapshot(Ref ref) {
   );
 }
 
-/// Draws one home-screen widget at its grid size in tinted glass: black at
-/// 40 % with white ink ([light] false), or white at 50 % with black ink.
+/// The wallpaper behind a widget, for the fake frosted-glass blur.
+class WidgetBackdrop {
+  const WidgetBackdrop({
+    required this.wallpaper,
+    required this.screen,
+    required this.topLeft,
+  });
+
+  /// The wallpaper as the launcher shows it, covering the whole screen.
+  final ui.Image wallpaper;
+
+  /// Screen size in logical pixels.
+  final Size screen;
+
+  /// Where the widget's top-left corner sits on the screen, logical pixels.
+  final Offset topLeft;
+
+  static const double sigma = 22;
+}
+
+/// Draws one home-screen widget at its grid size in glass: black at 40 %
+/// with white ink ([light] false), or white at 50 % with black ink. With a
+/// [backdrop], the wallpaper behind the widget is blurred under the tint.
 class HomeWidgetView extends StatelessWidget {
   const HomeWidgetView({
     super.key,
     required this.kind,
     required this.data,
     required this.light,
+    this.backdrop,
   });
 
   final HomeWidgetKind kind;
   final HomeWidgetSnapshot data;
   final bool light;
+  final WidgetBackdrop? backdrop;
 
   @override
   Widget build(BuildContext context) {
@@ -194,24 +221,59 @@ class HomeWidgetView extends StatelessWidget {
     double radius,
     Widget child, {
     EdgeInsets padding = EdgeInsets.zero,
+  }) => _glass(BorderRadius.circular(radius), child, padding: padding);
+
+  /// Tinted glass in a rounded rectangle, or a circle when [radius] is null,
+  /// over the blurred wallpaper when there is a [backdrop].
+  Widget _glass(
+    BorderRadius? radius,
+    Widget child, {
+    EdgeInsets padding = EdgeInsets.zero,
   }) {
-    return Container(
+    final glass = Container(
       padding: padding,
       decoration: BoxDecoration(
         color: _tint,
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: radius,
+        shape: radius == null ? BoxShape.circle : BoxShape.rectangle,
       ),
       child: child,
     );
+    final b = backdrop;
+    if (b == null) return glass;
+
+    final layers = Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned(
+          left: -b.topLeft.dx,
+          top: -b.topLeft.dy,
+          width: b.screen.width,
+          height: b.screen.height,
+          child: ImageFiltered(
+            imageFilter: ui.ImageFilter.blur(
+              sigmaX: WidgetBackdrop.sigma,
+              sigmaY: WidgetBackdrop.sigma,
+              tileMode: TileMode.clamp,
+            ),
+            child: RawImage(image: b.wallpaper, fit: BoxFit.fill),
+          ),
+        ),
+        glass,
+      ],
+    );
+    return radius == null
+        ? ClipOval(child: layers)
+        : ClipRRect(borderRadius: radius, child: layers);
   }
 
   Widget _content() {
     switch (kind) {
       case HomeWidgetKind.screenTime:
         final size = kind.size.width;
-        return Container(
-          decoration: BoxDecoration(color: _tint, shape: BoxShape.circle),
-          child: VRing(
+        return _glass(
+          null,
+          VRing(
             value: data.limitMin == 0 ? 0 : data.usedMin / data.limitMin,
             size: size,
             strokeWidth: 5,

@@ -5,10 +5,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Both glass variants are set; the system theme picks which shows
+         (values/ and values-night/widget_theme.xml), so the launcher swaps
+         them on a light/dark switch without asking the app. -->
     <ImageView
-        android:id="@+id/widget_image"
+        android:id="@+id/widget_image_dark"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:contentDescription="@string/widget_image_description"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitCenter"
+        android:visibility="@integer/widget_dark_visibility" />
+
+    <ImageView
+        android:id="@+id/widget_image_light"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_image_description"
+        android:scaleType="fitCenter"
+        android:visibility="@integer/widget_light_visibility" />
 </FrameLayout>

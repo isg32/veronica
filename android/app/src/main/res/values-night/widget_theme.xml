@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode shows the dark-glass widget image. -->
+    <integer name="widget_light_visibility">8</integer>
+    <integer name="widget_dark_visibility">0</integer>
+</resources>

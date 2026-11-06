@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -11,6 +12,7 @@ import '../app/routes.dart';
 import '../data/models/models.dart';
 import '../data/providers.dart';
 import '../features/home_widgets/home_widget_views.dart';
+import 'wallpaper.dart';
 
 part 'home_widgets.g.dart';
 
@@ -21,15 +23,16 @@ bool get _supported => !kIsWeb && Platform.isAndroid;
 ///
 /// Each widget is drawn from [HomeWidgetView] into a transparent PNG; the
 /// native provider shows that image and turns taps into `veronica://` links.
-/// Widgets re-render when their data changes, when the system switches
-/// between light and dark, and once a minute while the app runs (for
+/// Every widget is rendered twice, dark glass and light glass; Android
+/// shows the one matching the system theme, so switching light or dark needs
+/// no re-render. Widgets re-render when their data or glass settings change,
+/// when the app is left or reopened, and once a minute while it runs (for
 /// countdowns and "alarm in").
 @Riverpod(keepAlive: true)
 void homeWidgetSync(Ref ref) {
   if (!_supported) return;
 
   String? lastSignature;
-  Brightness? lastBrightness;
   var rendering = false;
   var pending = false;
   Timer? debounce;
@@ -42,11 +45,28 @@ void homeWidgetSync(Ref ref) {
     rendering = true;
     try {
       final data = ref.read(homeWidgetSnapshotProvider);
-      final brightness = PlatformDispatcher.instance.platformBrightness;
-      if (data.signature == lastSignature && brightness == lastBrightness) {
+      final glass = await ref.read(widgetGlassControllerProvider.future);
+
+      // Fake blur: the wallpaper, re-read only when it changes.
+      final view = PlatformDispatcher.instance.implicitView;
+      final screen = view == null
+          ? null
+          : view.physicalSize / view.devicePixelRatio;
+      ui.Image? wallpaper;
+      if (glass.style == WidgetGlass.blur && screen != null) {
+        await ref.read(wallpaperImageProvider.future);
+        await ref.read(wallpaperImageProvider.notifier).refreshIfChanged();
+        wallpaper = ref.read(wallpaperImageProvider).value;
+      }
+
+      final signature = [
+        data.signature,
+        glass.signature,
+        wallpaper == null ? 'tinted' : identityHashCode(wallpaper),
+      ].join('#');
+      if (signature == lastSignature) {
         return;
       }
-      final light = brightness == Brightness.light;
       final ratio =
           PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 3;
 
@@ -61,18 +81,33 @@ void homeWidgetSync(Ref ref) {
         );
       }
       for (final kind in HomeWidgetKind.values) {
-        await HomeWidget.renderFlutterWidget(
-          HomeWidgetView(kind: kind, data: data, light: light),
-          key: kind.imageKey,
-          logicalSize: kind.size,
-          pixelRatio: ratio,
-        );
+        final backdrop = wallpaper == null || screen == null
+            ? null
+            : WidgetBackdrop(
+                wallpaper: wallpaper,
+                screen: screen,
+                topLeft: glass
+                    .positionOf(kind)
+                    .scale(screen.width, screen.height),
+              );
+        for (final light in const [false, true]) {
+          await HomeWidget.renderFlutterWidget(
+            HomeWidgetView(
+              kind: kind,
+              data: data,
+              light: light,
+              backdrop: backdrop,
+            ),
+            key: kind.imageKey(light: light),
+            logicalSize: kind.size,
+            pixelRatio: ratio,
+          );
+        }
         await HomeWidget.updateWidget(
           qualifiedAndroidName: kind.qualifiedAndroidName,
         );
       }
-      lastSignature = data.signature;
-      lastBrightness = brightness;
+      lastSignature = signature;
     } catch (error, stack) {
       debugPrint('Home widget sync failed: $error\n$stack');
     } finally {
@@ -94,8 +129,11 @@ void homeWidgetSync(Ref ref) {
     (_, _) => schedule(),
     fireImmediately: true,
   );
+  ref
+    ..listen(widgetGlassControllerProvider, (_, _) => schedule())
+    ..listen(wallpaperImageProvider, (_, _) => schedule());
 
-  final observer = _BrightnessObserver(schedule);
+  final observer = _LifecycleObserver(schedule);
   WidgetsBinding.instance.addObserver(observer);
   final minute = Timer.periodic(const Duration(minutes: 1), (_) => schedule());
 
@@ -106,17 +144,20 @@ void homeWidgetSync(Ref ref) {
   });
 }
 
-class _BrightnessObserver with WidgetsBindingObserver {
-  _BrightnessObserver(this.onChange);
+class _LifecycleObserver with WidgetsBindingObserver {
+  _LifecycleObserver(this.onChange);
 
   final VoidCallback onChange;
 
   @override
-  void didChangePlatformBrightness() => onChange();
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) onChange();
+    // Leaving: make sure the widgets are current. Coming back: the wallpaper
+    // may have changed, or wallpaper access was just granted.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.resumed) {
+      onChange();
+    }
   }
 }
 

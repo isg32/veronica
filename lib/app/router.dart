@@ -15,6 +15,7 @@ import '../features/onboarding/onboarding_page.dart';
 import '../features/prompts/care_prompts.dart';
 import '../features/prompts/limit_prompts.dart';
 import '../features/settings/settings_pages.dart';
+import '../features/settings/widget_glass_pages.dart';
 import '../features/sleep/alarm_pages.dart';
 import '../features/sleep/sleep_page.dart';
 import '../features/tasks/task_detail_page.dart';
@@ -111,6 +112,7 @@ GoRouter router(Ref ref) {
         (Routes.settingsGlyph, GlyphSettingsPage()),
         (Routes.settingsVoice, VoiceSettingsPage()),
         (Routes.settingsWidgets, WidgetsSettingsPage()),
+        (Routes.settingsWidgetsPlace, WidgetPlacementPage()),
         (Routes.settingsData, DataSettingsPage()),
       ])
         GoRoute(

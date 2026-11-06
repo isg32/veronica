@@ -25,6 +25,7 @@ void main() {
     Routes.settingsGlyph,
     Routes.settingsVoice,
     Routes.settingsWidgets,
+    Routes.settingsWidgetsPlace,
     Routes.settingsData,
     Routes.weekly,
     Routes.app('com.instagram.android'),
