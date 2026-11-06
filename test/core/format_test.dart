@@ -31,6 +31,8 @@ void main() {
     expect(VFormat.days({1, 2, 3, 4, 5}), 'Mon–Fri');
     expect(VFormat.days({6, 7}), 'Sat, Sun');
     expect(VFormat.days({1, 2, 3, 4, 5, 6, 7}), 'Every day');
+    expect(VFormat.daysWord({1, 2, 3, 4, 5}), 'weekdays');
+    expect(VFormat.daysWord({6, 7}), 'weekends');
   });
 
   test('greeting', () {

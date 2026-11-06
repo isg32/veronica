@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../core/format.dart';
 import '../data/models/models.dart';
 import '../data/providers.dart';
 
@@ -81,7 +82,7 @@ List<NextUpItem> nextUp(Ref ref) {
   for (final a in alarms.where((a) => a.enabled)) {
     final at = _nextOccurrence(now, [a.time], a.days);
     if (at != null && (alarm == null || at.isBefore(alarm.at))) {
-      alarm = NextUpItem('Alarm · ${_daysWord(a.days)}', at);
+      alarm = NextUpItem('Alarm · ${VFormat.daysWord(a.days)}', at);
     }
   }
   if (alarm != null) items.add(alarm);
@@ -108,15 +109,6 @@ List<NextUpItem> nextUp(Ref ref) {
     }
   }
   return best;
-}
-
-String _daysWord(Set<int> days) {
-  if (days.length == 7) return 'every day';
-  if (days.length == 5 && days.containsAll(Weekdays.weekdays)) {
-    return 'weekdays';
-  }
-  if (days.length == 2 && days.containsAll(Weekdays.weekend)) return 'weekends';
-  return '${days.length} days';
 }
 
 DateTime? _nextOccurrence(DateTime now, List<DayTime> times, Set<int> days) {

@@ -85,6 +85,16 @@ abstract final class VFormat {
     return sorted.map((d) => names[d - 1]).join(', ');
   }
 
+  /// "weekdays", "weekends", "every day", else "Mon, Wed".
+  static String daysWord(Set<int> d) {
+    if (d.length == 7) return 'every day';
+    if (d.length == 5 && d.containsAll(const {1, 2, 3, 4, 5})) {
+      return 'weekdays';
+    }
+    if (d.length == 2 && d.containsAll(const {6, 7})) return 'weekends';
+    return days(d);
+  }
+
   /// "Good morning", "Good afternoon", "Good evening".
   static String greeting(DateTime now) {
     final h = now.hour;
