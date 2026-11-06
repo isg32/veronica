@@ -11,6 +11,7 @@ import '../features/focus/active_mode_page.dart';
 import '../features/focus/app_pages.dart';
 import '../features/focus/focus_page.dart';
 import '../features/focus/mode_editor_page.dart';
+import '../features/onboarding/onboarding_page.dart';
 import '../features/prompts/care_prompts.dart';
 import '../features/prompts/limit_prompts.dart';
 import '../features/settings/settings_pages.dart';
@@ -20,7 +21,6 @@ import '../features/tasks/task_detail_page.dart';
 import '../features/tasks/tasks_page.dart';
 import '../features/today/today_page.dart';
 import '../features/today/weekly_page.dart';
-import 'placeholder_page.dart';
 import 'routes.dart';
 import 'shell.dart';
 
@@ -212,7 +212,7 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: Routes.onboarding,
         pageBuilder: (context, state) =>
-            fadePage(state, const PlaceholderPage('Welcome')),
+            fadePage(state, const OnboardingPage()),
       ),
     ],
   );
