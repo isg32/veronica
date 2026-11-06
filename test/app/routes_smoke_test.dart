@@ -70,13 +70,11 @@ void main() {
       testWidgets('opens $route in ${light ? 'light' : 'dark'} mode', (
         tester,
       ) async {
-        if (light) {
-          tester.platformDispatcher.platformBrightnessTestValue =
-              Brightness.light;
-          addTearDown(
-            tester.platformDispatcher.clearPlatformBrightnessTestValue,
-          );
-        }
+        // Set both ways: the test binding defaults to light.
+        tester.platformDispatcher.platformBrightnessTestValue = light
+            ? Brightness.light
+            : Brightness.dark;
+        addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
         final container = await boot(tester);
         container.read(routerProvider).go(route);
         for (var i = 0; i < 5; i++) {
