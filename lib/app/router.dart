@@ -4,6 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../core/theme/v_tokens.dart';
 import '../data/providers.dart';
+import '../features/today/today_page.dart';
+import '../features/today/weekly_page.dart';
 import 'placeholder_page.dart';
 import 'routes.dart';
 import 'shell.dart';
@@ -39,8 +41,16 @@ GoRouter router(Ref ref) {
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
         branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.today,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: TodayPage()),
+              ),
+            ],
+          ),
           for (final (path, title) in const [
-            (Routes.today, 'Today'),
             (Routes.focus, 'Focus'),
             (Routes.tasks, 'Tasks'),
             (Routes.care, 'Care'),
@@ -56,6 +66,10 @@ GoRouter router(Ref ref) {
               ],
             ),
         ],
+      ),
+      GoRoute(
+        path: Routes.weekly,
+        pageBuilder: (context, state) => slidePage(state, const WeeklyPage()),
       ),
       GoRoute(
         path: Routes.onboarding,
