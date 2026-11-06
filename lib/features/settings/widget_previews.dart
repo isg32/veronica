@@ -299,34 +299,46 @@ class WidgetPreviewBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     final paper = light ? VColors.white : VColors.black;
     final dot = light ? VColors.black : VColors.white;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: ColoredBox(
-        color: paper,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Opacity(
-                opacity: dotOpacity,
-                child: CustomPaint(painter: _ScatterPainter(dot)),
-              ),
-            ),
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                child: const SizedBox.expand(),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 22),
-              child: FittedBox(
-                child: SizedBox(
-                  width: WidgetPreviewGrid.cell * 4 + WidgetPreviewGrid.gap * 3,
-                  child: child,
+    // A hairline in the page's ink frames the preview as its own section.
+    return DecoratedBox(
+      position: DecorationPosition.foreground,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: VInk.of(context)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: ColoredBox(
+          color: paper,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Opacity(
+                  opacity: dotOpacity,
+                  child: CustomPaint(painter: _ScatterPainter(dot)),
                 ),
               ),
-            ),
-          ],
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 22,
+                ),
+                child: FittedBox(
+                  child: SizedBox(
+                    width:
+                        WidgetPreviewGrid.cell * 4 + WidgetPreviewGrid.gap * 3,
+                    child: child,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
