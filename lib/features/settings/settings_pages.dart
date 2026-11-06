@@ -22,6 +22,7 @@ import '../../core/widgets/v_surface.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
 import '../selectors.dart';
+import '../home_widgets/home_widget_views.dart';
 import 'glyph_frames.dart';
 import 'widget_previews.dart';
 
@@ -486,14 +487,6 @@ class _WidgetsSettingsPageState extends State<WidgetsSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    const sizes = [
-      ('Screen time', '2×2'),
-      ('Water', '2×1'),
-      ('Next alarm', '2×1'),
-      ('Mode switch', '4×1'),
-      ('Oldest tasks', '4×2'),
-      ('Mantra', '4×1'),
-    ];
     const steps = [
       'Long-press the home screen',
       'Tap Widgets and find Veronica',
@@ -514,8 +507,8 @@ class _WidgetsSettingsPageState extends State<WidgetsSettingsPage> {
         ),
         VListSection(
           children: [
-            for (final (name, size) in sizes)
-              VListRow(title: name, value: size),
+            for (final k in HomeWidgetKind.values)
+              VListRow(title: k.label, value: k.sizeLabel),
           ],
         ),
         VCard(

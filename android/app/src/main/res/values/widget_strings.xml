@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_image_description">Veronica widget</string>
+    <string name="widget_screen_time_description">Today\'s screen time against your limits</string>
+    <string name="widget_water_description">Glasses of water today, with +1</string>
+    <string name="widget_next_alarm_description">Your next alarm and the sleep left</string>
+    <string name="widget_mode_switch_description">Start Work, Go Out or Binge Time</string>
+    <string name="widget_oldest_tasks_description">Your three oldest tasks</string>
+    <string name="widget_mantra_description">Today\'s mantra</string>
+</resources>
