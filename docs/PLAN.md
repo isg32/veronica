@@ -259,6 +259,19 @@ Phase 0 builds every page, overlay and widget layout on mock data; Phases 1–4 
 | 3 · Care, tasks & sleep | drift storage for tasks, water, medicine and mantras; notifications; sleep wind-down; calm alarm with imported sounds | After a week of real use, no mock data remains on Today, Tasks, Care or Sleep |
 | 4 · Glyph, voice & widgets | Glyph patterns, Kokoro/Piper download and pre-rendering, six home widgets (tinted glass first, fake blur after) | Every Glyph pattern plays from Settings, Veronica speaks offline, and widgets update and act without opening the app |
 
+**Versioning.** Every completed phase bumps `version:` in `pubspec.yaml` (and `lib/app/version.dart`, which a test keeps in step), in its own `chore(release): …` commit:
+
+| Milestone | Version |
+| --- | --- |
+| Phase 0 in progress | 0.0.x |
+| Phase 0 done | 0.1.0 |
+| Phase 1 done | 0.2.0 |
+| Phase 2 done | 0.3.0 |
+| Phase 3 done | 0.4.0 |
+| Phase 4 done | 1.0.0 |
+
+The build number after `+` goes up by one with every bump and never resets.
+
 **Phase 0 rules.** Every screen reads from a `Mock…Repository`, never from hard-coded values inside a widget. Each mock lives in `lib/mock/` and is listed in `mockdata.md` at the repo root, so you always know what is fake. When a later phase wires a feature up, its row in `mockdata.md` flips from Mock to Real and the mock file is kept only for tests.
 
 ```markdown

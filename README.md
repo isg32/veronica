@@ -9,7 +9,7 @@ It is built for the **Nothing Phone (2a)**, where the Glyph lights act as a quie
 - **Two colours.** The UI is pure black and white, with dot-matrix Doto type.
 - **Personal use.** Veronica is sideloaded, never on the Play Store, so it uses ADB-granted permissions.
 
-> **Status:** Phase 0 (UI on mock data). See the roadmap in [`docs/PLAN.md`](docs/PLAN.md#roadmap).
+> **Status:** Phase 0 (UI on mock data), version 0.0.1. See the roadmap in [`docs/PLAN.md`](docs/PLAN.md#roadmap).
 
 ## Repository
 
@@ -51,3 +51,5 @@ Re-run both commands after a factory reset.
 ## Contributing
 
 History is linear on `main` and uses [Conventional Commits](https://www.conventionalcommits.org/) (`feat(today): …`, `fix(tasks): …`, `docs: …`). Each commit must pass `flutter analyze` and `flutter test`.
+
+When a phase is completed, bump `version:` in `pubspec.yaml` and `lib/app/version.dart` in a `chore(release): …` commit: 0.1.0 after Phase 0, then 0.2.0, 0.3.0, 0.4.0, and 1.0.0 after Phase 4. The build number (after `+`) goes up by one every time. See [Versioning](docs/PLAN.md#roadmap).
