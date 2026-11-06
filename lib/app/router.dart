@@ -11,6 +11,8 @@ import '../features/focus/active_mode_page.dart';
 import '../features/focus/app_pages.dart';
 import '../features/focus/focus_page.dart';
 import '../features/focus/mode_editor_page.dart';
+import '../features/sleep/alarm_pages.dart';
+import '../features/sleep/sleep_page.dart';
 import '../features/tasks/task_detail_page.dart';
 import '../features/tasks/tasks_page.dart';
 import '../features/today/today_page.dart';
@@ -86,16 +88,15 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          for (final (path, title) in const [(Routes.sleep, 'Sleep')])
-            StatefulShellBranch(
-              routes: [
-                GoRoute(
-                  path: path,
-                  pageBuilder: (context, state) =>
-                      NoTransitionPage(child: PlaceholderPage(title)),
-                ),
-              ],
-            ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.sleep,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: SleepPage()),
+              ),
+            ],
+          ),
         ],
       ),
       GoRoute(
@@ -139,6 +140,16 @@ GoRouter router(Ref ref) {
         path: Routes.mantras,
         pageBuilder: (context, state) =>
             slidePage(state, const MantraLibraryPage()),
+      ),
+      GoRoute(
+        path: '/alarm/:id',
+        pageBuilder: (context, state) =>
+            slidePage(state, AlarmEditorPage(id: state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: Routes.sounds,
+        pageBuilder: (context, state) =>
+            slidePage(state, const SoundLibraryPage()),
       ),
       GoRoute(
         path: Routes.activeMode,
