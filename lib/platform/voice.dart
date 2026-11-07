@@ -4,6 +4,7 @@ import 'dart:isolate';
 
 import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -37,71 +38,105 @@ int kokoroSpeaker(KokoroVoice v) => switch (v) {
 Future<Directory> _root() async =>
     Directory('${(await getApplicationSupportDirectory()).path}/voice');
 
+const _download = MethodChannel('veronica/voice');
+
 /// Download and readiness of the Kokoro model, with progress.
+///
+/// Android's DownloadManager fetches it, so the download carries on in the
+/// background with its own notification, even if Veronica is closed. When
+/// it has finished, the app unpacks it (straight away if open, else the
+/// next time it runs).
 @Riverpod(keepAlive: true)
 class VoiceModel extends _$VoiceModel {
+  Timer? _poll;
+  bool _unpacking = false;
+
+  static Future<Directory> _modelDir() async =>
+      Directory('${(await _root()).path}/$_modelDir');
+
+  static Future<bool> _installed() async {
+    final dir = await _modelDir();
+    return File('${dir.path}/model.onnx').existsSync() &&
+        File('${dir.path}/voices.bin').existsSync();
+  }
+
   @override
   Future<({VoiceModelState state, double progress})> build() async {
+    ref.onDispose(() => _poll?.cancel());
     if (!isAndroid) {
       return (state: VoiceModelState.notDownloaded, progress: 0.0);
     }
-    final dir = Directory('${(await _root()).path}/$_modelDir');
-    final ready =
-        File('${dir.path}/model.onnx').existsSync() &&
-        File('${dir.path}/voices.bin').existsSync();
-    return (
-      state: ready ? VoiceModelState.ready : VoiceModelState.notDownloaded,
-      progress: ready ? 1.0 : 0.0,
-    );
+    if (await _installed()) {
+      return (state: VoiceModelState.ready, progress: 1.0);
+    }
+    return _check();
   }
 
-  /// Downloads (about 300 MB) and unpacks the model.
+  /// Starts (or rejoins) the background download.
   Future<void> download() async {
-    final root = await _root();
-    await root.create(recursive: true);
-    final archive = File('${root.path}/kokoro.tar.bz2');
+    await _download.invokeMethod<void>('start', kokoroUrl);
     state = const AsyncData((
       state: VoiceModelState.downloading,
       progress: 0.0,
     ));
-    try {
-      final client = HttpClient();
-      final request = await client.getUrl(Uri.parse(kokoroUrl));
-      final response = await request.close();
-      final total = response.contentLength;
-      var received = 0;
-      final sink = archive.openWrite();
-      await for (final chunk in response) {
-        sink.add(chunk);
-        received += chunk.length;
-        if (total > 0) {
-          state = AsyncData((
-            state: VoiceModelState.downloading,
-            // The last 10 % is unpacking.
-            progress: received / total * 0.9,
-          ));
-        }
-      }
-      await sink.close();
-      client.close();
+    _watch();
+  }
 
-      state = const AsyncData((
-        state: VoiceModelState.downloading,
-        progress: 0.92,
-      ));
-      final path = archive.path;
+  void _watch() {
+    _poll ??= Timer.periodic(const Duration(seconds: 1), (_) async {
+      final next = await _check();
+      if (next.state != VoiceModelState.downloading) {
+        _poll?.cancel();
+        _poll = null;
+      }
+      state = AsyncData(next);
+    });
+  }
+
+  /// Where the system download is; unpacks it once it has finished.
+  Future<({VoiceModelState state, double progress})> _check() async {
+    final status = await _download.invokeMapMethod<String, Object?>('status');
+    final received = (status?['received'] as num?)?.toDouble() ?? 0;
+    final total = (status?['total'] as num?)?.toDouble() ?? 0;
+    switch (status?['state']) {
+      case 'pending' || 'running' || 'paused':
+        _watch();
+        return (
+          state: VoiceModelState.downloading,
+          // The last 10 % is unpacking.
+          progress: total > 0 ? received / total * 0.9 : 0.0,
+        );
+      case 'done':
+        final path = status?['path'] as String?;
+        if (path != null && await _unpack(path)) {
+          return (state: VoiceModelState.ready, progress: 1.0);
+        }
+        return (state: VoiceModelState.downloading, progress: 0.92);
+      case 'failed':
+        await _download.invokeMethod<void>('forget');
+        return (state: VoiceModelState.notDownloaded, progress: 0.0);
+      default:
+        return (state: VoiceModelState.notDownloaded, progress: 0.0);
+    }
+  }
+
+  /// Unpacks the downloaded archive; true once the model is in place.
+  Future<bool> _unpack(String archive) async {
+    if (_unpacking) return false;
+    _unpacking = true;
+    try {
+      final root = await _root();
+      await root.create(recursive: true);
       final out = root.path;
-      await Isolate.run(() => extractFileToDisk(path, out));
-      await archive.delete();
-      state = const AsyncData((state: VoiceModelState.ready, progress: 1.0));
+      await Isolate.run(() => extractFileToDisk(archive, out));
+      await _download.invokeMethod<void>('forget');
+      return await _installed();
     } on Object catch (e) {
-      debugPrint('Voice model download failed: $e');
-      if (archive.existsSync()) await archive.delete();
-      state = const AsyncData((
-        state: VoiceModelState.notDownloaded,
-        progress: 0.0,
-      ));
-      rethrow;
+      debugPrint('Voice model unpack failed: $e');
+      await _download.invokeMethod<void>('forget');
+      return false;
+    } finally {
+      _unpacking = false;
     }
   }
 }
@@ -179,9 +214,10 @@ class VeronicaVoice {
   }
 
   /// Renders [lines] ahead of time (after the model arrives or settings change).
-  Future<void> prerender(List<String> lines) async {
+  Future<void> prerender(List<String> lines, {KokoroVoice? voice}) async {
     if (!isAndroid) return;
-    final s = await _settings();
+    final current = await _settings();
+    final s = voice == null ? current : current.copyWith(voice: voice);
     for (final line in lines) {
       final file = await _cached(line, s);
       if (file != null && !file.existsSync()) await _prepare(line, s, file);
@@ -212,6 +248,29 @@ class VeronicaVoice {
     }
   }
 
+  /// Plays a short sample of [voice] at [speed], so a voice can be chosen
+  /// by ear. Without the model, Android's own voice reads it.
+  Future<void> sample(
+    KokoroVoice voice,
+    double speed, {
+    String name = '',
+  }) async {
+    if (!isAndroid) return;
+    await stop();
+    final s = (await _settings()).copyWith(voice: voice, speed: speed);
+    final text = sampleLine(name);
+    final file = await _cached(text, s);
+    if (file == null) {
+      await _system.setSpeechRate(0.45 * speed);
+      await _system.speak(text);
+      return;
+    }
+    if (!file.existsSync()) await _prepare(text, s, file);
+    if (!file.existsSync()) return;
+    await _player.setFilePath(file.path);
+    await _player.play();
+  }
+
   Future<void> stop() async {
     await _player.stop();
     await _system.stop();
@@ -235,6 +294,10 @@ List<String> fixedLines(String name) {
   ];
 }
 
+/// What a voice sample says.
+String sampleLine(String name) =>
+    "Hi${name.isEmpty ? '' : ' $name'}, I'm Veronica. This is how I sound.";
+
 /// Pre-renders the fixed lines once the model is ready, and again when the
 /// voice, speed or name changes.
 @Riverpod(keepAlive: true)
@@ -250,6 +313,12 @@ void voicePrerender(Ref ref) {
     if (key == last) return;
     last = key;
     await ref.read(veronicaVoiceProvider).prerender(fixedLines(name));
+    // A sample in every voice, so choosing one plays at once.
+    for (final v in KokoroVoice.values) {
+      await ref.read(veronicaVoiceProvider).prerender([
+        sampleLine(name),
+      ], voice: v);
+    }
   }
 
   ref

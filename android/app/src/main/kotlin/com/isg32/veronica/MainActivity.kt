@@ -11,6 +11,7 @@ import com.isg32.veronica.permissions.PermissionsChannel
 import com.isg32.veronica.permissions.ShizukuChannel
 import com.isg32.veronica.reminders.Reminders
 import com.isg32.veronica.usage.UsageChannel
+import com.isg32.veronica.voice.VoiceDownload
 import com.isg32.veronica.watcher.WatcherChannel
 import com.isg32.veronica.widgets.WallpaperChannel
 import io.flutter.embedding.android.FlutterActivity
@@ -59,6 +60,7 @@ class MainActivity : FlutterActivity() {
         ShizukuChannel.register(this, messenger)
         ModeChannel.register(this, messenger)
         WallpaperChannel.register(this, messenger)
+        VoiceDownload.register(this, messenger)
         reminders = MethodChannel(messenger, "veronica/reminders").apply {
             setMethodCallHandler { call, result ->
                 when (call.method) {

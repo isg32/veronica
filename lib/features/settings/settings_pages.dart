@@ -456,7 +456,19 @@ class VoiceSettingsPage extends ConsumerWidget {
                 title: voice.id,
                 subtitle: voice.description,
                 trailing: voice == v.voice ? const _Check() : null,
-                onTap: () => save(v.copyWith(voice: voice)),
+                // Choosing a voice plays a sample of it.
+                onTap: () {
+                  save(v.copyWith(voice: voice));
+                  unawaited(
+                    ref
+                        .read(veronicaVoiceProvider)
+                        .sample(
+                          voice,
+                          v.speed,
+                          name: ref.read(profileProvider).value?.name ?? '',
+                        ),
+                  );
+                },
                 chevron: false,
               ),
           ],
@@ -469,7 +481,18 @@ class VoiceSettingsPage extends ConsumerWidget {
                 compact: true,
                 segments: const {9: '0.9×', 10: '1.0×', 11: '1.1×'},
                 value: (v.speed * 10).round(),
-                onChanged: (s) => save(v.copyWith(speed: s / 10)),
+                onChanged: (s) {
+                  save(v.copyWith(speed: s / 10));
+                  unawaited(
+                    ref
+                        .read(veronicaVoiceProvider)
+                        .sample(
+                          v.voice,
+                          s / 10,
+                          name: ref.read(profileProvider).value?.name ?? '',
+                        ),
+                  );
+                },
               ),
             ),
           ],
@@ -494,7 +517,8 @@ class VoiceSettingsPage extends ConsumerWidget {
           ],
         ),
         const VFootnote(
-          'Lines are made once with Kokoro and kept, so they play instantly. '
+          'Tap a voice or a speed to hear it. Lines are made once with Kokoro '
+          'and kept, so they play instantly. '
           'Until a line is ready, or without the model, Android\'s own voice '
           'says it.',
         ),
@@ -516,7 +540,8 @@ class _VoiceModelRow extends ConsumerWidget {
       subtitle: switch (state) {
         VoiceModelState.ready => 'Kokoro-82M, on this phone and offline',
         VoiceModelState.downloading =>
-          'Downloading Kokoro-82M, keep Veronica open',
+          'Downloading Kokoro-82M in the background. You can close '
+              'Veronica; the notification shows progress.',
         VoiceModelState.notDownloaded =>
           'Kokoro-82M, about 300 MB, downloaded once. The only thing Veronica '
               'fetches.',

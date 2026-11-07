@@ -9,11 +9,21 @@ part of 'voice.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Download and readiness of the Kokoro model, with progress.
+///
+/// Android's DownloadManager fetches it, so the download carries on in the
+/// background with its own notification, even if Veronica is closed. When
+/// it has finished, the app unpacks it (straight away if open, else the
+/// next time it runs).
 
 @ProviderFor(VoiceModel)
 final voiceModelProvider = VoiceModelProvider._();
 
 /// Download and readiness of the Kokoro model, with progress.
+///
+/// Android's DownloadManager fetches it, so the download carries on in the
+/// background with its own notification, even if Veronica is closed. When
+/// it has finished, the app unpacks it (straight away if open, else the
+/// next time it runs).
 final class VoiceModelProvider
     extends
         $AsyncNotifierProvider<
@@ -21,6 +31,11 @@ final class VoiceModelProvider
           ({double progress, VoiceModelState state})
         > {
   /// Download and readiness of the Kokoro model, with progress.
+  ///
+  /// Android's DownloadManager fetches it, so the download carries on in the
+  /// background with its own notification, even if Veronica is closed. When
+  /// it has finished, the app unpacks it (straight away if open, else the
+  /// next time it runs).
   VoiceModelProvider._()
     : super(
         from: null,
@@ -40,9 +55,14 @@ final class VoiceModelProvider
   VoiceModel create() => VoiceModel();
 }
 
-String _$voiceModelHash() => r'825cbc07712374a940709f9eb682b0397fc79fce';
+String _$voiceModelHash() => r'4b7da53ccdf4eb3e77d675567236ac46feb96419';
 
 /// Download and readiness of the Kokoro model, with progress.
+///
+/// Android's DownloadManager fetches it, so the download carries on in the
+/// background with its own notification, even if Veronica is closed. When
+/// it has finished, the app unpacks it (straight away if open, else the
+/// next time it runs).
 
 abstract class _$VoiceModel
     extends $AsyncNotifier<({double progress, VoiceModelState state})> {
@@ -158,4 +178,4 @@ final class VoicePrerenderProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$voicePrerenderHash() => r'9c158bbafb3bb153e92d600941e28e6cf2a87e08';
+String _$voicePrerenderHash() => r'35cda2eb368977cc0cfd1fb58a7f916d0795fa58';
