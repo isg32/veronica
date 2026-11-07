@@ -4,8 +4,8 @@
 
 **A calm Android companion for using your phone less and looking after yourself more.**
 
-![Version](https://img.shields.io/badge/version-0.1.0-000000?style=flat-square)
-![Phase](https://img.shields.io/badge/phase-1%20%C2%B7%20usage%20watcher-000000?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.0.0-000000?style=flat-square)
+![Release](https://img.shields.io/github/v/release/isg32/veronica?style=flat-square&color=000000&label=release)
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-000000?style=flat-square&logo=flutter&logoColor=white)
 ![Platform](https://img.shields.io/badge/platform-Android-000000?style=flat-square&logo=android&logoColor=white)
 ![License](https://img.shields.io/badge/license-GPL--3.0-000000?style=flat-square)
@@ -116,9 +116,9 @@ flowchart TB
 
 **Data.** `lib/data/repositories/repositories.dart` defines one interface per area: tasks, usage, water, medicine, modes, sleep, mantras, settings, permissions and profile. The models in `lib/data/models/` mirror the planned database tables, so a real implementation can replace a mock without the UI changing.
 
-**One switch between mock and real.** `lib/data/providers.dart` is the only file that decides which implementation backs each repository. In Phase 0 all of them are in-memory mocks anchored to a fixed moment (Fri 6 Nov 2026, 21:04), so every screen can be compared with the design. As each phase lands, its repositories switch to real ones and [`mockdata.md`](mockdata.md) records the change.
+**One switch between mock and real.** `lib/data/providers.dart` is the only file that decides which implementation backs each repository. Every repository is now real: drift (SQLite) on the phone, plus Android's usage and permission APIs. The in-memory mocks remain for tests and for the design's sample data, as [`mockdata.md`](mockdata.md) records.
 
-**Native layer (planned).** A foreground service and an accessibility service watch app usage and launch the full-screen prompts; platform channels expose Do Not Disturb, greyscale, exact alarms and boot restore. The Glyph lights go through the official Glyph Developer Kit, voice through sherpa-onnx, and home widgets through `home_widget` with native layouts.
+**Native layer.** A foreground service and an accessibility service watch app usage and launch the full-screen prompts; platform channels expose Do Not Disturb, greyscale, exact alarms and boot restore. The Glyph lights go through the official Glyph Developer Kit, voice through sherpa-onnx, and home widgets through `home_widget` with native layouts.
 
 ### Enforced rules
 
@@ -217,9 +217,9 @@ adb shell settings put global nt_glyph_interface_debug_enable 1
 
 Re-run both commands after a factory reset.
 
-### Exploring Phase 0
+### Installing a release
 
-Phase 0 runs entirely on sample data, which resets on every launch. In debug builds, **Settings → Preview prompts** opens each full-screen prompt, and **Settings → Data & About → Reset all data** replays onboarding.
+Signed APKs are attached to every [release](https://github.com/isg32/veronica/releases). For the Nothing Phone (2a) and most phones, use `app-arm64-v8a-release.apk`. Everything Veronica keeps stays on the phone. **Settings → Data → Reset all data** replays onboarding. In debug builds, **Settings → Preview prompts** opens each full-screen prompt, and **Load sample data** fills the app with the design's sample data.
 
 ---
 
@@ -237,10 +237,10 @@ Phase 0 runs entirely on sample data, which resets on every launch. In debug bui
 | Phase | Scope | Status |
 | --- | --- | --- |
 | **0 · UI on mocks** | Every page, prompt and widget layout from the design, on sample data | Done (0.1.0) |
-| **1 · Usage watcher** | Native watcher, accessibility detection, limits, nudges, prompts over other apps | In progress |
-| **2 · Modes and phone control** | Modes and schedules, quick-settings tile, Do Not Disturb, greyscale, brightness, volume, wallpaper | Planned |
-| **3 · Care, tasks and sleep** | On-device storage, notifications, wind-down, calm alarm with imported sounds | Planned |
-| **4 · Glyph, voice and widgets** | Glyph patterns, offline voice, background widget updates | Planned |
+| **1 · Usage watcher** | Native watcher, accessibility detection, limits, nudges, prompts over other apps | Done (0.2.0) |
+| **2 · Modes and phone control** | Modes and schedules, quick-settings tile, Do Not Disturb, greyscale, brightness, volume, wallpaper | Done (0.3.0) |
+| **3 · Care, tasks and sleep** | On-device storage, notifications, wind-down, calm alarm with the phone's tones or imported sounds, audio mantras | Done (0.4.0) |
+| **4 · Glyph, voice and widgets** | Glyph patterns, offline voice, home widgets that act without opening the app | Done (1.0.0) |
 
 The full plan, including each phase's definition of done, is in [`docs/PLAN.md`](docs/PLAN.md).
 
