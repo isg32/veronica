@@ -7,7 +7,7 @@ The values match the design canvas ([`design/DESIGN.md`](design/DESIGN.md)), so 
 | Dataset | File | Used on | Contents | Status |
 | --- | --- | --- | --- | --- |
 | Profile | `lib/mock/profile_mock.dart` | Onboarding, Today, overlays | Name "Sapan" | Mock |
-| Permissions | `lib/mock/permissions_mock.dart` | Onboarding, Settings | 7 permissions (Usage access, Accessibility, Display over apps, DND, Notifications, Exact alarms, Battery unrestricted); 5 granted (exact alarms and battery still to do); ADB greyscale granted; Glyph debug shown as needed and expiring in 31 h so its UI can be reviewed | Mock |
+| Permissions | `lib/data/system/android_permission_repository.dart` (`lib/mock/permissions_mock.dart` in tests) | Onboarding, Settings | The phone's real state of the 7 permissions and the ADB grants, re-read every few seconds while shown | Real |
 | Watched apps | `lib/data/usage/drift_usage_repository.dart`, `lib/platform/android_usage.dart` | Today, Focus, App detail, Put it down, Weekly, widgets | Watched apps, limits and counters in drift; minutes per day and the installed-app list from Android usage stats (`MockUsageSource` only in tests and on the desktop) | Real |
 | Tasks | `lib/mock/tasks_mock.dart` | Today, Tasks, Task detail, widget | 8 tasks, 6 open (ages 10, 8, 5, 4, 1, 0 days) and 2 done; "Renew passport" is due Fri 20 Nov, priority High, with notes | Mock |
 | Water log | `lib/mock/water_mock.dart` | Today, Care, Weekly, widget | 5 of 8 glasses (250 ml) at 08:10–15:40; window 07:00–23:00, every 2 h; week total 45 of 56 | Mock |

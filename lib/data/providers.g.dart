@@ -242,7 +242,7 @@ final class PermissionRepositoryProvider
 }
 
 String _$permissionRepositoryHash() =>
-    r'f377421adcb608bd25d3f7e7ac4fb2893426ba04';
+    r'128c4c82ea4d62e8dda2c4e8fd289b7034947b2e';
 
 @ProviderFor(usageRepository)
 final usageRepositoryProvider = UsageRepositoryProvider._();

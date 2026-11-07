@@ -3,6 +3,7 @@ package com.isg32.veronica.watcher
 import android.Manifest
 import android.app.Activity
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -81,13 +82,18 @@ class WatcherChannel(private val activity: Activity, messenger: BinaryMessenger)
         channel.invokeMethod("route", route)
     }
 
-    private fun isEnabled(): Boolean {
-        val enabled = Settings.Secure.getString(
-            activity.contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-        ) ?: return false
-        val me = ComponentName(activity, WatcherService::class.java).flattenToString()
-        return enabled.split(':').any { it.equals(me, ignoreCase = true) }
+    private fun isEnabled(): Boolean = isServiceEnabled(activity)
+
+    companion object {
+        /** Whether "Veronica watcher" is on in Accessibility settings. */
+        fun isServiceEnabled(context: Context): Boolean {
+            val enabled = Settings.Secure.getString(
+                context.contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+            ) ?: return false
+            val me = ComponentName(context, WatcherService::class.java).flattenToString()
+            return enabled.split(':').any { it.equals(me, ignoreCase = true) }
+        }
     }
 
     private fun canNotify(): Boolean =

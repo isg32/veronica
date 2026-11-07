@@ -13,6 +13,7 @@ import '../mock/voice_mock.dart';
 import '../mock/water_mock.dart';
 import '../platform/android_usage.dart';
 import 'db/database.dart';
+import 'system/android_permission_repository.dart';
 import 'models/models.dart';
 import 'usage/drift_usage_repository.dart';
 import 'repositories/repositories.dart';
@@ -46,7 +47,7 @@ ProfileRepository profileRepository(Ref ref) => MockProfileRepository();
 
 @Riverpod(keepAlive: true)
 PermissionRepository permissionRepository(Ref ref) =>
-    MockPermissionRepository();
+    isAndroid ? AndroidPermissionRepository() : MockPermissionRepository();
 
 @Riverpod(keepAlive: true)
 UsageRepository usageRepository(Ref ref) => DriftUsageRepository(

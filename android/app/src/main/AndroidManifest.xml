@@ -4,6 +4,15 @@
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
+    <!-- Permissions asked for in onboarding (see PermissionsChannel.kt). -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Greyscale: granted once over ADB (pm grant ... WRITE_SECURE_SETTINGS). -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
     <!-- Soft nudges near a limit. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Reading the wallpaper (for the widgets' frosted-glass blur) needs
