@@ -67,6 +67,38 @@ Stream<({String alarmId, DateTime at})?> alarmSnooze(Ref ref) =>
       );
     });
 
+/// Key of a snoozed medicine dose: `{"medicine": id, "at": epoch ms}`.
+const medicineSnoozePrefKey = 'medicine.snooze';
+
+/// A snoozed medicine dose, if any.
+@riverpod
+Stream<({String medicineId, DateTime at})?> medicineSnooze(Ref ref) =>
+    ref.watch(databaseProvider).watchPref(medicineSnoozePrefKey).map((j) {
+      if (j == null) return null;
+      final m = jsonDecode(j) as Map<String, Object?>;
+      return (
+        medicineId: m['medicine']! as String,
+        at: DateTime.fromMillisecondsSinceEpoch((m['at']! as num).toInt()),
+      );
+    });
+
+/// Reminds about [medicineId] again in [minutes]; null clears the snooze.
+Future<void> snoozeMedicine(
+  VeronicaDatabase db,
+  String? medicineId, {
+  int minutes = 15,
+}) => db.writePref(
+  medicineSnoozePrefKey,
+  medicineId == null
+      ? null
+      : jsonEncode({
+          'medicine': medicineId,
+          'at': DateTime.now()
+              .add(Duration(minutes: minutes))
+              .millisecondsSinceEpoch,
+        }),
+);
+
 /// Snoozes [alarmId] for [minutes].
 Future<void> snoozeAlarm(VeronicaDatabase db, String alarmId, int minutes) =>
     db.writePref(
@@ -173,6 +205,24 @@ List<PlannedReminder> reminderPlan(Ref ref) {
             title: 'Refill ${m.name}',
             body: '${m.refillCount} left',
             route: '/medicine/${m.id}',
+          ),
+        );
+      }
+    }
+
+    // A snoozed dose.
+    final snoozed = ref.watch(medicineSnoozeProvider).value;
+    if (snoozed != null && inWindow(snoozed.at)) {
+      final med = meds.where((m) => m.id == snoozed.medicineId).firstOrNull;
+      if (med != null) {
+        plan.add(
+          PlannedReminder(
+            id: 'med-snooze-${med.id}-${snoozed.at.millisecondsSinceEpoch}',
+            at: snoozed.at,
+            kind: 'medicine',
+            title: med.name,
+            body: med.dose,
+            route: '/now/medicine/${med.id}',
           ),
         );
       }

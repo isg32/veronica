@@ -91,6 +91,7 @@ class MedicineDuePage extends ConsumerWidget {
                   onPressed: () async {
                     if (due != null) {
                       await repo.setDoseStatus(due, DoseStatus.taken);
+                      await snoozeMedicine(ref.read(databaseProvider), null);
                     }
                     if (context.mounted) _leave(context);
                   },
@@ -101,7 +102,13 @@ class MedicineDuePage extends ConsumerWidget {
                     Expanded(
                       child: VButton.secondary(
                         'Snooze 15 min',
-                        onPressed: () => _leave(context),
+                        onPressed: () async {
+                          await snoozeMedicine(
+                            ref.read(databaseProvider),
+                            med.id,
+                          );
+                          if (context.mounted) _leave(context);
+                        },
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -111,6 +118,10 @@ class MedicineDuePage extends ConsumerWidget {
                         onPressed: () async {
                           if (due != null) {
                             await repo.setDoseStatus(due, DoseStatus.skipped);
+                            await snoozeMedicine(
+                              ref.read(databaseProvider),
+                              null,
+                            );
                           }
                           if (context.mounted) _leave(context);
                         },

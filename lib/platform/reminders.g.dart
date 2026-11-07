@@ -54,6 +54,52 @@ final class AlarmSnoozeProvider
 
 String _$alarmSnoozeHash() => r'c3a85a94757a2bf7dc01fb3a74450dd2b88262ae';
 
+/// A snoozed medicine dose, if any.
+
+@ProviderFor(medicineSnooze)
+final medicineSnoozeProvider = MedicineSnoozeProvider._();
+
+/// A snoozed medicine dose, if any.
+
+final class MedicineSnoozeProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<({DateTime at, String medicineId})?>,
+          ({DateTime at, String medicineId})?,
+          Stream<({DateTime at, String medicineId})?>
+        >
+    with
+        $FutureModifier<({DateTime at, String medicineId})?>,
+        $StreamProvider<({DateTime at, String medicineId})?> {
+  /// A snoozed medicine dose, if any.
+  MedicineSnoozeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'medicineSnoozeProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$medicineSnoozeHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<({DateTime at, String medicineId})?> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<({DateTime at, String medicineId})?> create(Ref ref) {
+    return medicineSnooze(ref);
+  }
+}
+
+String _$medicineSnoozeHash() => r'bbed6181cb63bb1f3a86082f4bb4dfc65bb32583';
+
 /// Everything Veronica should remind about in the next 48 hours.
 
 @ProviderFor(reminderPlan)
@@ -104,7 +150,7 @@ final class ReminderPlanProvider
   }
 }
 
-String _$reminderPlanHash() => r'7ec963f9238fe8b955b71fe305a5d4a9c7b200ee';
+String _$reminderPlanHash() => r'1f46ed100573b538d8c31cb9bb69917776b6b0f0';
 
 /// Sends the plan to Android whenever it changes, and refreshes the screens
 /// when "+1 glass" was logged from a notification.
