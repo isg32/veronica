@@ -86,6 +86,9 @@ class MockSleepRepository implements SleepRepository {
   );
 
   @override
+  Future<void> syncPhoneSounds(List<(String, String, Duration)> tones) async {}
+
+  @override
   Future<void> renameSound(String id, String name) async => _sounds.update(
     (list) => [for (final s in list) s.id == id ? s.rename(name) : s],
   );

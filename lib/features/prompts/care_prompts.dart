@@ -167,12 +167,16 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
     final repo = ref.read(sleepRepositoryProvider);
     final alarms = await repo.watchAlarms().first;
     final alarm = alarms.where((a) => a.id == widget.alarmId).firstOrNull;
-    final soundId = alarm?.soundId;
-    if (!mounted || alarm == null || soundId == null) return;
-    final path = await repo.soundPath(soundId);
-    if (path == null || path.isEmpty || !mounted) return;
+    if (!mounted || alarm == null) return;
+    // Never silent: without a sound of its own, the phone's default alarm.
+    final soundId = alarm.soundId;
+    final chosen = soundId == null ? null : await repo.soundPath(soundId);
+    final path = chosen == null || chosen.isEmpty
+        ? 'content://settings/system/alarm_alert'
+        : chosen;
+    if (!mounted) return;
     try {
-      await _player.setFilePath(path);
+      await _player.setAudioSource(audioSourceFor(path));
       await _player.setLoopMode(LoopMode.one);
       await _player.setVolume(0);
       unawaited(_player.play());
@@ -471,6 +475,11 @@ class _BreathRing extends StatelessWidget {
     );
   }
 }
+
+/// A sound's audio: a phone tone (`content://`) or a file in the app.
+AudioSource audioSourceFor(String path) => path.startsWith('content://')
+    ? AudioSource.uri(Uri.parse(path))
+    : AudioSource.file(path);
 
 /// "Mantra time": a gentle glass card with Start or Later.
 class MantraTimePage extends ConsumerWidget {

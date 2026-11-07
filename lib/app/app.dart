@@ -6,6 +6,7 @@ import '../core/theme/v_colors.dart';
 import '../core/theme/v_palette.dart';
 import '../core/theme/v_text.dart';
 import '../core/theme/v_theme.dart';
+import '../platform/device_sounds.dart';
 import '../platform/home_widgets.dart';
 import '../platform/mode_engine.dart';
 import '../platform/reminders.dart';
@@ -27,7 +28,8 @@ class VeronicaApp extends ConsumerWidget {
       ..watch(watcherRoutesProvider)
       ..watch(modeEngineProvider)
       ..watch(reminderSyncProvider)
-      ..watch(voicePrerenderProvider);
+      ..watch(voicePrerenderProvider)
+      ..watch(phoneSoundsSyncProvider);
     final palette = VPalette.of(context);
     return CupertinoApp.router(
       title: 'Veronica',

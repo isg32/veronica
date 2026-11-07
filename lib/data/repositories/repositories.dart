@@ -111,6 +111,10 @@ abstract interface class SleepRepository {
   /// Where a sound's audio lives on the phone, for playback.
   Future<String?> soundPath(String id);
   Future<void> importSound();
+
+  /// Lists the phone's own alarm [tones] (title, content URI, length)
+  /// alongside the imported sounds, in the given order.
+  Future<void> syncPhoneSounds(List<(String, String, Duration)> tones);
   Future<void> renameSound(String id, String name);
   Future<void> deleteSound(String id);
 }

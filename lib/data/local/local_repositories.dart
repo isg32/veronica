@@ -557,6 +557,42 @@ class DriftSleepRepository implements SleepRepository {
     if (picked != null) await addSound(picked.sound, picked.path);
   }
 
+  @override
+  Future<void> syncPhoneSounds(List<(String, String, Duration)> tones) =>
+      _db.transaction(() async {
+        final keep = <String>{};
+        for (final (i, (title, uri, length)) in tones.indexed) {
+          final id = '${AlarmSound.phonePrefix}${_stableHash(uri)}';
+          keep.add(id);
+          // Before every import, the default tone first.
+          await _db
+              .into(_db.sounds)
+              .insertOnConflictUpdate(
+                SoundsCompanion.insert(
+                  id: id,
+                  name: title,
+                  lengthMs: length.inMilliseconds,
+                  importedAt: i,
+                  path: uri,
+                ),
+              );
+        }
+        // Tones no longer on the phone.
+        await (_db.delete(_db.sounds)..where(
+              (t) =>
+                  t.id.like('${AlarmSound.phonePrefix}%') & t.id.isNotIn(keep),
+            ))
+            .go();
+      });
+
+  static String _stableHash(String s) {
+    var h = 0x811c9dc5;
+    for (final c in s.codeUnits) {
+      h = ((h ^ c) * 0x01000193) & 0xffffffff;
+    }
+    return h.toRadixString(16);
+  }
+
   /// Stores a sound whose audio is already copied into the app.
   Future<void> addSound(AlarmSound sound, String path) => _db
       .into(_db.sounds)

@@ -174,13 +174,15 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
   }
 }
 
-/// Sounds you imported. No sounds ship with Veronica.
+/// The phone's own alarm tones and the sounds you imported.
 class SoundLibraryPage extends ConsumerWidget {
   const SoundLibraryPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sounds = ref.watch(soundsProvider).value ?? const <AlarmSound>[];
+    final all = ref.watch(soundsProvider).value ?? const <AlarmSound>[];
+    final phone = all.where((s) => s.fromPhone).toList();
+    final sounds = all.where((s) => !s.fromPhone).toList();
     final alarms = ref.watch(alarmsProvider).value ?? const <Alarm>[];
     final inUse = {for (final a in alarms) ?a.soundId};
     final repo = ref.read(sleepRepositoryProvider);
@@ -191,6 +193,7 @@ class SoundLibraryPage extends ConsumerWidget {
       children: [
         if (sounds.isNotEmpty)
           VListSection(
+            header: const VEyebrow('Imported'),
             children: [
               for (final s in sounds)
                 VListRow(
@@ -230,10 +233,24 @@ class SoundLibraryPage extends ConsumerWidget {
             ],
           ),
         VButton.primary('Import from files', onPressed: repo.importSound),
-        const VFootnote(
-          'MP3, M4A, OGG or WAV. No sounds ship with Veronica.',
-          center: true,
-        ),
+        const VFootnote('MP3, M4A, OGG or WAV.', center: true),
+        if (phone.isNotEmpty)
+          VListSection(
+            header: const VEyebrow('On this phone'),
+            children: [
+              for (final s in phone)
+                VListRow(
+                  title: s.name,
+                  subtitle: s.length == Duration.zero
+                      ? 'Alarm tone'
+                      : '${VFormat.length(s.length)} · alarm tone',
+                  trailing: inUse.contains(s.id)
+                      ? const VPill.badge('In use')
+                      : null,
+                  chevron: false,
+                ),
+            ],
+          ),
       ],
     );
   }

@@ -86,6 +86,11 @@ class AlarmSound {
   final Duration length;
   final DateTime importedAt;
 
+  /// One of the phone's own alarm tones, rather than an imported file.
+  bool get fromPhone => id.startsWith(phonePrefix);
+
+  static const phonePrefix = 'phone-';
+
   AlarmSound rename(String name) =>
       AlarmSound(id: id, name: name, length: length, importedAt: importedAt);
 }

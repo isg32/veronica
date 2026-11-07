@@ -55,7 +55,7 @@ final class VoiceModelProvider
   VoiceModel create() => VoiceModel();
 }
 
-String _$voiceModelHash() => r'4b7da53ccdf4eb3e77d675567236ac46feb96419';
+String _$voiceModelHash() => r'ee7fe036adbb0775b385e14c0e3e44092b03a6f8';
 
 /// Download and readiness of the Kokoro model, with progress.
 ///
