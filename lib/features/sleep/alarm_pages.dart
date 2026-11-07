@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/routes.dart';
 import '../../core/format.dart';
+import '../../core/icons/v_icons.dart';
 import '../../core/ids.dart';
 import '../../core/theme/v_text.dart';
 import '../../core/widgets/v_buttons.dart';
@@ -16,6 +19,7 @@ import '../../core/widgets/v_surface.dart';
 import '../../core/widgets/v_wheel.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
+import '../../platform/device_sounds.dart';
 
 /// Add or edit an alarm (`id == 'new'` adds). Draft until "Save".
 class AlarmEditorPage extends ConsumerStatefulWidget {
@@ -136,50 +140,125 @@ class _AlarmEditorPageState extends ConsumerState<AlarmEditorPage> {
     );
   }
 
-  Future<void> _pickSound(List<AlarmSound> sounds) {
-    return showVSheet<void>(
+  Future<void> _pickSound(List<AlarmSound> sounds) async {
+    final chosen = await showVSheet<String>(
       context,
       title: 'Sound',
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          VListSection(
-            children: [
-              for (final s in sounds)
-                VListRow(
-                  title: s.name,
-                  subtitle: VFormat.length(s.length),
-                  trailing: s.id == _draft!.soundId
-                      ? const VPill.badge('In use')
-                      : null,
-                  onTap: () {
-                    _set((a) => a.copyWith(soundId: s.id));
-                    Navigator.of(context).pop();
-                  },
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          VButton.ghost(
-            'Sound library',
-            onPressed: () {
-              Navigator.of(context).pop();
-              this.context.push(Routes.sounds);
-            },
-          ),
-        ],
-      ),
+      builder: (context) =>
+          _SoundPicker(sounds: sounds, selected: _draft!.soundId),
     );
+    if (chosen == _library) {
+      if (mounted) unawaited(context.push(Routes.sounds));
+    } else if (chosen != null) {
+      _set((a) => a.copyWith(soundId: chosen));
+    }
   }
 }
 
+const _library = '#library';
+
+/// Tap a sound to hear it; "Use this sound" chooses it.
+class _SoundPicker extends ConsumerStatefulWidget {
+  const _SoundPicker({required this.sounds, required this.selected});
+
+  final List<AlarmSound> sounds;
+  final String? selected;
+
+  @override
+  ConsumerState<_SoundPicker> createState() => _SoundPickerState();
+}
+
+class _SoundPickerState extends ConsumerState<_SoundPicker> {
+  late String? _chosen = widget.selected;
+  late final SoundPreview _preview = SoundPreview(
+    ref.read(sleepRepositoryProvider).soundPath,
+  );
+
+  @override
+  void dispose() {
+    _preview.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<String?>(
+    valueListenable: _preview,
+    builder: (context, playing, _) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        VListSection(
+          children: [
+            for (final s in widget.sounds)
+              VListRow(
+                title: s.name,
+                subtitle: [
+                  if (s.fromPhone) 'On this phone',
+                  if (s.length > Duration.zero) VFormat.length(s.length),
+                  if (s.id == playing) 'Playing',
+                ].join(' · '),
+                trailing: s.id == _chosen
+                    ? const VCircleButton(
+                        icon: VIcon.check,
+                        filled: true,
+                        size: 26,
+                      )
+                    : null,
+                chevron: false,
+                onTap: () {
+                  setState(() => _chosen = s.id);
+                  unawaited(_preview.toggle(s.id));
+                },
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        VButton.primary(
+          'Use this sound',
+          onPressed: _chosen == null
+              ? null
+              : () => Navigator.of(context).pop(_chosen),
+        ),
+        const SizedBox(height: 10),
+        VButton.ghost(
+          'Sound library',
+          onPressed: () => Navigator.of(context).pop(_library),
+        ),
+      ],
+    ),
+  );
+}
+
 /// The phone's own alarm tones and the sounds you imported.
-class SoundLibraryPage extends ConsumerWidget {
+/// Tap a sound to hear it.
+class SoundLibraryPage extends ConsumerStatefulWidget {
   const SoundLibraryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SoundLibraryPage> createState() => _SoundLibraryPageState();
+}
+
+class _SoundLibraryPageState extends ConsumerState<SoundLibraryPage> {
+  late final SoundPreview _preview = SoundPreview(
+    ref.read(sleepRepositoryProvider).soundPath,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _preview.addListener(_changed);
+  }
+
+  void _changed() => setState(() {});
+
+  @override
+  void dispose() {
+    _preview.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final all = ref.watch(soundsProvider).value ?? const <AlarmSound>[];
     final phone = all.where((s) => s.fromPhone).toList();
     final sounds = all.where((s) => !s.fromPhone).toList();
@@ -241,13 +320,15 @@ class SoundLibraryPage extends ConsumerWidget {
               for (final s in phone)
                 VListRow(
                   title: s.name,
-                  subtitle: s.length == Duration.zero
-                      ? 'Alarm tone'
-                      : '${VFormat.length(s.length)} · alarm tone',
+                  subtitle: [
+                    if (s.length > Duration.zero) VFormat.length(s.length),
+                    if (s.id == _preview.playing) 'Playing' else 'Alarm tone',
+                  ].join(' · '),
                   trailing: inUse.contains(s.id)
                       ? const VPill.badge('In use')
                       : null,
                   chevron: false,
+                  onTap: () => _preview.toggle(s.id),
                 ),
             ],
           ),

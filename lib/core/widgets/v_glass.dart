@@ -403,44 +403,50 @@ class VSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    final screen = MediaQuery.sizeOf(context).height;
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
-      child: Builder(
-        builder: (context) => VGlass(
-          radius: VRadius.sheet,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(VRadius.sheet),
-          ),
-          tint: VPalette.of(context).glassSheet,
-          blur: 14,
-          border: false,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: VInk.of(context))),
+      child: ConstrainedBox(
+        // At most 85 % of the screen above the keyboard; the rest scrolls.
+        constraints: BoxConstraints(maxHeight: (screen - bottom) * 0.85),
+        child: Builder(
+          builder: (context) => VGlass(
+            radius: VRadius.sheet,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(VRadius.sheet),
             ),
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: VInk.of(context),
-                          borderRadius: BorderRadius.circular(2),
+            tint: VPalette.of(context).glassSheet,
+            blur: 14,
+            border: false,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: VInk.of(context))),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: VInk.of(context),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(title.toUpperCase(), style: VText.eyebrow),
-                    const SizedBox(height: 14),
-                    child,
-                  ],
+                      const SizedBox(height: 14),
+                      Text(title.toUpperCase(), style: VText.eyebrow),
+                      const SizedBox(height: 14),
+                      // Long lists (apps, sounds) scroll inside the sheet.
+                      Flexible(child: SingleChildScrollView(child: child)),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -462,6 +468,7 @@ class VTextField extends StatelessWidget {
     this.maxLines = 1,
     this.style,
     this.onSubmitted,
+    this.onChanged,
   });
 
   final TextEditingController controller;
@@ -471,6 +478,7 @@ class VTextField extends StatelessWidget {
   final int maxLines;
   final TextStyle? style;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -484,6 +492,7 @@ class VTextField extends StatelessWidget {
         maxLines: maxLines,
         minLines: 1,
         onSubmitted: onSubmitted,
+        onChanged: onChanged,
         cursorColor: ink,
         padding: const EdgeInsets.all(14),
         placeholder: placeholder,

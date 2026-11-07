@@ -17,6 +17,7 @@ import '../../core/widgets/v_glass.dart';
 import '../../core/widgets/v_surface.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
+import '../../platform/device_sounds.dart';
 import '../../platform/mantra_audio.dart';
 import '../../platform/reminders.dart';
 import '../../platform/voice.dart';
@@ -476,11 +477,6 @@ class _BreathRing extends StatelessWidget {
     );
   }
 }
-
-/// A sound's audio: a phone tone (`content://`) or a file in the app.
-AudioSource audioSourceFor(String path) => path.startsWith('content://')
-    ? AudioSource.uri(Uri.parse(path))
-    : AudioSource.file(path);
 
 /// "Mantra time": a gentle glass card for the listening session, Start
 /// or Later.
