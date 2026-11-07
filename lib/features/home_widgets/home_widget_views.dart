@@ -60,15 +60,23 @@ class WidgetMode {
     required this.id,
     required this.label,
     required this.active,
-    this.left,
+    this.endsAt,
   });
 
   final String id;
   final String label;
   final bool active;
 
-  /// Time left for a timed mode, e.g. "38 min".
-  final String? left;
+  /// When a timed mode (Binge Time) ends.
+  final DateTime? endsAt;
+
+  /// "38 min" left at [now], or "ended".
+  String? leftAt(DateTime now) {
+    final end = endsAt;
+    if (!active || end == null) return null;
+    final d = end.difference(now);
+    return d.isNegative ? 'ended' : '${(d.inSeconds / 60).ceil()} min';
+  }
 }
 
 /// One row on the oldest-tasks widget.
@@ -92,7 +100,7 @@ class HomeWidgetSnapshot {
     required this.water,
     required this.waterGoal,
     required this.alarmTime,
-    required this.alarmIn,
+    required this.alarmAt,
     required this.modes,
     required this.tasks,
     required this.mantra,
@@ -106,8 +114,21 @@ class HomeWidgetSnapshot {
   /// `07:00`, or null when no alarm is on.
   final String? alarmTime;
 
-  /// `9h 56m`.
-  final String? alarmIn;
+  /// When the next alarm rings.
+  final DateTime? alarmAt;
+
+  /// "in 9 h" (whole hours from two hours out), else "in 1h 35m" to the
+  /// 5 minutes, at [now]; frames are rendered at those steps.
+  String? alarmInAt(DateTime now) {
+    final at = alarmAt;
+    if (at == null) return null;
+    final d = at.difference(now);
+    if (d.isNegative) return 'now';
+    if (d.inHours >= 2) return 'in ${d.inHours} h';
+    final m = (d.inMinutes ~/ 5) * 5;
+    return 'in ${VFormat.minutes(m)}';
+  }
+
   final List<WidgetMode> modes;
   final List<WidgetTask> tasks;
   final String? mantra;
@@ -119,8 +140,9 @@ class HomeWidgetSnapshot {
     water,
     waterGoal,
     alarmTime,
-    alarmIn,
-    for (final m in modes) '${m.id}:${m.active}:${m.left}',
+    alarmAt?.millisecondsSinceEpoch,
+    for (final m in modes)
+      '${m.id}:${m.active}:${m.endsAt?.millisecondsSinceEpoch}',
     for (final t in tasks) '${t.id}:${t.title}:${t.ageDays}',
     mantra,
   ].join('|');
@@ -136,26 +158,20 @@ HomeWidgetSnapshot homeWidgetSnapshot(Ref ref) {
   final modes = ref.watch(modesProvider).value ?? const <Mode>[];
   final active = ref.watch(activeModeProvider).value;
 
-  String? left(Mode m) {
-    if (active?.modeId != m.id || active?.endsAt == null) return null;
-    final d = active!.endsAt!.difference(now);
-    return d.isNegative ? 'ended' : '${(d.inSeconds / 60).ceil()} min';
-  }
-
   return HomeWidgetSnapshot(
     usedMin: apps.fold<int>(0, (s, a) => s + a.minutesToday),
     limitMin: apps.fold<int>(0, (s, a) => s + a.dailyLimitMin),
     water: ref.watch(waterTodayProvider).value?.length ?? 0,
     waterGoal: ref.watch(waterSettingsProvider).value?.goalGlasses ?? 8,
     alarmTime: next?.alarm.time.label,
-    alarmIn: next == null ? null : VFormat.hm(next.at.difference(now)),
+    alarmAt: next?.at,
     modes: [
       for (final m in modes.where((m) => m.isPreset))
         WidgetMode(
           id: m.id,
           label: m.name.replaceAll(' Time', ''),
           active: m.id == active?.modeId,
-          left: left(m),
+          endsAt: m.id == active?.modeId ? active?.endsAt : null,
         ),
     ],
     tasks: [
@@ -196,12 +212,18 @@ class HomeWidgetView extends StatelessWidget {
     required this.data,
     required this.light,
     this.backdrop,
+    this.now,
   });
 
   final HomeWidgetKind kind;
   final HomeWidgetSnapshot data;
   final bool light;
   final WidgetBackdrop? backdrop;
+
+  /// The moment to draw for (a future frame), or the current time.
+  final DateTime? now;
+
+  DateTime get at => now ?? DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -350,7 +372,9 @@ class HomeWidgetView extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                data.alarmIn == null ? 'No alarm' : 'Alarm · ${data.alarmIn}',
+                data.alarmAt == null
+                    ? 'No alarm'
+                    : 'Alarm · ${data.alarmInAt(at)}',
                 style: VText.inter(11),
               ),
             ],
@@ -381,8 +405,8 @@ class HomeWidgetView extends StatelessWidget {
                           m.label,
                           style: VText.inter(13, weight: m.active ? 600 : 500),
                         ),
-                        if (m.left != null)
-                          Text(m.left!, style: VText.doto(13)),
+                        if (m.leftAt(at) case final left?)
+                          Text(left, style: VText.doto(13)),
                       ],
                     ),
                   ),

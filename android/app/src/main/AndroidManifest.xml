@@ -99,6 +99,15 @@
         </service>
 
         <!-- Home widgets (images rendered by Flutter; see lib/platform/home_widgets.dart). -->
+        <!-- Redraws the widgets at their pre-rendered frames' times, also after a reboot. -->
+        <receiver
+            android:name="es.antonborri.home_widget.HomeWidgetScheduledUpdateReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
         <receiver
             android:name=".widgets.ScreenTimeWidget"
             android:exported="false">

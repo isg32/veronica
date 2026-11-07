@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -18,6 +19,46 @@ part 'home_widgets.g.dart';
 
 /// Home widgets run only on Android (not in tests or on the desktop).
 bool get _supported => !kIsWeb && Platform.isAndroid;
+
+/// When a widget's picture changes on its own as time passes: the next
+/// alarm's "in 9 h" (hourly, then every 5 minutes in the last two hours) and
+/// Binge Time's minutes left (every 5 minutes, then every minute in the last
+/// fifteen). Each is rendered ahead as a frame, so the widget stays current
+/// with the app closed. Other widgets have a single frame.
+List<DateTime> frameTimes(
+  HomeWidgetKind kind,
+  HomeWidgetSnapshot d,
+  DateTime now,
+) {
+  final times = <DateTime>{now};
+  void add(DateTime t) {
+    if (t.isAfter(now)) times.add(t);
+  }
+
+  switch (kind) {
+    case HomeWidgetKind.nextAlarm:
+      final at = d.alarmAt;
+      if (at == null) break;
+      for (var h = 24; h >= 2; h--) {
+        add(at.subtract(Duration(hours: h)));
+      }
+      for (var m = 115; m >= 0; m -= 5) {
+        add(at.subtract(Duration(minutes: m)));
+      }
+    case HomeWidgetKind.modeSwitch:
+      final end = d.modes.where((m) => m.active).firstOrNull?.endsAt;
+      if (end == null) break;
+      for (var m = 120; m > 15; m -= 5) {
+        add(end.subtract(Duration(minutes: m)));
+      }
+      for (var m = 15; m >= 0; m--) {
+        add(end.subtract(Duration(minutes: m)));
+      }
+    default:
+      break;
+  }
+  return times.toList()..sort();
+}
 
 /// Keeps the six native home widgets in step with the app.
 ///
@@ -90,17 +131,36 @@ void homeWidgetSync(Ref ref) {
                     .positionOf(kind)
                     .scale(screen.width, screen.height),
               );
+        final times = frameTimes(kind, data, DateTime.now());
         for (final light in const [false, true]) {
-          await HomeWidget.renderFlutterWidget(
-            HomeWidgetView(
-              kind: kind,
-              data: data,
-              light: light,
-              backdrop: backdrop,
-            ),
-            key: kind.imageKey(light: light),
-            logicalSize: kind.size,
-            pixelRatio: ratio,
+          final frames = <Map<String, Object>>[];
+          for (final (n, t) in times.indexed) {
+            final path = await HomeWidget.renderFlutterWidget(
+              HomeWidgetView(
+                kind: kind,
+                data: data,
+                light: light,
+                backdrop: backdrop,
+                now: t,
+              ),
+              key: n == 0
+                  ? kind.imageKey(light: light)
+                  : '${kind.imageKey(light: light)}_$n',
+              logicalSize: kind.size,
+              pixelRatio: ratio,
+            );
+            frames.add({'at': t.millisecondsSinceEpoch, 'path': path});
+          }
+          await HomeWidget.saveWidgetData<String>(
+            'widget_${kind.name}_${light ? 'light' : 'dark'}_frames',
+            jsonEncode(frames),
+          );
+        }
+        // Android redraws at each later frame, with the app closed.
+        if (times.length > 1) {
+          await HomeWidget.scheduleWidgetUpdates(
+            times.skip(1).toList(),
+            qualifiedAndroidName: kind.qualifiedAndroidName,
           );
         }
         await HomeWidget.updateWidget(

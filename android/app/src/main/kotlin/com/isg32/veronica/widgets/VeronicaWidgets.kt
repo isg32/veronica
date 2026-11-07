@@ -11,6 +11,7 @@ import com.isg32.veronica.MainActivity
 import com.isg32.veronica.R
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
+import org.json.JSONArray
 
 /**
  * Veronica's home widgets.
@@ -38,7 +39,8 @@ abstract class ImageWidget(
             val views = RemoteViews(context.packageName, layout)
             // Both variants; the layout shows the one for the system theme.
             for ((variant, view) in VARIANTS) {
-                val image = widgetData.getString("widget_${kind}_${variant}_image", null)
+                val image = (currentFrame(widgetData, variant)
+                    ?: widgetData.getString("widget_${kind}_${variant}_image", null))
                     ?.let { BitmapFactory.decodeFile(it) }
                 if (image != null) {
                     views.setImageViewBitmap(view, image)
@@ -49,6 +51,23 @@ abstract class ImageWidget(
             bindTaps(context, views, widgetData)
             appWidgetManager.updateAppWidget(id, views)
         }
+    }
+
+    /**
+     * The frame to show now: widgets whose picture changes with time (alarm
+     * in, minutes left) are rendered ahead as frames `[{at, path}]`, and
+     * Android redraws them at each frame's time.
+     */
+    private fun currentFrame(data: SharedPreferences, variant: String): String? {
+        val raw = data.getString("widget_${kind}_${variant}_frames", null) ?: return null
+        val frames = JSONArray(raw)
+        val now = System.currentTimeMillis()
+        var best: String? = null
+        for (i in 0 until frames.length()) {
+            val f = frames.getJSONObject(i)
+            if (f.getLong("at") <= now) best = f.getString("path")
+        }
+        return best ?: frames.optJSONObject(0)?.getString("path")
     }
 
     /** Wires the tap areas of [views] to `veronica://` links. */
