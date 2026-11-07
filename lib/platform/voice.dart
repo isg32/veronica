@@ -163,39 +163,110 @@ Future<Directory?> modelDirectory() async {
   return base == null ? null : Directory('${base.path}/voice/$_modelDir');
 }
 
-/// Renders [text] to a WAV with Kokoro, off the main isolate.
-Future<void> _render({
-  required String modelDir,
-  required String text,
-  required int speaker,
-  required double speed,
-  required String out,
-}) => Isolate.run(() {
-  sherpa.initBindings();
-  final tts = sherpa.OfflineTts(
-    sherpa.OfflineTtsConfig(
-      model: sherpa.OfflineTtsModelConfig(
-        kokoro: sherpa.OfflineTtsKokoroModelConfig(
-          model: '$modelDir/model.int8.onnx',
-          voices: '$modelDir/voices.bin',
-          tokens: '$modelDir/tokens.txt',
-          lexicon: '$modelDir/lexicon-us-en.txt',
-        ),
-        numThreads: 2,
-      ),
-    ),
-  );
-  try {
-    final audio = tts.generate(text: text, sid: speaker, speed: speed);
-    sherpa.writeWave(
-      filename: out,
-      samples: audio.samples,
-      sampleRate: audio.sampleRate,
+/// Kokoro in its own isolate, loaded once and kept: loading the model
+/// takes seconds, rendering a line far less. Lines render one at a time;
+/// urgent ones (a voice sample) go to the front of the queue.
+class _KokoroWorker {
+  _KokoroWorker(this.modelDir);
+
+  final String modelDir;
+  final _queue = <({List<Object> job, Completer<void> done})>[];
+  Future<SendPort>? _port;
+  bool _busy = false;
+
+  Future<void> render({
+    required String text,
+    required int speaker,
+    required double speed,
+    required String out,
+    bool urgent = false,
+  }) {
+    final entry = (
+      job: <Object>[text, speaker, speed, out],
+      done: Completer<void>(),
     );
-  } finally {
-    tts.free();
+    urgent ? _queue.insert(0, entry) : _queue.add(entry);
+    unawaited(_pump());
+    return entry.done.future;
   }
-});
+
+  Future<void> _pump() async {
+    if (_busy || _queue.isEmpty) return;
+    _busy = true;
+    final next = _queue.removeAt(0);
+    try {
+      final port = await (_port ??= _start());
+      final reply = ReceivePort();
+      port.send([...next.job, reply.sendPort]);
+      final error = await reply.first;
+      reply.close();
+      if (error is String) throw StateError(error);
+      next.done.complete();
+    } on Object catch (e, st) {
+      // A broken worker starts again for the next line.
+      _port = null;
+      next.done.completeError(e, st);
+    } finally {
+      _busy = false;
+      unawaited(_pump());
+    }
+  }
+
+  Future<SendPort> _start() async {
+    final ready = ReceivePort();
+    await Isolate.spawn(_main, [ready.sendPort, modelDir]);
+    final port = await ready.first;
+    ready.close();
+    if (port is String) throw StateError(port);
+    return port as SendPort;
+  }
+
+  static void _main(List<Object> args) {
+    final main = args[0] as SendPort;
+    final dir = args[1] as String;
+    final sherpa.OfflineTts tts;
+    try {
+      sherpa.initBindings();
+      tts = sherpa.OfflineTts(
+        sherpa.OfflineTtsConfig(
+          model: sherpa.OfflineTtsModelConfig(
+            kokoro: sherpa.OfflineTtsKokoroModelConfig(
+              model: '$dir/model.int8.onnx',
+              voices: '$dir/voices.bin',
+              tokens: '$dir/tokens.txt',
+              lexicon: '$dir/lexicon-us-en.txt',
+            ),
+            numThreads: 2,
+          ),
+        ),
+      );
+    } on Object catch (e) {
+      main.send('Kokoro failed to load: $e');
+      return;
+    }
+    final jobs = ReceivePort();
+    main.send(jobs.sendPort);
+    jobs.listen((message) {
+      final m = message as List<Object>;
+      final reply = m[4] as SendPort;
+      try {
+        final audio = tts.generate(
+          text: m[0] as String,
+          sid: m[1] as int,
+          speed: m[2] as double,
+        );
+        sherpa.writeWave(
+          filename: m[3] as String,
+          samples: audio.samples,
+          sampleRate: audio.sampleRate,
+        );
+        reply.send(null);
+      } on Object catch (e) {
+        reply.send('$e');
+      }
+    });
+  }
+}
 
 /// A stable short hash for cache file names.
 String _hash(String s) {
@@ -217,7 +288,11 @@ class VeronicaVoice {
   final Future<VoiceSettings> Function() _settings;
   final AudioPlayer _player = AudioPlayer();
   final FlutterTts _system = FlutterTts();
-  final Set<String> _rendering = {};
+  final Map<String, Future<void>> _rendering = {};
+  _KokoroWorker? _worker;
+
+  /// The voice whose sample is being made, for "Preparing…" in Settings.
+  final ValueNotifier<KokoroVoice?> preparing = ValueNotifier(null);
 
   Future<void> say(String text, VoiceMoment moment) async {
     if (!isAndroid || text.trim().isEmpty) return;
@@ -253,21 +328,32 @@ class VeronicaVoice {
     return File('${dir.path}/${_hash('${s.voice.id}|${s.speed}|$text')}.wav');
   }
 
-  Future<void> _prepare(String text, VoiceSettings s, File out) async {
-    if (!_rendering.add(out.path)) return;
-    try {
-      await _render(
-        modelDir: (await modelDirectory())!.path,
-        text: text,
-        speaker: kokoroSpeaker(s.voice),
-        speed: s.speed,
-        out: out.path,
-      );
-    } on Object catch (e) {
-      debugPrint('Voice render failed: $e');
-    } finally {
-      _rendering.remove(out.path);
-    }
+  /// Renders [text] into [out]; a render already under way is joined.
+  Future<void> _prepare(
+    String text,
+    VoiceSettings s,
+    File out, {
+    bool urgent = false,
+  }) {
+    return _rendering[out.path] ??= () async {
+      try {
+        final dir = (await modelDirectory())!.path;
+        final worker = _worker?.modelDir == dir
+            ? _worker!
+            : (_worker = _KokoroWorker(dir));
+        await worker.render(
+          text: text,
+          speaker: kokoroSpeaker(s.voice),
+          speed: s.speed,
+          out: out.path,
+          urgent: urgent,
+        );
+      } on Object catch (e) {
+        debugPrint('Voice render failed: $e');
+      } finally {
+        unawaited(_rendering.remove(out.path));
+      }
+    }();
   }
 
   /// Plays a short sample of [voice] at [speed], so a voice can be chosen
@@ -278,20 +364,29 @@ class VeronicaVoice {
     String name = '',
   }) async {
     if (!isAndroid) return;
+    final turn = ++_sampleTurn;
     await stop();
     final s = (await _settings()).copyWith(voice: voice, speed: speed);
     final text = sampleLine(name);
     final file = await _cached(text, s);
-    if (file == null) {
+    if (file != null && !file.existsSync()) {
+      preparing.value = voice;
+      await _prepare(text, s, file, urgent: true);
+      if (preparing.value == voice) preparing.value = null;
+    }
+    // Only the latest tap plays.
+    if (turn != _sampleTurn) return;
+    if (file == null || !file.existsSync()) {
+      // No model yet, or it couldn't render: Android's own voice.
       await _system.setSpeechRate(0.45 * speed);
       await _system.speak(text);
       return;
     }
-    if (!file.existsSync()) await _prepare(text, s, file);
-    if (!file.existsSync()) return;
     await _player.setFilePath(file.path);
-    await _player.play();
+    unawaited(_player.play());
   }
+
+  int _sampleTurn = 0;
 
   Future<void> stop() async {
     await _player.stop();

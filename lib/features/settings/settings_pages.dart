@@ -435,7 +435,20 @@ class VoiceSettingsPage extends ConsumerWidget {
     if (v == null) return const SizedBox.shrink();
     final repo = ref.read(settingsRepositoryProvider);
     void save(VoiceSettings next) => repo.saveVoice(next);
+    return ValueListenableBuilder<KokoroVoice?>(
+      valueListenable: ref.watch(veronicaVoiceProvider).preparing,
+      builder: (context, preparing, _) =>
+          _page(context, ref, v, save, preparing),
+    );
+  }
 
+  Widget _page(
+    BuildContext context,
+    WidgetRef ref,
+    VoiceSettings v,
+    void Function(VoiceSettings) save,
+    KokoroVoice? preparing,
+  ) {
     return VDetailPage(
       backLabel: 'Settings',
       title: 'Voice',
@@ -458,7 +471,9 @@ class VoiceSettingsPage extends ConsumerWidget {
             for (final voice in KokoroVoice.values)
               VListRow(
                 title: voice.id,
-                subtitle: voice.description,
+                subtitle: preparing == voice
+                    ? 'Preparing a sample…'
+                    : voice.description,
                 trailing: voice == v.voice ? const _Check() : null,
                 // Choosing a voice plays a sample of it.
                 onTap: () {
