@@ -23,6 +23,7 @@ import '../../data/models/models.dart';
 import '../../data/providers.dart';
 import '../selectors.dart';
 import '../../mock/seed.dart';
+import '../../platform/glyph.dart';
 import '../home_widgets/home_widget_views.dart';
 import 'glyph_frames.dart';
 import 'widget_glass_pages.dart';
@@ -285,6 +286,7 @@ class _GlyphSettingsPageState extends ConsumerState<GlyphSettingsPage>
   @override
   void dispose() {
     _ticker.dispose();
+    GlyphPlayer.instance.stop();
     super.dispose();
   }
 
@@ -296,6 +298,8 @@ class _GlyphSettingsPageState extends ConsumerState<GlyphSettingsPage>
     _ticker
       ..stop()
       ..start();
+    // On a Phone (2a), the real lights play it too.
+    unawaited(GlyphPlayer.instance.play(s));
   }
 
   @override

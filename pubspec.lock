@@ -613,6 +613,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.19.2"
+  nothing_glyph_interface:
+    dependency: "direct main"
+    description:
+      name: nothing_glyph_interface
+      sha256: "56b55806244d3dba96e2d234dd02c4e472def4a88b95678d6ba170fd182534cb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.10"
   objective_c:
     dependency: transitive
     description:

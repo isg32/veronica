@@ -17,4 +17,4 @@ The values match the design canvas ([`design/DESIGN.md`](design/DESIGN.md)), so 
 | Mantras | `lib/data/local/local_repositories.dart` | Today, Care, Mantra library, Mantra session/time, widget | Six starter mantras on first run, plus your own; rotates by date | Real |
 | Alarm sounds | `lib/data/local/local_repositories.dart`, `lib/platform/reminders.dart` | Sleep, Alarm editor, Sound library, Alarm ringing | Imported from your files and copied into the app; played with a fade-in | Real |
 | Voice | `lib/data/local/local_repositories.dart`; `voiceModelState` (Phase 4) | Settings · Voice | Voice settings are stored; the model and speech arrive in Phase 4 | Partly real |
-| Glyph | `lib/data/local/local_repositories.dart` | Settings · Glyph | Brightness and quiet hours are stored; the lights arrive in Phase 4 | Partly real |
+| Glyph | `lib/data/local/local_repositories.dart`, `lib/platform/glyph.dart` | Settings · Glyph, full-screen prompts | Brightness and quiet hours are stored; patterns play on the Phone (2a) lights while their page is open | Real |

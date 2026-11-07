@@ -11,6 +11,7 @@ import '../features/focus/active_mode_page.dart';
 import '../features/focus/app_pages.dart';
 import '../features/focus/focus_page.dart';
 import '../features/focus/mode_editor_page.dart';
+import '../data/models/models.dart';
 import '../features/onboarding/onboarding_page.dart';
 import '../features/prompts/care_prompts.dart';
 import '../features/prompts/limit_prompts.dart';
@@ -22,6 +23,7 @@ import '../features/tasks/task_detail_page.dart';
 import '../features/tasks/tasks_page.dart';
 import '../features/today/today_page.dart';
 import '../features/today/weekly_page.dart';
+import '../platform/glyph.dart';
 import 'routes.dart';
 import 'shell.dart';
 
@@ -176,42 +178,67 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(
         path: Routes.activeMode,
-        pageBuilder: (context, state) =>
-            fadePage(state, const ActiveModePage()),
+        pageBuilder: (context, state) => fadePage(
+          state,
+          const GlyphWhileShown(
+            signal: GlyphSignal.focus,
+            child: ActiveModePage(),
+          ),
+        ),
       ),
       GoRoute(
         path: '/now/put-it-down/:package',
         pageBuilder: (context, state) => fadePage(
           state,
-          PutItDownPage(
-            packageName: state.pathParameters['package']!,
-            fromWatcher: state.uri.queryParameters['from'] == 'watcher',
-            modeName: state.uri.queryParameters['mode'],
+          GlyphWhileShown(
+            signal: GlyphSignal.putItDown,
+            child: PutItDownPage(
+              packageName: state.pathParameters['package']!,
+              fromWatcher: state.uri.queryParameters['from'] == 'watcher',
+              modeName: state.uri.queryParameters['mode'],
+            ),
           ),
         ),
       ),
       GoRoute(
         path: Routes.timesUp,
-        pageBuilder: (context, state) => fadePage(state, const TimesUpPage()),
+        pageBuilder: (context, state) => fadePage(
+          state,
+          const GlyphWhileShown(
+            signal: GlyphSignal.timesUp,
+            child: TimesUpPage(),
+          ),
+        ),
       ),
       GoRoute(
         path: '/now/medicine/:id',
         pageBuilder: (context, state) => fadePage(
           state,
-          MedicineDuePage(medicineId: state.pathParameters['id']!),
+          GlyphWhileShown(
+            signal: GlyphSignal.medicine,
+            child: MedicineDuePage(medicineId: state.pathParameters['id']!),
+          ),
         ),
       ),
       GoRoute(
         path: '/now/alarm/:id',
         pageBuilder: (context, state) => fadePage(
           state,
-          AlarmRingingPage(alarmId: state.pathParameters['id']!),
+          GlyphWhileShown(
+            signal: GlyphSignal.alarmSunrise,
+            child: AlarmRingingPage(alarmId: state.pathParameters['id']!),
+          ),
         ),
       ),
       GoRoute(
         path: Routes.mantraSession,
-        pageBuilder: (context, state) =>
-            fadePage(state, const MantraSessionPage()),
+        pageBuilder: (context, state) => fadePage(
+          state,
+          const GlyphWhileShown(
+            signal: GlyphSignal.mantra,
+            child: MantraSessionPage(),
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.mantraTime,
