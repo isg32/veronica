@@ -41,6 +41,9 @@ flutter:
     - assets/fonts/OFL-Doto.txt
     - assets/fonts/OFL-Inter.txt
 
+  shaders:
+    - shaders/progressive_blur.frag
+
   fonts:
     # Variable fonts (OFL); weights are set through the `wght` axis.
     - family: Doto

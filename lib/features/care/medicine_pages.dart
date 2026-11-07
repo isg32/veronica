@@ -187,7 +187,7 @@ class DosesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final doses = ref.watch(dosesProvider).value ?? const <DoseLog>[];
     final meds = ref.watch(medicinesProvider).value ?? const <Medicine>[];
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
     final names = {for (final m in meds) m.id: m.name};
     final shown = doses.where((d) => names.containsKey(d.medicineId)).toList();
 

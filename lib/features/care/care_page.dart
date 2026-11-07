@@ -51,7 +51,7 @@ class _WaterCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final logs = ref.watch(waterTodayProvider).value ?? const <WaterLog>[];
     final s = ref.watch(waterSettingsProvider).value ?? const WaterSettings();
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
     final repo = ref.read(waterRepositoryProvider);
     final ml = logs.fold<int>(0, (sum, l) => sum + l.ml);
     final next = nextWaterReminder(s, now);
@@ -179,7 +179,7 @@ class _MedicineCard extends ConsumerWidget {
 
     final meds = ref.watch(medicinesProvider).value ?? const <Medicine>[];
     final doses = ref.watch(dosesProvider).value ?? const <DoseLog>[];
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
     final byId = {for (final m in meds) m.id: m};
     final today =
         doses

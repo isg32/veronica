@@ -25,7 +25,7 @@ class TaskDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
     final task = tasks.where((t) => t.id == id).firstOrNull;
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
     final repo = ref.read(taskRepositoryProvider);
 
     if (task == null) {

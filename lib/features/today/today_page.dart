@@ -24,7 +24,7 @@ class TodayPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
     final name = ref.watch(profileProvider).value?.name ?? '';
     final greeting = VFormat.greeting(now);
 
@@ -278,7 +278,7 @@ class _OldestTasksCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final open = ref.watch(openTasksOldestFirstProvider);
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
     if (open.isEmpty) return const SizedBox.shrink();
 
     return VCard(

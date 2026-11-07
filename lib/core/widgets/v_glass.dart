@@ -496,50 +496,85 @@ class VTextField extends StatelessWidget {
 }
 
 /// Progressive blur behind the status bar, as on iOS: strongest at the top
-/// edge and fading out a little below the bar, so content can scroll
-/// underneath while the clock and icons stay readable.
+/// edge and easing smoothly to nothing a little below the bar, with no seam,
+/// so content can scroll underneath while the clock and icons stay readable.
 ///
-/// Built from stacked blur layers, each covering a little less of the height,
-/// so the blur adds up towards the top; a soft paper-coloured gradient sits
-/// over it.
-class VStatusBarBlur extends StatelessWidget {
+/// A fragment shader (`shaders/progressive_blur.frag`) varies the blur
+/// radius with height. Where shader filters are not supported, a single
+/// light blur is used instead. A soft paper-coloured gradient sits on top.
+class VStatusBarBlur extends StatefulWidget {
   const VStatusBarBlur({super.key});
 
-  /// How far below the status bar the fade reaches. Page titles start this
-  /// far below the bar, so nothing is blurred until it scrolls up.
-  static const double fade = 16;
-  static const int _layers = 8;
-  static const double _sigmaPerLayer = 1.4;
+  /// How far below the status bar the blur eases out. Page titles start 16
+  /// below the bar, where the blur is already close to nothing.
+  static const double fade = 24;
+
+  /// Blur radius at the very top edge, in logical pixels.
+  static const double maxRadius = 18;
+
+  static Future<FragmentProgram>? _program;
+
+  @override
+  State<VStatusBarBlur> createState() => _VStatusBarBlurState();
+}
+
+class _VStatusBarBlurState extends State<VStatusBarBlur> {
+  FragmentShader? _shader;
+
+  @override
+  void initState() {
+    super.initState();
+    if (ImageFilter.isShaderFilterSupported) {
+      VStatusBarBlur._program ??= FragmentProgram.fromAsset(
+        'shaders/progressive_blur.frag',
+      );
+      VStatusBarBlur._program!.then((p) {
+        if (mounted) setState(() => _shader = p.fragmentShader());
+      }, onError: (Object _) {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _shader?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
     if (top == 0) return const SizedBox.shrink();
-    final height = top + fade;
+    final height = top + VStatusBarBlur.fade;
+    final ratio = MediaQuery.devicePixelRatioOf(context);
     final paper = VInk.surfaceOf(context);
+
+    final shader = _shader;
+    final ImageFilter filter;
+    if (shader != null) {
+      // Uniforms 0–1 (the texture size) are set by the engine.
+      shader
+        ..setFloat(2, height * ratio)
+        ..setFloat(3, VStatusBarBlur.maxRadius * ratio);
+      filter = ImageFilter.shader(shader);
+    } else {
+      filter = ImageFilter.blur(sigmaX: 4, sigmaY: 4);
+    }
+
     return IgnorePointer(
       child: SizedBox(
         height: height,
         child: Stack(
           children: [
-            for (var i = 0; i < _layers; i++)
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                // Layer i reaches part-way into the fade; together they add
-                // up to the most blur at the top and none at the fade's end.
-                height: top + fade * (1 - (i + 1) / _layers),
-                child: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                      sigmaX: _sigmaPerLayer,
-                      sigmaY: _sigmaPerLayer,
-                    ),
-                    child: const SizedBox.expand(),
-                  ),
+            Positioned.fill(
+              // Without the shader the fallback blur stops at the bar.
+              bottom: shader == null ? VStatusBarBlur.fade : 0,
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: filter,
+                  child: const SizedBox.expand(),
                 ),
               ),
+            ),
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -547,8 +582,8 @@ class VStatusBarBlur extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      paper.withValues(alpha: 0.6),
-                      paper.withValues(alpha: 0.3),
+                      paper.withValues(alpha: 0.55),
+                      paper.withValues(alpha: 0.25),
                       paper.withValues(alpha: 0),
                     ],
                     stops: [0, top / height, 1],

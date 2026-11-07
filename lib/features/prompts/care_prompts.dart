@@ -35,7 +35,7 @@ class MedicineDuePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final meds = ref.watch(medicinesProvider).value ?? const <Medicine>[];
     final doses = ref.watch(dosesProvider).value ?? const <DoseLog>[];
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
     final med = meds.where((m) => m.id == medicineId).firstOrNull;
     if (med == null) return const PromptScaffold(child: SizedBox.shrink());
     final repo = ref.read(medicineRepositoryProvider);

@@ -380,7 +380,7 @@ class _AdbStepState extends ConsumerState<_AdbStep> {
   @override
   Widget build(BuildContext context) {
     final adb = ref.watch(adbStatusProvider).value;
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
 
     Widget command({
       required String title,

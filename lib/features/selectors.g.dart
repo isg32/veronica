@@ -54,6 +54,58 @@ final class CurrentTimeProvider
 
 String _$currentTimeHash() => r'658d86c68f1fbecf7d0414919aa3ea76a558e84b';
 
+/// The current minute. Most screens only change once a minute, so they
+/// watch this instead of [currentTimeProvider] and don't rebuild every
+/// second; only countdowns need the seconds.
+
+@ProviderFor(currentMinute)
+final currentMinuteProvider = CurrentMinuteProvider._();
+
+/// The current minute. Most screens only change once a minute, so they
+/// watch this instead of [currentTimeProvider] and don't rebuild every
+/// second; only countdowns need the seconds.
+
+final class CurrentMinuteProvider
+    extends $FunctionalProvider<DateTime, DateTime, DateTime>
+    with $Provider<DateTime> {
+  /// The current minute. Most screens only change once a minute, so they
+  /// watch this instead of [currentTimeProvider] and don't rebuild every
+  /// second; only countdowns need the seconds.
+  CurrentMinuteProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentMinuteProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentMinuteHash();
+
+  @$internal
+  @override
+  $ProviderElement<DateTime> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DateTime create(Ref ref) {
+    return currentMinute(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DateTime value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DateTime>(value),
+    );
+  }
+}
+
+String _$currentMinuteHash() => r'77b968b8bc813e2055b08247731ce9c7d51f4742';
+
 /// The mantra shown today: the fixed one, or (rotating) one per calendar day.
 
 @ProviderFor(todayMantra)
@@ -98,7 +150,7 @@ final class TodayMantraProvider
   }
 }
 
-String _$todayMantraHash() => r'12fe09d1be6044107c96de803db9b78fbaed42bd';
+String _$todayMantraHash() => r'b3f9656d42b7892c1d197c5414da70fe2dd7de0c';
 
 /// Open tasks, oldest first.
 
@@ -196,7 +248,7 @@ final class NextUpProvider
   }
 }
 
-String _$nextUpHash() => r'866cd75367295fa4010edebcff94f96f9cf2c93a';
+String _$nextUpHash() => r'660bb74cb87c9065fa1556f20ee2840c3eafb3be';
 
 /// The next alarm that will ring, if any.
 
@@ -250,4 +302,4 @@ final class NextAlarmProvider
   }
 }
 
-String _$nextAlarmHash() => r'28c025ae011e5cb55a8a0fb6f62586f5fdd46efd';
+String _$nextAlarmHash() => r'8a24c3e1bdc56e9d7cbce33b87dbf8be9a2436fb';

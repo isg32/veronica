@@ -42,7 +42,7 @@ class SettingsPage extends ConsumerWidget {
     final adb = ref.watch(adbStatusProvider).value;
     final glyph = ref.watch(glyphSettingsProvider).value;
     final voice = ref.watch(voiceSettingsProvider).value;
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
 
     final toFix =
         granted.values.where((g) => !g).length +
@@ -205,7 +205,7 @@ class PermissionsSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final granted = ref.watch(permissionsProvider).value ?? const {};
     final adb = ref.watch(adbStatusProvider).value;
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
     final repo = ref.read(permissionRepositoryProvider);
 
     return VDetailPage(

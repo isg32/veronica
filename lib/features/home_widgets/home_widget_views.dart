@@ -153,7 +153,7 @@ class HomeWidgetSnapshot {
 @riverpod
 HomeWidgetSnapshot homeWidgetSnapshot(Ref ref) {
   final apps = ref.watch(watchedAppsProvider).value ?? const <WatchedApp>[];
-  final now = ref.watch(currentTimeProvider);
+  final now = ref.watch(currentMinuteProvider);
   final next = ref.watch(nextAlarmProvider);
   final modes = ref.watch(modesProvider).value ?? const <Mode>[];
   final active = ref.watch(activeModeProvider).value;

@@ -115,7 +115,7 @@ Future<void> snoozeAlarm(VeronicaDatabase db, String alarmId, int minutes) =>
 @riverpod
 List<PlannedReminder> reminderPlan(Ref ref) {
   final now = ref
-      .watch(currentTimeProvider)
+      .watch(currentMinuteProvider)
       .copyWith(second: 0, millisecond: 0);
   final horizon = now.add(const Duration(hours: 48));
   final plan = <PlannedReminder>[];

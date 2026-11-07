@@ -36,7 +36,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
   @override
   Widget build(BuildContext context) {
     final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
-    final now = ref.watch(currentTimeProvider);
+    final now = ref.watch(currentMinuteProvider);
     final open = ref.watch(openTasksOldestFirstProvider);
     final shown = switch (_filter) {
       _Filter.all => open,

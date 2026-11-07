@@ -150,7 +150,7 @@ final class ReminderPlanProvider
   }
 }
 
-String _$reminderPlanHash() => r'1f46ed100573b538d8c31cb9bb69917776b6b0f0';
+String _$reminderPlanHash() => r'f9d1805d2bb1dd27c2c0c5bb4217fe5571755b42';
 
 /// Sends the plan to Android whenever it changes, and refreshes the screens
 /// when "+1 glass" was logged from a notification.

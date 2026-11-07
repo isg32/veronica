@@ -11,6 +11,17 @@ part 'selectors.g.dart';
 DateTime currentTime(Ref ref) =>
     ref.watch(nowProvider).value ?? ref.watch(clockProvider).now();
 
+/// The current minute. Most screens only change once a minute, so they
+/// watch this instead of [currentTimeProvider] and don't rebuild every
+/// second; only countdowns need the seconds.
+@riverpod
+DateTime currentMinute(Ref ref) {
+  final t = ref.watch(currentTimeProvider);
+  // Recomputed every second, but listeners only hear about a change of
+  // value (Riverpod compares with ==), i.e. once a minute.
+  return DateTime(t.year, t.month, t.day, t.hour, t.minute);
+}
+
 /// The mantra shown today: the fixed one, or (rotating) one per calendar day.
 @riverpod
 Mantra? todayMantra(Ref ref) {
@@ -23,7 +34,7 @@ Mantra? todayMantra(Ref ref) {
     }
   }
   // Rotating: a different mantra each calendar day, the same all day.
-  final now = ref.watch(currentTimeProvider);
+  final now = ref.watch(currentMinuteProvider);
   final day = DateTime.utc(
     now.year,
     now.month,
@@ -51,7 +62,7 @@ class NextUpItem {
 /// The next medicine dose (only when medicine is on), alarm and mantra.
 @riverpod
 List<NextUpItem> nextUp(Ref ref) {
-  final now = ref.watch(currentTimeProvider);
+  final now = ref.watch(currentMinuteProvider);
   final items = <NextUpItem>[];
 
   final medicineOn = ref.watch(medicineEnabledProvider).value ?? false;
@@ -89,7 +100,7 @@ List<NextUpItem> nextUp(Ref ref) {
 /// The next alarm that will ring, if any.
 @riverpod
 ({Alarm alarm, DateTime at})? nextAlarm(Ref ref) {
-  final now = ref.watch(currentTimeProvider);
+  final now = ref.watch(currentMinuteProvider);
   final alarms = ref.watch(alarmsProvider).value ?? const <Alarm>[];
   ({Alarm alarm, DateTime at})? best;
   for (final a in alarms.where((a) => a.enabled)) {
