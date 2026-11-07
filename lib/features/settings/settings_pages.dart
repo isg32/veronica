@@ -718,6 +718,9 @@ class DataSettingsPage extends ConsumerWidget {
       ('Inter', 'OFL'),
       ('Glyph Developer Kit', 'Nothing'),
       ('nothing_glyph_interface', 'MIT'),
+      ('NewPipeExtractor', 'GPL-3.0'),
+      ('youtube_explode_dart', 'BSD-3'),
+      ('OkHttp', 'Apache 2.0'),
     ];
 
     return VDetailPage(
