@@ -91,6 +91,10 @@ abstract interface class ModeRepository {
   Stream<ActiveMode?> watchActive();
   Future<void> start(String modeId, {int? minutes});
   Future<void> end();
+
+  /// Records a mode that was started or ended outside the app (by a
+  /// schedule), without applying anything.
+  Future<void> adopt(ActiveMode? active);
 }
 
 abstract interface class SleepRepository {

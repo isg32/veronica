@@ -469,6 +469,12 @@ class DriftModeRepository implements ModeRepository {
 
   @override
   Future<void> end() => _db.writePref(PrefKeys.activeMode, null);
+
+  @override
+  Future<void> adopt(ActiveMode? active) => _db.writePref(
+    PrefKeys.activeMode,
+    active == null ? null : Codecs.activeMode(active),
+  );
 }
 
 // Sleep, alarms and sounds.

@@ -69,8 +69,11 @@ GoRouter router(Ref ref) {
             routes: [
               GoRoute(
                 path: Routes.focus,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: FocusPage()),
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: FocusPage(
+                    showModes: state.uri.queryParameters['view'] == 'modes',
+                  ),
+                ),
               ),
             ],
           ),
@@ -183,6 +186,7 @@ GoRouter router(Ref ref) {
           PutItDownPage(
             packageName: state.pathParameters['package']!,
             fromWatcher: state.uri.queryParameters['from'] == 'watcher',
+            modeName: state.uri.queryParameters['mode'],
           ),
         ),
       ),

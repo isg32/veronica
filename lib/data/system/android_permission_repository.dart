@@ -25,6 +25,7 @@ class AndroidPermissionRepository implements PermissionRepository {
     AppPermission.notifications: 'notifications',
     AppPermission.exactAlarms: 'exactAlarms',
     AppPermission.battery: 'battery',
+    AppPermission.writeSettings: 'writeSettings',
   };
 
   Stream<T> _poll<T>(Future<T> Function() read) {

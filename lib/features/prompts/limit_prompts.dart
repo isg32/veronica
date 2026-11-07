@@ -25,10 +25,14 @@ class PutItDownPage extends ConsumerStatefulWidget {
     super.key,
     required this.packageName,
     this.fromWatcher = false,
+    this.modeName,
   });
 
   final String packageName;
   final bool fromWatcher;
+
+  /// Set when the app is blocked by a running mode rather than a limit.
+  final String? modeName;
 
   @override
   ConsumerState<PutItDownPage> createState() => _PutItDownPageState();
@@ -61,12 +65,72 @@ class _PutItDownPageState extends ConsumerState<PutItDownPage> {
     if (mounted) _close();
   }
 
+  /// The app is blocked by [modeName]: no minutes, no extra time; Close app,
+  /// or a long-press on the title for an emergency five minutes.
+  Widget _blockedByMode(BuildContext context, String name, String modeName) {
+    final installed =
+        ref.watch(installedAppsProvider).value ?? const <InstalledApp>[];
+    final appName =
+        installed
+            .where((a) => a.packageName == packageName)
+            .firstOrNull
+            ?.name ??
+        'This app';
+    final repo = ref.read(usageRepositoryProvider);
+    return PromptScaffold(
+      child: Countdown(
+        seconds: 5,
+        builder: (context, left) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PromptHeadline(
+              title: name.isEmpty
+                  ? 'PUT IT\nDOWN'
+                  : 'PUT IT\nDOWN,\n${name.toUpperCase()}',
+              body: '$modeName is on. $appName is paused until it ends.',
+              onLongPress: () async {
+                await repo.logOverride(packageName);
+                await _backToApp();
+              },
+            ),
+            Expanded(
+              child: Center(child: VBreatheCircle(value: '$left')),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+              child: Column(
+                children: [
+                  VButton.primary(
+                    'Close app',
+                    enabled: left == 0,
+                    onPressed: () async {
+                      await repo.recordPutDown(packageName);
+                      await _home();
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Long-press the title for an emergency 5 minutes.',
+                    textAlign: TextAlign.center,
+                    style: VText.secondary,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final apps = ref.watch(watchedAppsProvider).value ?? const <WatchedApp>[];
     final app = apps.where((a) => a.packageName == packageName).firstOrNull;
     final name = ref.watch(profileProvider).value?.name ?? '';
     final repo = ref.read(usageRepositoryProvider);
+    final modeName = widget.modeName;
+    if (modeName != null) return _blockedByMode(context, name, modeName);
     if (app == null) return const PromptScaffold(child: SizedBox.shrink());
 
     final emergency = app.hardBlock && app.extensionsLeft == 0;

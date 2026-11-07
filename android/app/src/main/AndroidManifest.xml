@@ -13,6 +13,10 @@
     <uses-permission
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
+    <!-- Modes: brightness, the black wallpaper, and re-arming schedules after a reboot. -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Soft nudges near a limit. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Reading the wallpaper (for the widgets' frosted-glass blur) needs
@@ -59,6 +63,28 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/watcher_service" />
         </service>
+        <!-- Modes: schedules, Binge Time running out, re-arming after a reboot. -->
+        <receiver
+            android:name=".modes.ModeReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Quick-settings tile: the running mode. -->
+        <service
+            android:name=".modes.VeronicaTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_monochrome"
+            android:label="Veronica"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <!-- Home widgets (images rendered by Flutter; see lib/platform/home_widgets.dart). -->
         <receiver
             android:name=".widgets.ScreenTimeWidget"

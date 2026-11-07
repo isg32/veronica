@@ -1,6 +1,7 @@
 package com.isg32.veronica
 
 import android.content.Intent
+import com.isg32.veronica.modes.ModeChannel
 import com.isg32.veronica.permissions.PermissionsChannel
 import com.isg32.veronica.usage.UsageChannel
 import com.isg32.veronica.watcher.WatcherChannel
@@ -21,6 +22,7 @@ class MainActivity : FlutterActivity() {
         val messenger = flutterEngine.dartExecutor.binaryMessenger
         UsageChannel.register(this, messenger)
         PermissionsChannel.register(this, messenger)
+        ModeChannel.register(this, messenger)
         WallpaperChannel.register(this, messenger)
         watcher = WatcherChannel(this, messenger).also {
             it.deliver(intent?.getStringExtra(EXTRA_ROUTE))

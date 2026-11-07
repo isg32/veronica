@@ -78,6 +78,9 @@ void watcherRoutes(Ref ref) {
 
   void open(String route) {
     final router = ref.read(routerProvider);
+    // Already showing it (e.g. Time's up from both the app and the alarm).
+    final path = Uri.parse(route).path;
+    if (router.state.uri.path == path) return;
     if (route.startsWith('/now/')) {
       unawaited(router.push(route));
     } else {

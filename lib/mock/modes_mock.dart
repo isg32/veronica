@@ -112,4 +112,7 @@ class MockModeRepository implements ModeRepository {
 
   @override
   Future<void> end() async => _active.value = null;
+
+  @override
+  Future<void> adopt(ActiveMode? active) async => _active.value = active;
 }

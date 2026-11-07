@@ -23,14 +23,25 @@ enum _FocusView { usage, modes }
 
 /// Tab 2: watched apps and modes.
 class FocusPage extends StatefulWidget {
-  const FocusPage({super.key});
+  const FocusPage({super.key, this.showModes = false});
+
+  /// Open on Modes (from the quick-settings tile).
+  final bool showModes;
 
   @override
   State<FocusPage> createState() => _FocusPageState();
 }
 
 class _FocusPageState extends State<FocusPage> {
-  _FocusView _view = _FocusView.usage;
+  late _FocusView _view = widget.showModes
+      ? _FocusView.modes
+      : _FocusView.usage;
+
+  @override
+  void didUpdateWidget(FocusPage old) {
+    super.didUpdateWidget(old);
+    if (widget.showModes && !old.showModes) _view = _FocusView.modes;
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -6,7 +6,8 @@ enum AppPermission {
   dnd('Do Not Disturb', 'Silence the phone in Work and Go Out'),
   notifications('Notifications', 'Water, medicine and mantra reminders'),
   exactAlarms('Exact alarms', 'Wake you at exactly 07:00'),
-  battery('Battery unrestricted', 'Keep the watcher running');
+  battery('Battery unrestricted', 'Keep the watcher running'),
+  writeSettings('Modify system settings', 'Dim the screen in a mode');
 
   const AppPermission(this.label, this.reason);
 

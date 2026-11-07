@@ -53,6 +53,7 @@ object PermissionsChannel {
                 PackageManager.PERMISSION_GRANTED),
             "exactAlarms" to (Build.VERSION.SDK_INT < 31 || alarms.canScheduleExactAlarms()),
             "battery" to power.isIgnoringBatteryOptimizations(activity.packageName),
+            "writeSettings" to Settings.System.canWrite(activity),
         )
     }
 
@@ -73,6 +74,7 @@ object PermissionsChannel {
             }
             "exactAlarms" -> Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, pkg)
             "battery" -> Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, pkg)
+            "writeSettings" -> Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, pkg)
             else -> return
         }
         activity.startActivity(intent)

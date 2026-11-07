@@ -6,11 +6,13 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import com.isg32.veronica.MainActivity
 import com.isg32.veronica.R
+import com.isg32.veronica.modes.ModeState
 import com.isg32.veronica.usage.UsageChannel
 
 /**
@@ -80,19 +82,57 @@ class WatcherService : AccessibilityService() {
         handler.removeCallbacks(tick)
         current = pkg
         promptedThisVisit = false
+        nudgedThisVisit = false
         if (pkg == packageName) return
-        val rule = WatchRules.load(this)[pkg] ?: return
+        if (WatchRules.load(this)[pkg] == null && modeBlocks(pkg) == null) return
 
         baseMillis = UsageChannel.todayMillis(this, pkg)
         sessionStart = System.currentTimeMillis()
-        check(rule)
+        check()
         handler.postDelayed(tick, TICK_MS)
     }
 
-    private fun check(rule: WatchRule? = current?.let { WatchRules.load(this)[it] }) {
-        val r = rule ?: return
+    /** The running mode's name if it blocks [pkg]. */
+    private fun modeBlocks(pkg: String): String? {
+        val mode = ModeState.active(this) ?: return null
+        if (mode.optString("policy") != "blocked") return null
+        val blocked = mode.optJSONArray("blocked") ?: return null
+        for (i in 0 until blocked.length()) {
+            if (blocked.getString(i) == pkg) return mode.optString("name", "Your mode")
+        }
+        return null
+    }
+
+    private var nudgedThisVisit = false
+
+    private fun check() {
+        val pkg = current ?: return
         val now = System.currentTimeMillis()
-        if (now < WatchRules.graceUntil(this, r.packageName)) return
+        if (now < WatchRules.graceUntil(this, pkg)) return
+
+        // A mode that blocks the app: Put it down on every visit.
+        modeBlocks(pkg)?.let { modeName ->
+            if (!promptedThisVisit) {
+                promptedThisVisit = true
+                openPutItDown(pkg, modeName)
+            }
+            return
+        }
+
+        val r = WatchRules.load(this)[pkg] ?: return
+        val mode = ModeState.active(this)
+        when (mode?.optString("policy")) {
+            // Binge Time: limits are off until it ends.
+            "allowed" -> return
+            // Go Out: a nudge after a few minutes in any watched app.
+            "nudgeAfter" -> {
+                val visitMin = ((now - sessionStart) / 60_000).toInt()
+                if (!nudgedThisVisit && visitMin >= mode.optInt("nudgeAfter", 5)) {
+                    nudgedThisVisit = true
+                    nudge(r, ((baseMillis + now - sessionStart) / 60_000).toInt(), mode.optString("name"))
+                }
+            }
+        }
 
         val usedMin = ((baseMillis + now - sessionStart) / 60_000).toInt()
         val limit = r.limitMin.coerceAtLeast(1)
@@ -110,15 +150,16 @@ class WatcherService : AccessibilityService() {
         }
     }
 
-    private fun openPutItDown(pkg: String) {
+    private fun openPutItDown(pkg: String, modeName: String? = null) {
+        val mode = modeName?.let { "&mode=" + Uri.encode(it) } ?: ""
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            putExtra(MainActivity.EXTRA_ROUTE, "/now/put-it-down/$pkg?from=watcher")
+            putExtra(MainActivity.EXTRA_ROUTE, "/now/put-it-down/$pkg?from=watcher$mode")
         }
         startActivity(intent)
     }
 
-    private fun nudge(rule: WatchRule, usedMin: Int) {
+    private fun nudge(rule: WatchRule, usedMin: Int, modeName: String? = null) {
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
             NotificationChannel(
@@ -137,7 +178,13 @@ class WatcherService : AccessibilityService() {
         val notification = Notification.Builder(this, NUDGE_CHANNEL)
             .setSmallIcon(R.drawable.ic_launcher_monochrome)
             .setContentTitle("$usedMin min on ${rule.name}")
-            .setContentText("$left min left of your ${rule.limitMin}. Maybe wrap up soon.")
+            .setContentText(
+                if (modeName != null) {
+                    "$modeName is on. Maybe put it down for a while."
+                } else {
+                    "$left min left of your ${rule.limitMin}. Maybe wrap up soon."
+                },
+            )
             .setContentIntent(open)
             .setAutoCancel(true)
             .build()
