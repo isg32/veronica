@@ -316,7 +316,7 @@ Each later phase is done only when its "Done when" holds on your phone, and Phas
 | Glyph light test | *Settings → Glyph → Test the lights* runs every light in turn (C1–C24, B, A) and then all of them, on the preview and the real Glyphs; the page says whether the Phone (2a) lights were found | Done |
 | Blurred status bar | Pages run edge to edge behind the status bar with an iOS-style progressive blur: strongest at the top, fading out 16 px below the bar, under a soft paper-coloured gradient | Done |
 | Greyscale without ADB | Grant greyscale on the phone alone through Shizuku, or switch it by hand from a one-tap notification, so the app can be shared (see *Sharing Veronica*) | Built |
-| Veronica's voice | Kokoro (kokoro-en-v0_19) downloaded once via sherpa-onnx, lines rendered once and cached, Android speech as the fallback; speaks on Put it down, Time's up, Medicine due, the mantra session and after the alarm | Built |
+| Veronica's voice | Kokoro v1.0 int8 (English files, about 150 MB from Hugging Face) downloaded once in the background via sherpa-onnx, lines rendered once and cached, Android speech as the fallback; speaks on Put it down, Time's up, Medicine due, the mantra session and after the alarm | Built |
 | Widgets refresh in the background | Next alarm and Binge Time are rendered ahead as frames and redrawn on schedule with the app closed; screen time updates when Veronica opens | Built |
 | Medicine snooze | "Snooze 15 min" reminds again 15 minutes later | Built |
 

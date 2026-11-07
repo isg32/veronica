@@ -5,33 +5,36 @@ import android.content.Context
 import android.net.Uri
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
+import org.json.JSONArray
+import java.io.File
 
 /**
  * Downloads the Kokoro voice model with Android's DownloadManager, so it
- * carries on in the background (with its own progress notification) even
- * if Veronica is closed. The app unpacks it when it next runs.
+ * carries on in the background (with a progress notification) even if
+ * Veronica is closed. Files land in the app's external files folder.
  *
  * Methods on `veronica/voice`:
- * - `start(url)` → starts the download (or keeps the one running)
- * - `status` → {state: none | pending | running | paused | done | failed,
- *   received, total, path}
- * - `forget` → drops the finished or failed download (and its file)
+ * - `start(json)` → downloads [{url, path (relative), visible}], unless a
+ *   download is already running
+ * - `status` → {state: none | running | done | failed, received, total}
+ * - `forget(delete)` → stops tracking the download; with delete, removes
+ *   its files (after a failure)
  */
 object VoiceDownload {
     private const val NAME = "veronica/voice"
     private const val PREFS = "veronica_voice"
-    private const val ID = "download"
+    private const val IDS = "downloads"
 
     fun register(context: Context, messenger: BinaryMessenger) {
         MethodChannel(messenger, NAME).setMethodCallHandler { call, result ->
             when (call.method) {
                 "start" -> {
-                    start(context, call.arguments as String)
+                    start(context, JSONArray(call.arguments as String))
                     result.success(null)
                 }
                 "status" -> result.success(status(context))
                 "forget" -> {
-                    forget(context)
+                    forget(context, call.arguments as? Boolean ?: false)
                     result.success(null)
                 }
                 else -> result.notImplemented()
@@ -43,45 +46,70 @@ object VoiceDownload {
 
     private fun manager(context: Context) = context.getSystemService(DownloadManager::class.java)
 
-    private fun start(context: Context, url: String) {
-        val state = status(context)["state"]
-        if (state == "pending" || state == "running" || state == "paused") return
-        forget(context)
-        val request = DownloadManager.Request(Uri.parse(url))
-            .setTitle("Veronica's voice")
-            .setDescription("Kokoro voice model, about 300 MB")
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalFilesDir(context, null, "kokoro.tar.bz2")
-        val id = manager(context).enqueue(request)
-        prefs(context).edit().putLong(ID, id).apply()
+    private fun ids(context: Context): List<Long> {
+        val raw = JSONArray(prefs(context).getString(IDS, "[]"))
+        return (0 until raw.length()).map { raw.getLong(it) }
     }
 
-    private fun status(context: Context): Map<String, Any?> {
-        val id = prefs(context).getLong(ID, -1)
-        if (id < 0) return mapOf("state" to "none")
-        manager(context).query(DownloadManager.Query().setFilterById(id)).use { c ->
-            if (!c.moveToFirst()) return mapOf("state" to "none")
-            val status = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-            val state = when (status) {
-                DownloadManager.STATUS_PENDING -> "pending"
-                DownloadManager.STATUS_RUNNING -> "running"
-                DownloadManager.STATUS_PAUSED -> "paused"
-                DownloadManager.STATUS_SUCCESSFUL -> "done"
-                else -> "failed"
+    private fun start(context: Context, files: JSONArray) {
+        if (status(context)["state"] == "running") return
+        forget(context, true)
+        val base = context.getExternalFilesDir(null) ?: return
+        val ids = JSONArray()
+        for (i in 0 until files.length()) {
+            val f = files.getJSONObject(i)
+            val path = f.getString("path")
+            // A file already there would make the download pick another name.
+            File(base, path).apply {
+                parentFile?.mkdirs()
+                delete()
             }
-            val local = c.getString(c.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI))
-            return mapOf(
-                "state" to state,
-                "received" to c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)),
-                "total" to c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)),
-                "path" to local?.let { Uri.parse(it).path },
-            )
+            val request = DownloadManager.Request(Uri.parse(f.getString("url")))
+                .setTitle("Veronica's voice")
+                .setDescription("Kokoro voice model")
+                .setNotificationVisibility(
+                    if (f.optBoolean("visible")) {
+                        DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+                    } else {
+                        DownloadManager.Request.VISIBILITY_HIDDEN
+                    },
+                )
+                .setDestinationInExternalFilesDir(context, null, path)
+            ids.put(manager(context).enqueue(request))
         }
+        prefs(context).edit().putString(IDS, ids.toString()).apply()
     }
 
-    private fun forget(context: Context) {
-        val id = prefs(context).getLong(ID, -1)
-        if (id >= 0) manager(context).remove(id)
-        prefs(context).edit().remove(ID).apply()
+    /** All the files together: failed if one failed, done when all are. */
+    private fun status(context: Context): Map<String, Any?> {
+        val ids = ids(context)
+        if (ids.isEmpty()) return mapOf("state" to "none")
+        var received = 0L
+        var total = 0L
+        var done = 0
+        var failed = false
+        manager(context).query(DownloadManager.Query().setFilterById(*ids.toLongArray())).use { c ->
+            while (c.moveToNext()) {
+                received += c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                total += c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                when (c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))) {
+                    DownloadManager.STATUS_SUCCESSFUL -> done++
+                    DownloadManager.STATUS_FAILED -> failed = true
+                }
+            }
+            if (c.count < ids.size) failed = true
+        }
+        val state = when {
+            failed -> "failed"
+            done == ids.size -> "done"
+            else -> "running"
+        }
+        return mapOf("state" to state, "received" to received, "total" to total)
+    }
+
+    private fun forget(context: Context, delete: Boolean) {
+        val ids = ids(context)
+        if (delete && ids.isNotEmpty()) manager(context).remove(*ids.toLongArray())
+        prefs(context).edit().remove(IDS).apply()
     }
 }

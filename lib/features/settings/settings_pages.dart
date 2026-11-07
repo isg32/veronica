@@ -531,7 +531,7 @@ class VoiceSettingsPage extends ConsumerWidget {
   }
 }
 
-/// The Kokoro model: download it (once, about 300 MB), see progress.
+/// The Kokoro model: download it (once, about 150 MB), see progress.
 class _VoiceModelRow extends ConsumerWidget {
   const _VoiceModelRow();
 
@@ -547,7 +547,7 @@ class _VoiceModelRow extends ConsumerWidget {
           'Downloading Kokoro-82M in the background. You can close '
               'Veronica; the notification shows progress.',
         VoiceModelState.notDownloaded =>
-          'Kokoro-82M, about 300 MB, downloaded once. The only thing Veronica '
+          'Kokoro-82M, about 150 MB, downloaded once. The only thing Veronica '
               'fetches.',
       },
       trailing: switch (state) {

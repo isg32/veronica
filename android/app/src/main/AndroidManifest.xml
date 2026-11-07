@@ -6,6 +6,8 @@
         tools:ignore="ProtectedPermissions" />
     <!-- Only to download the offline voice model, once. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The voice model's small files download without their own notification. -->
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
     <!-- Permissions asked for in onboarding (see PermissionsChannel.kt). -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'dart:isolate';
 
-import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -17,24 +17,32 @@ import 'android_usage.dart';
 
 part 'voice.g.dart';
 
-/// Kokoro English (v0.19) for sherpa-onnx, downloaded once from the
-/// sherpa-onnx releases. It is the only thing Veronica fetches from the
-/// network.
-const kokoroUrl =
-    'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2';
-const _modelDir = 'kokoro-en-v0_19';
+/// Kokoro v1.0 (int8) for sherpa-onnx, from the sherpa-onnx author's
+/// Hugging Face repository, which is far faster than GitHub releases.
+/// Only the English files are fetched, about 150 MB, once. It is the only
+/// thing Veronica downloads.
+const kokoroRepo =
+    'https://huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_0/resolve/main';
+const _modelDir = 'kokoro-int8-multi-lang-v1_0';
 
-/// Speaker ids in kokoro-en-v0_19: 0 af, 1 af_bella, 2 af_nicole, 3 af_sarah,
-/// 4 af_sky, 5 am_adam, 6 am_michael, 7 bf_emma, 8 bf_isabella, 9 bm_george,
-/// 10 bm_lewis. This model has no af_heart, so its default warm voice "af"
-/// stands in for it.
+/// The model's files; the first (the large model) shows the notification.
+const _modelFiles = [
+  'model.int8.onnx',
+  'voices.bin',
+  'tokens.txt',
+  'lexicon-us-en.txt',
+];
+
+/// Speaker ids in Kokoro v1.0 (from the model's metadata): 2 af_bella,
+/// 3 af_heart, 6 af_nicole, 21 bf_emma.
 int kokoroSpeaker(KokoroVoice v) => switch (v) {
-  KokoroVoice.afHeart => 0,
-  KokoroVoice.afBella => 1,
-  KokoroVoice.afNicole => 2,
-  KokoroVoice.bfEmma => 7,
+  KokoroVoice.afHeart => 3,
+  KokoroVoice.afBella => 2,
+  KokoroVoice.afNicole => 6,
+  KokoroVoice.bfEmma => 21,
 };
 
+/// Rendered lines are kept here.
 Future<Directory> _root() async =>
     Directory('${(await getApplicationSupportDirectory()).path}/voice');
 
@@ -49,15 +57,26 @@ const _download = MethodChannel('veronica/voice');
 @Riverpod(keepAlive: true)
 class VoiceModel extends _$VoiceModel {
   Timer? _poll;
-  bool _unpacking = false;
-
-  static Future<Directory> _modelDir() async =>
-      Directory('${(await _root()).path}/$_modelDir');
 
   static Future<bool> _installed() async {
-    final dir = await _modelDir();
-    return File('${dir.path}/model.onnx').existsSync() &&
-        File('${dir.path}/voices.bin').existsSync();
+    final dir = await modelDirectory();
+    return dir != null && File('${dir.path}/.complete').existsSync();
+  }
+
+  /// The earlier model (Kokoro v0.19, from GitHub), no longer used.
+  static Future<void> _dropOldModel() async {
+    final root = await _root();
+    for (final name in ['kokoro-en-v0_19', 'kokoro.tar.bz2']) {
+      final path = '${root.path}/$name';
+      switch (FileSystemEntity.typeSync(path)) {
+        case FileSystemEntityType.directory:
+          await Directory(path).delete(recursive: true);
+        case FileSystemEntityType.file:
+          await File(path).delete();
+        default:
+          break;
+      }
+    }
   }
 
   @override
@@ -66,6 +85,7 @@ class VoiceModel extends _$VoiceModel {
     if (!isAndroid) {
       return (state: VoiceModelState.notDownloaded, progress: 0.0);
     }
+    unawaited(_dropOldModel().catchError((Object _) {}));
     if (await _installed()) {
       return (state: VoiceModelState.ready, progress: 1.0);
     }
@@ -74,7 +94,17 @@ class VoiceModel extends _$VoiceModel {
 
   /// Starts (or rejoins) the background download.
   Future<void> download() async {
-    await _download.invokeMethod<void>('start', kokoroUrl);
+    await _download.invokeMethod<void>(
+      'start',
+      jsonEncode([
+        for (final (i, f) in _modelFiles.indexed)
+          {
+            'url': '$kokoroRepo/$f',
+            'path': 'voice/$_modelDir/$f',
+            'visible': i == 0,
+          },
+      ]),
+    );
     state = const AsyncData((
       state: VoiceModelState.downloading,
       progress: 0.0,
@@ -93,52 +123,44 @@ class VoiceModel extends _$VoiceModel {
     });
   }
 
-  /// Where the system download is; unpacks it once it has finished.
+  /// Where the system download is; marks the model ready once every
+  /// file has arrived.
   Future<({VoiceModelState state, double progress})> _check() async {
     final status = await _download.invokeMapMethod<String, Object?>('status');
     final received = (status?['received'] as num?)?.toDouble() ?? 0;
     final total = (status?['total'] as num?)?.toDouble() ?? 0;
     switch (status?['state']) {
-      case 'pending' || 'running' || 'paused':
+      case 'running':
         _watch();
         return (
           state: VoiceModelState.downloading,
-          // The last 10 % is unpacking.
-          progress: total > 0 ? received / total * 0.9 : 0.0,
+          progress: total > 0 ? received / total : 0.0,
         );
       case 'done':
-        final path = status?['path'] as String?;
-        if (path != null && await _unpack(path)) {
+        final dir = await modelDirectory();
+        final complete =
+            dir != null &&
+            _modelFiles.every((f) => File('${dir.path}/$f').existsSync());
+        if (complete) {
+          await File('${dir.path}/.complete').writeAsString('ok');
+          await _download.invokeMethod<void>('forget', false);
           return (state: VoiceModelState.ready, progress: 1.0);
         }
-        return (state: VoiceModelState.downloading, progress: 0.92);
+        await _download.invokeMethod<void>('forget', true);
+        return (state: VoiceModelState.notDownloaded, progress: 0.0);
       case 'failed':
-        await _download.invokeMethod<void>('forget');
+        await _download.invokeMethod<void>('forget', true);
         return (state: VoiceModelState.notDownloaded, progress: 0.0);
       default:
         return (state: VoiceModelState.notDownloaded, progress: 0.0);
     }
   }
+}
 
-  /// Unpacks the downloaded archive; true once the model is in place.
-  Future<bool> _unpack(String archive) async {
-    if (_unpacking) return false;
-    _unpacking = true;
-    try {
-      final root = await _root();
-      await root.create(recursive: true);
-      final out = root.path;
-      await Isolate.run(() => extractFileToDisk(archive, out));
-      await _download.invokeMethod<void>('forget');
-      return await _installed();
-    } on Object catch (e) {
-      debugPrint('Voice model unpack failed: $e');
-      await _download.invokeMethod<void>('forget');
-      return false;
-    } finally {
-      _unpacking = false;
-    }
-  }
+/// Where the model's files are (the app's external files folder).
+Future<Directory?> modelDirectory() async {
+  final base = await getExternalStorageDirectory();
+  return base == null ? null : Directory('${base.path}/voice/$_modelDir');
 }
 
 /// Renders [text] to a WAV with Kokoro, off the main isolate.
@@ -154,10 +176,10 @@ Future<void> _render({
     sherpa.OfflineTtsConfig(
       model: sherpa.OfflineTtsModelConfig(
         kokoro: sherpa.OfflineTtsKokoroModelConfig(
-          model: '$modelDir/model.onnx',
+          model: '$modelDir/model.int8.onnx',
           voices: '$modelDir/voices.bin',
           tokens: '$modelDir/tokens.txt',
-          dataDir: '$modelDir/espeak-ng-data',
+          lexicon: '$modelDir/lexicon-us-en.txt',
         ),
         numThreads: 2,
       ),
@@ -235,7 +257,7 @@ class VeronicaVoice {
     if (!_rendering.add(out.path)) return;
     try {
       await _render(
-        modelDir: '${(await _root()).path}/$_modelDir',
+        modelDir: (await modelDirectory())!.path,
         text: text,
         speaker: kokoroSpeaker(s.voice),
         speed: s.speed,
