@@ -58,11 +58,12 @@ class GlyphPlayer {
   }
 
   Future<void> _show(GlyphFrame frame) async {
-    final key = '${frame.lit}:${frame.a}:${frame.b}';
+    final key = '${frame.lit}:${frame.only}:${frame.a}:${frame.b}';
     if (key == _lastFrame) return;
     _lastFrame = key;
     final channels = [
-      for (var i = 0; i < frame.lit.clamp(0, 24); i++) i,
+      for (var i = 0; i < 24; i++)
+        if (frame.litC(i)) i,
       if (frame.b) _b,
       if (frame.a) _a,
     ];

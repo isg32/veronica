@@ -32,5 +32,12 @@ GlyphFrame glyphFrameAt(GlyphSignal signal, double t) {
       return GlyphFrame(lit: fill(p));
     case GlyphSignal.focus:
       return GlyphFrame(lit: fill(1 - (t % 8) / 8));
+    case GlyphSignal.test:
+      // One light at a time (0.12 s each), then everything for a second.
+      final step = (t * 8).floor() % 34;
+      if (step < 24) return GlyphFrame(only: step);
+      if (step == 24) return const GlyphFrame(b: true);
+      if (step == 25) return const GlyphFrame(a: true);
+      return const GlyphFrame(lit: n, a: true, b: true);
   }
 }

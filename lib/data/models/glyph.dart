@@ -14,7 +14,12 @@ enum GlyphSignal {
   water('Water progress', 'C lights one block per glass of the goal'),
   medicine('Medicine due', 'A and B double-flash, repeating every 10 s'),
   mantra('Mantra breathing', 'Whole C strip glows up for 4 s and down for 6 s'),
-  focus('Focus countdown', 'C drains as the Work or Binge timer runs');
+  focus('Focus countdown', 'C drains as the Work or Binge timer runs'),
+  test('Light test', 'Every light in turn, C1 to C24, then B and A, then all');
+
+  /// The patterns Veronica uses (everything but the light test).
+  static List<GlyphSignal> get patterns =>
+      values.where((s) => s != test).toList();
 
   const GlyphSignal(this.label, this.description);
 

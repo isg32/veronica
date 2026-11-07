@@ -315,10 +315,17 @@ class _GlyphSettingsPageState extends ConsumerState<GlyphSettingsPage>
         Center(
           child: VGlyphPreview(frame: glyphFrameAt(_playing, _t), scale: 1.25),
         ),
+        const _GlyphStatus(),
+        VButton.primary(
+          _playing == GlyphSignal.test
+              ? 'Testing every light…'
+              : 'Test the lights',
+          onPressed: () => _play(GlyphSignal.test),
+        ),
         VListSection(
           header: const VEyebrow('Test patterns'),
           children: [
-            for (final signal in GlyphSignal.values)
+            for (final signal in GlyphSignal.patterns)
               VListRow(
                 title: signal.label,
                 trailing: signal == _playing
@@ -377,6 +384,28 @@ class _GlyphSettingsPageState extends ConsumerState<GlyphSettingsPage>
           'open as full-screen pages.',
         ),
       ],
+    );
+  }
+}
+
+/// Whether this phone's Glyph lights can be driven.
+class _GlyphStatus extends StatelessWidget {
+  const _GlyphStatus();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: GlyphPlayer.instance.available,
+      builder: (context, snap) => Text(
+        switch (snap.data) {
+          null => 'Looking for the Glyph lights…',
+          true =>
+            'Phone (2a) Glyph lights connected. Patterns play on the back.',
+          false => 'No Glyph lights found. Patterns show here only.',
+        },
+        textAlign: TextAlign.center,
+        style: VText.secondary,
+      ),
     );
   }
 }

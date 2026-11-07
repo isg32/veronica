@@ -10,10 +10,16 @@ import 'v_ink.dart';
 /// The 2a has the curved strip C1–C24 (indices 0–23) and the lights A (25)
 /// and B (24).
 class GlyphFrame {
-  const GlyphFrame({this.lit = 0, this.a = false, this.b = false});
+  const GlyphFrame({this.lit = 0, this.a = false, this.b = false, this.only});
 
   /// Number of C segments lit from C1.
   final int lit;
+
+  /// A single C segment lit on its own (index 0–23), for the light test.
+  final int? only;
+
+  /// Whether C segment [i] is lit.
+  bool litC(int i) => only != null ? i == only : i < lit;
   final bool a;
   final bool b;
 }
@@ -92,7 +98,7 @@ class _GlyphPainter extends CustomPainter {
     // C1–C24.
     for (var i = 0; i < 24; i++) {
       final d0 = 10 + i * 2.7;
-      _arc(canvas, d0, d0 + 2.1, on: i < frame.lit);
+      _arc(canvas, d0, d0 + 2.1, on: frame.litC(i));
     }
     _arc(canvas, 150, 208, on: frame.a);
     _arc(canvas, 254, 286, on: frame.b);
@@ -154,6 +160,7 @@ class _GlyphPainter extends CustomPainter {
   @override
   bool shouldRepaint(_GlyphPainter old) =>
       old.frame.lit != frame.lit ||
+      old.frame.only != frame.only ||
       old.frame.a != frame.a ||
       old.frame.b != frame.b ||
       old.color != color;
