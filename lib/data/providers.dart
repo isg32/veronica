@@ -1,18 +1,13 @@
+import 'dart:io';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../core/clock.dart';
-import '../mock/medicine_mock.dart';
-import '../mock/mantra_mock.dart';
-import '../mock/modes_mock.dart';
 import '../mock/permissions_mock.dart';
-import '../mock/profile_mock.dart';
-import '../mock/sleep_mock.dart';
-import '../mock/tasks_mock.dart';
 import '../mock/usage_mock.dart';
-import '../mock/voice_mock.dart';
-import '../mock/water_mock.dart';
 import '../platform/android_usage.dart';
 import 'db/database.dart';
+import 'local/local_repositories.dart';
 import 'system/android_permission_repository.dart';
 import 'models/models.dart';
 import 'usage/drift_usage_repository.dart';
@@ -43,7 +38,8 @@ UsageSource usageSource(Ref ref) =>
     isAndroid ? const AndroidUsageSource() : const MockUsageSource();
 
 @Riverpod(keepAlive: true)
-ProfileRepository profileRepository(Ref ref) => MockProfileRepository();
+ProfileRepository profileRepository(Ref ref) =>
+    DriftProfileRepository(ref.watch(databaseProvider));
 
 @Riverpod(keepAlive: true)
 PermissionRepository permissionRepository(Ref ref) =>
@@ -57,29 +53,66 @@ UsageRepository usageRepository(Ref ref) => DriftUsageRepository(
 );
 
 @Riverpod(keepAlive: true)
-TaskRepository taskRepository(Ref ref) =>
-    MockTaskRepository(ref.watch(clockProvider).now);
+TaskRepository taskRepository(Ref ref) => DriftTaskRepository(
+  ref.watch(databaseProvider),
+  ref.watch(clockProvider).now,
+);
 
 @Riverpod(keepAlive: true)
-WaterRepository waterRepository(Ref ref) =>
-    MockWaterRepository(ref.watch(clockProvider).now);
+WaterRepository waterRepository(Ref ref) => DriftWaterRepository(
+  ref.watch(databaseProvider),
+  ref.watch(clockProvider).now,
+);
 
 @Riverpod(keepAlive: true)
-MedicineRepository medicineRepository(Ref ref) => MockMedicineRepository();
+MedicineRepository medicineRepository(Ref ref) => DriftMedicineRepository(
+  ref.watch(databaseProvider),
+  ref.watch(clockProvider).now,
+);
 
 @Riverpod(keepAlive: true)
-ModeRepository modeRepository(Ref ref) =>
-    MockModeRepository(ref.watch(clockProvider).now);
+ModeRepository modeRepository(Ref ref) => DriftModeRepository(
+  ref.watch(databaseProvider),
+  ref.watch(clockProvider).now,
+);
+
+/// Importing alarm sounds (Phase 3). Returns null until then.
+@Riverpod(keepAlive: true)
+SoundPicker soundPicker(Ref ref) =>
+    () async => null;
+
+/// Sleep estimated from screen-off time (Phase 3). Empty until then.
+@Riverpod(keepAlive: true)
+NightSource nightSource(Ref ref) =>
+    (schedule) async => const [];
 
 @Riverpod(keepAlive: true)
-SleepRepository sleepRepository(Ref ref) =>
-    MockSleepRepository(ref.watch(clockProvider).now);
+SleepRepository sleepRepository(Ref ref) => DriftSleepRepository(
+  ref.watch(databaseProvider),
+  pickSound: ref.watch(soundPickerProvider),
+  nights: ref.watch(nightSourceProvider),
+  deleteFile: (path) async {
+    final file = File(path);
+    if (file.existsSync()) await file.delete();
+  },
+);
 
 @Riverpod(keepAlive: true)
-MantraRepository mantraRepository(Ref ref) => MockMantraRepository();
+MantraRepository mantraRepository(Ref ref) => DriftMantraRepository(
+  ref.watch(databaseProvider),
+  ref.watch(clockProvider).now,
+);
+
+/// Whether the offline voice model is on the phone (Phase 4).
+@Riverpod(keepAlive: true)
+Stream<VoiceModelState> voiceModelState(Ref ref) =>
+    Stream.value(VoiceModelState.notDownloaded);
 
 @Riverpod(keepAlive: true)
-SettingsRepository settingsRepository(Ref ref) => MockSettingsRepository();
+SettingsRepository settingsRepository(Ref ref) => DriftSettingsRepository(
+  ref.watch(databaseProvider),
+  voiceModel: ref.watch(voiceModelStateProvider.future).asStream(),
+);
 
 // ---------------------------------------------------------------------------
 // Streams the UI watches.

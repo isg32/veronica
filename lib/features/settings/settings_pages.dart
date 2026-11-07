@@ -22,6 +22,7 @@ import '../../core/widgets/v_surface.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
 import '../selectors.dart';
+import '../../mock/seed.dart';
 import '../home_widgets/home_widget_views.dart';
 import 'glyph_frames.dart';
 import 'widget_glass_pages.dart';
@@ -582,7 +583,7 @@ class DataSettingsPage extends ConsumerWidget {
             ),
             VListRow(
               title: 'Reset all data',
-              subtitle: 'Starts onboarding again',
+              subtitle: 'Deletes everything and starts onboarding again',
               onTap: () => showVSheet<void>(
                 context,
                 title: 'Reset all data?',
@@ -590,15 +591,15 @@ class DataSettingsPage extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const VFootnote('Everything on this phone is cleared.'),
+                    const VFootnote(
+                      'Everything Veronica keeps on this phone is deleted.',
+                    ),
                     const SizedBox(height: 14),
                     VButton.primary(
                       'Reset',
                       onPressed: () async {
                         Navigator.of(sheet).pop();
-                        final repo = ref.read(profileRepositoryProvider);
-                        final p = await repo.watch().first;
-                        await repo.save(p.copyWith(onboarded: false));
+                        await ref.read(databaseProvider).resetAll();
                       },
                     ),
                     const SizedBox(height: 10),
@@ -612,6 +613,21 @@ class DataSettingsPage extends ConsumerWidget {
             ),
           ],
         ),
+        if (kDebugMode)
+          VListSection(
+            header: const VEyebrow('Debug', trailing: VEyebrowNote('debug')),
+            children: [
+              VListRow(
+                title: 'Load sample data',
+                subtitle: 'Replaces everything with the design\'s sample data',
+                onTap: () async {
+                  final db = ref.read(databaseProvider);
+                  await db.resetAll();
+                  await seedSampleData(db);
+                },
+              ),
+            ],
+          ),
         VListSection(
           header: const VEyebrow('About'),
           children: [

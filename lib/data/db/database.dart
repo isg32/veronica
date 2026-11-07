@@ -50,15 +50,190 @@ class OverrideLogs extends Table {
   IntColumn get at => integer()();
 }
 
-/// Veronica's on-device database. Phase 1 holds usage; later phases add
-/// tasks, water, medicine, modes, sleep and mantras (see docs/PLAN.md).
-@DriftDatabase(tables: [WatchedApps, UsageDays, OverrideLogs])
+/// Small single values (settings, the profile, the running mode), each a
+/// JSON document under a key. See `codecs.dart`.
+@DataClassName('PrefRow')
+class Prefs extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {key};
+}
+
+@DataClassName('TaskRow')
+class Tasks extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get notes => text().withDefault(const Constant(''))();
+  IntColumn get createdAt => integer()();
+  IntColumn get dueAt => integer().nullable()();
+  IntColumn get completedAt => integer().nullable()();
+
+  /// TaskPriority index.
+  IntColumn get priority => integer().withDefault(const Constant(1))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('WaterLogRow')
+class WaterLogs extends Table {
+  TextColumn get id => text()();
+  IntColumn get at => integer()();
+  IntColumn get ml => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('MedicineRow')
+class Medicines extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get dose => text()();
+
+  /// `HH:MM,HH:MM`.
+  TextColumn get times => text()();
+
+  /// `1,2,3` (Monday = 1).
+  TextColumn get days => text()();
+  IntColumn get refillCount => integer().withDefault(const Constant(0))();
+  BoolColumn get remindRefill => boolean().withDefault(const Constant(true))();
+  IntColumn get refillRemindAt => integer().withDefault(const Constant(5))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+/// A dose that was answered. Unanswered doses are worked out from the
+/// medicines' schedules (due, or missed once well past their time).
+@DataClassName('DoseRow')
+class Doses extends Table {
+  TextColumn get medicineId => text()();
+  IntColumn get scheduledAt => integer()();
+
+  /// DoseStatus index.
+  IntColumn get status => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {medicineId, scheduledAt};
+}
+
+/// Modes, alarms and sounds are stored as JSON documents (see codecs.dart).
+@DataClassName('ModeRow')
+class Modes extends Table {
+  TextColumn get id => text()();
+  IntColumn get position => integer()();
+  TextColumn get json => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('AlarmRow')
+class Alarms extends Table {
+  TextColumn get id => text()();
+  TextColumn get json => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('SoundRow')
+class Sounds extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  IntColumn get lengthMs => integer()();
+  IntColumn get importedAt => integer()();
+
+  /// Copy of the audio inside the app's storage.
+  TextColumn get path => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('MantraRow')
+class Mantras extends Table {
+  TextColumn get id => text()();
+  TextColumn get body => text()();
+  BoolColumn get isStarter => boolean().withDefault(const Constant(false))();
+  IntColumn get lastShownAt => integer().nullable()();
+  IntColumn get addedAt => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+/// Veronica's on-device database (see docs/PLAN.md, "Data model").
+@DriftDatabase(
+  tables: [
+    WatchedApps,
+    UsageDays,
+    OverrideLogs,
+    Prefs,
+    Tasks,
+    WaterLogs,
+    Medicines,
+    Doses,
+    Modes,
+    Alarms,
+    Sounds,
+    Mantras,
+  ],
+)
 class VeronicaDatabase extends _$VeronicaDatabase {
   VeronicaDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'veronica'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      // 1 → 2: everything beyond usage. Usage tables are kept as they are.
+      if (from < 2) {
+        for (final TableInfo<Table, Object?> table in [
+          prefs,
+          tasks,
+          waterLogs,
+          medicines,
+          doses,
+          modes,
+          alarms,
+          sounds,
+          mantras,
+        ]) {
+          await m.createTable(table);
+        }
+      }
+    },
+  );
+
+  /// Deletes everything; the presets and starter mantras come back on next
+  /// read, and onboarding runs again.
+  Future<void> resetAll() => transaction(() async {
+    for (final table in allTables) {
+      await delete(table).go();
+    }
+  });
+
+  // Prefs.
+
+  Stream<String?> watchPref(String key) => (select(
+    prefs,
+  )..where((t) => t.key.equals(key))).watchSingleOrNull().map((r) => r?.value);
+
+  Future<String?> readPref(String key) => watchPref(key).first;
+
+  Future<void> writePref(String key, String? value) => value == null
+      ? (delete(prefs)..where((t) => t.key.equals(key))).go()
+      : into(
+          prefs,
+        ).insertOnConflictUpdate(PrefsCompanion.insert(key: key, value: value));
 
   /// `yyyy-mm-dd` for [t] in local time.
   static String dayKey(DateTime t) =>

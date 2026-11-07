@@ -8,7 +8,7 @@ void main() {
   testWidgets('app opens on Today with the tab bar', (tester) async {
     await tester.pumpWidget(
       UncontrolledProviderScope(
-        container: testContainer(),
+        container: (await tester.runAsync(testContainer))!,
         child: const VeronicaApp(),
       ),
     );

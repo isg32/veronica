@@ -4,14 +4,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:veronica/data/db/database.dart';
 import 'package:veronica/data/providers.dart';
 import 'package:veronica/data/usage/drift_usage_repository.dart';
+import 'package:veronica/mock/seed.dart';
 
-/// A provider container for app-level tests: real repositories, but an
-/// in-memory database so nothing touches the disk. Disposed after the test.
-ProviderContainer testContainer() {
+/// A provider container for app-level tests: the real repositories over an
+/// in-memory database, filled with the sample data unless [seed] is false.
+/// Disposed after the test.
+Future<ProviderContainer> testContainer({bool seed = true}) async {
+  final db = VeronicaDatabase(NativeDatabase.memory());
+  if (seed) await seedSampleData(db);
   final container = ProviderContainer(
     overrides: [
       databaseProvider.overrideWith((ref) {
-        final db = VeronicaDatabase(NativeDatabase.memory());
         ref.onDispose(db.close);
         return db;
       }),

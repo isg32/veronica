@@ -194,7 +194,7 @@ final class ProfileRepositoryProvider
   }
 }
 
-String _$profileRepositoryHash() => r'8d941d3ae802c8d0c9c05b51d02c00b3e0531055';
+String _$profileRepositoryHash() => r'19993b908971567f5e7dc1a7fc48318dbed68fb0';
 
 @ProviderFor(permissionRepository)
 final permissionRepositoryProvider = PermissionRepositoryProvider._();
@@ -325,7 +325,7 @@ final class TaskRepositoryProvider
   }
 }
 
-String _$taskRepositoryHash() => r'7ddb489d4cc6b740dbf47490199eca6f8304e616';
+String _$taskRepositoryHash() => r'bb3daca631869ef2afbb76507819eb0fba32ec49';
 
 @ProviderFor(waterRepository)
 final waterRepositoryProvider = WaterRepositoryProvider._();
@@ -367,7 +367,7 @@ final class WaterRepositoryProvider
   }
 }
 
-String _$waterRepositoryHash() => r'830bea7fa07fe81bbe2cb69b08824bf5ac968f34';
+String _$waterRepositoryHash() => r'4d61dec650f47e491e9c818a36f8e14d59572ce0';
 
 @ProviderFor(medicineRepository)
 final medicineRepositoryProvider = MedicineRepositoryProvider._();
@@ -415,7 +415,7 @@ final class MedicineRepositoryProvider
 }
 
 String _$medicineRepositoryHash() =>
-    r'321db38457e9585f8a4659b954b9aa3976f2c03f';
+    r'ac65c09ad100aae9b0522c18d90cd431a9b61eea';
 
 @ProviderFor(modeRepository)
 final modeRepositoryProvider = ModeRepositoryProvider._();
@@ -456,7 +456,99 @@ final class ModeRepositoryProvider
   }
 }
 
-String _$modeRepositoryHash() => r'619a69511f344c6b99509ba17e7ad61d75855c91';
+String _$modeRepositoryHash() => r'032e32fe3910d59122f140dd766d72fcd8047d8f';
+
+/// Importing alarm sounds (Phase 3). Returns null until then.
+
+@ProviderFor(soundPicker)
+final soundPickerProvider = SoundPickerProvider._();
+
+/// Importing alarm sounds (Phase 3). Returns null until then.
+
+final class SoundPickerProvider
+    extends $FunctionalProvider<SoundPicker, SoundPicker, SoundPicker>
+    with $Provider<SoundPicker> {
+  /// Importing alarm sounds (Phase 3). Returns null until then.
+  SoundPickerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'soundPickerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$soundPickerHash();
+
+  @$internal
+  @override
+  $ProviderElement<SoundPicker> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SoundPicker create(Ref ref) {
+    return soundPicker(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SoundPicker value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SoundPicker>(value),
+    );
+  }
+}
+
+String _$soundPickerHash() => r'6f5b76fcecc327d6443461d738dbc2aa71e2c123';
+
+/// Sleep estimated from screen-off time (Phase 3). Empty until then.
+
+@ProviderFor(nightSource)
+final nightSourceProvider = NightSourceProvider._();
+
+/// Sleep estimated from screen-off time (Phase 3). Empty until then.
+
+final class NightSourceProvider
+    extends $FunctionalProvider<NightSource, NightSource, NightSource>
+    with $Provider<NightSource> {
+  /// Sleep estimated from screen-off time (Phase 3). Empty until then.
+  NightSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'nightSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$nightSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<NightSource> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  NightSource create(Ref ref) {
+    return nightSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NightSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NightSource>(value),
+    );
+  }
+}
+
+String _$nightSourceHash() => r'621e39c909e3e71fef5c4436f927fc213ff5ae7f';
 
 @ProviderFor(sleepRepository)
 final sleepRepositoryProvider = SleepRepositoryProvider._();
@@ -498,7 +590,7 @@ final class SleepRepositoryProvider
   }
 }
 
-String _$sleepRepositoryHash() => r'3968b88e56b074d9f0528d1afe0a6eb9b571f7ac';
+String _$sleepRepositoryHash() => r'ac448ca89111f389bdedcbd98e01af4f158c4b99';
 
 @ProviderFor(mantraRepository)
 final mantraRepositoryProvider = MantraRepositoryProvider._();
@@ -544,7 +636,51 @@ final class MantraRepositoryProvider
   }
 }
 
-String _$mantraRepositoryHash() => r'299faff6605cfe7b4cfe24af27b5a59118874c1d';
+String _$mantraRepositoryHash() => r'2e3a9bd5ad6d1753658291ce4562b5bf8ec76bbd';
+
+/// Whether the offline voice model is on the phone (Phase 4).
+
+@ProviderFor(voiceModelState)
+final voiceModelStateProvider = VoiceModelStateProvider._();
+
+/// Whether the offline voice model is on the phone (Phase 4).
+
+final class VoiceModelStateProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<VoiceModelState>,
+          VoiceModelState,
+          Stream<VoiceModelState>
+        >
+    with $FutureModifier<VoiceModelState>, $StreamProvider<VoiceModelState> {
+  /// Whether the offline voice model is on the phone (Phase 4).
+  VoiceModelStateProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'voiceModelStateProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$voiceModelStateHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<VoiceModelState> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<VoiceModelState> create(Ref ref) {
+    return voiceModelState(ref);
+  }
+}
+
+String _$voiceModelStateHash() => r'c54d1ecbad70b14b55c7fceb68ffa7aaa98d2b79';
 
 @ProviderFor(settingsRepository)
 final settingsRepositoryProvider = SettingsRepositoryProvider._();
@@ -592,7 +728,7 @@ final class SettingsRepositoryProvider
 }
 
 String _$settingsRepositoryHash() =>
-    r'5b2b51e12a437a7ed812a5b050465bf6e09271d1';
+    r'9ed2213f331faf380b68755b81a8cf97bad1b3f6';
 
 /// "Now", ticking once a second (timers and countdowns).
 

@@ -54,20 +54,17 @@ final class CurrentTimeProvider
 
 String _$currentTimeHash() => r'658d86c68f1fbecf7d0414919aa3ea76a558e84b';
 
-/// The mantra shown today: the fixed one, or (rotating) the one already shown
-/// today, else the least recently shown.
+/// The mantra shown today: the fixed one, or (rotating) one per calendar day.
 
 @ProviderFor(todayMantra)
 final todayMantraProvider = TodayMantraProvider._();
 
-/// The mantra shown today: the fixed one, or (rotating) the one already shown
-/// today, else the least recently shown.
+/// The mantra shown today: the fixed one, or (rotating) one per calendar day.
 
 final class TodayMantraProvider
     extends $FunctionalProvider<Mantra?, Mantra?, Mantra?>
     with $Provider<Mantra?> {
-  /// The mantra shown today: the fixed one, or (rotating) the one already shown
-  /// today, else the least recently shown.
+  /// The mantra shown today: the fixed one, or (rotating) one per calendar day.
   TodayMantraProvider._()
     : super(
         from: null,
@@ -101,7 +98,7 @@ final class TodayMantraProvider
   }
 }
 
-String _$todayMantraHash() => r'5152f2ca3986689505d781b4680fdaae476ec73f';
+String _$todayMantraHash() => r'12fe09d1be6044107c96de803db9b78fbaed42bd';
 
 /// Open tasks, oldest first.
 

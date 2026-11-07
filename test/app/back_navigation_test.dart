@@ -29,7 +29,9 @@ void main() {
       },
     );
 
-    final container = testContainer();
+    final container =
+        await tester.runAsync(testContainer) ??
+        (throw StateError('no container'));
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -60,7 +62,9 @@ void main() {
   });
 
   testWidgets('back on a detail page just closes it', (tester) async {
-    final container = testContainer();
+    final container =
+        await tester.runAsync(testContainer) ??
+        (throw StateError('no container'));
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,

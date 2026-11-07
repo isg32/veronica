@@ -11,8 +11,7 @@ part 'selectors.g.dart';
 DateTime currentTime(Ref ref) =>
     ref.watch(nowProvider).value ?? ref.watch(clockProvider).now();
 
-/// The mantra shown today: the fixed one, or (rotating) the one already shown
-/// today, else the least recently shown.
+/// The mantra shown today: the fixed one, or (rotating) one per calendar day.
 @riverpod
 Mantra? todayMantra(Ref ref) {
   final mantras = ref.watch(mantrasProvider).value ?? const <Mantra>[];
@@ -23,23 +22,14 @@ Mantra? todayMantra(Ref ref) {
       if (m.id == settings.fixedMantraId) return m;
     }
   }
+  // Rotating: a different mantra each calendar day, the same all day.
   final now = ref.watch(currentTimeProvider);
-  for (final m in mantras) {
-    final shown = m.lastShownAt;
-    if (shown != null &&
-        shown.year == now.year &&
-        shown.month == now.month &&
-        shown.day == now.day) {
-      return m;
-    }
-  }
-  final sorted = [...mantras]
-    ..sort((a, b) {
-      final x = a.lastShownAt?.millisecondsSinceEpoch ?? 0;
-      final y = b.lastShownAt?.millisecondsSinceEpoch ?? 0;
-      return x.compareTo(y);
-    });
-  return sorted.first;
+  final day = DateTime.utc(
+    now.year,
+    now.month,
+    now.day,
+  ).difference(DateTime.utc(2024)).inDays;
+  return mantras[day % mantras.length];
 }
 
 /// Open tasks, oldest first.

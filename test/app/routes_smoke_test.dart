@@ -5,8 +5,6 @@ import 'package:veronica/app/app.dart';
 import 'package:veronica/app/router.dart';
 import 'package:veronica/app/routes.dart';
 import 'package:veronica/core/widgets/v_controls.dart';
-import 'package:veronica/data/models/models.dart';
-import 'package:veronica/data/providers.dart';
 
 import '../helpers/app.dart';
 import '../helpers/fonts.dart';
@@ -52,11 +50,14 @@ void main() {
     Routes.mantraTime,
   ];
 
-  Future<ProviderContainer> boot(WidgetTester tester) async {
+  Future<ProviderContainer> boot(
+    WidgetTester tester, {
+    bool seed = true,
+  }) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
-    final container = testContainer();
+    final container = (await tester.runAsync(() => testContainer(seed: seed)))!;
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -87,18 +88,21 @@ void main() {
     }
   }
 
-  testWidgets('reset sends you through onboarding to Today', (tester) async {
-    final container = await boot(tester);
-    await container
-        .read(profileRepositoryProvider)
-        .save(const Profile(name: '', onboarded: false));
+  testWidgets('a fresh install goes through onboarding to Today', (
+    tester,
+  ) async {
+    await boot(tester, seed: false);
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
     expect(find.text('VERO\nNICA'), findsOneWidget);
 
+    // Database writes finish in real time, outside the test's fake clock.
     Future<void> settle() async {
       for (var i = 0; i < 6; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
         await tester.pump(const Duration(milliseconds: 100));
       }
     }
