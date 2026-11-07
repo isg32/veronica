@@ -77,6 +77,18 @@ class _AppShellState extends State<AppShell> {
       child: Stack(
         children: [
           Positioned.fill(child: shell),
+          // Content scrolling under the floating tab bar softens into a blur
+          // that is strongest at the bottom edge.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: VEdgeBlur(
+              edge: VEdge.bottom,
+              solid: bottom + 22 + 62,
+              fade: 32,
+            ),
+          ),
           Positioned(
             left: 0,
             right: 0,

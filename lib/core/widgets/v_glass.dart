@@ -495,40 +495,55 @@ class VTextField extends StatelessWidget {
   }
 }
 
-/// Progressive blur behind the status bar, as on iOS: strongest at the top
-/// edge and easing smoothly to nothing a little below the bar, with no seam,
-/// so content can scroll underneath while the clock and icons stay readable.
+/// Which screen edge a [VEdgeBlur] sits on.
+enum VEdge { top, bottom }
+
+/// Progressive blur along a screen edge, as on iOS: strongest at the edge
+/// and easing smoothly to nothing [fade] away from it, with no seam, so
+/// content can scroll underneath while what sits on the edge stays readable.
 ///
 /// A fragment shader (`shaders/progressive_blur.frag`) varies the blur
-/// radius with height. Where shader filters are not supported, a single
-/// light blur is used instead. A soft paper-coloured gradient sits on top.
-class VStatusBarBlur extends StatefulWidget {
-  const VStatusBarBlur({super.key});
+/// radius with distance from the edge. Where shader filters are not
+/// supported, a single light blur covers just [solid]. A soft paper-coloured
+/// gradient sits on top.
+class VEdgeBlur extends StatefulWidget {
+  const VEdgeBlur({
+    super.key,
+    required this.edge,
+    required this.solid,
+    this.fade = 24,
+    this.maxRadius = 18,
+  });
 
-  /// How far below the status bar the blur eases out. Page titles start 16
-  /// below the bar, where the blur is already close to nothing.
-  static const double fade = 24;
+  final VEdge edge;
 
-  /// Blur radius at the very top edge, in logical pixels.
-  static const double maxRadius = 18;
+  /// The part right at the edge (the status bar, or the tab bar and gesture
+  /// area) where the blur is at or near its strongest.
+  final double solid;
+
+  /// How far beyond [solid] the blur eases out.
+  final double fade;
+
+  /// Blur radius at the edge, in logical pixels.
+  final double maxRadius;
 
   static Future<FragmentProgram>? _program;
 
   @override
-  State<VStatusBarBlur> createState() => _VStatusBarBlurState();
+  State<VEdgeBlur> createState() => _VEdgeBlurState();
 }
 
-class _VStatusBarBlurState extends State<VStatusBarBlur> {
+class _VEdgeBlurState extends State<VEdgeBlur> {
   FragmentShader? _shader;
 
   @override
   void initState() {
     super.initState();
     if (ImageFilter.isShaderFilterSupported) {
-      VStatusBarBlur._program ??= FragmentProgram.fromAsset(
+      VEdgeBlur._program ??= FragmentProgram.fromAsset(
         'shaders/progressive_blur.frag',
       );
-      VStatusBarBlur._program!.then((p) {
+      VEdgeBlur._program!.then((p) {
         if (mounted) setState(() => _shader = p.fragmentShader());
       }, onError: (Object _) {});
     }
@@ -542,9 +557,9 @@ class _VStatusBarBlurState extends State<VStatusBarBlur> {
 
   @override
   Widget build(BuildContext context) {
-    final top = MediaQuery.paddingOf(context).top;
-    if (top == 0) return const SizedBox.shrink();
-    final height = top + VStatusBarBlur.fade;
+    if (widget.solid <= 0) return const SizedBox.shrink();
+    final top = widget.edge == VEdge.top;
+    final height = widget.solid + widget.fade;
     final ratio = MediaQuery.devicePixelRatioOf(context);
     final paper = VInk.surfaceOf(context);
 
@@ -554,11 +569,14 @@ class _VStatusBarBlurState extends State<VStatusBarBlur> {
       // Uniforms 0–1 (the texture size) are set by the engine.
       shader
         ..setFloat(2, height * ratio)
-        ..setFloat(3, VStatusBarBlur.maxRadius * ratio);
+        ..setFloat(3, widget.maxRadius * ratio)
+        ..setFloat(4, top ? 0 : 1);
       filter = ImageFilter.shader(shader);
     } else {
       filter = ImageFilter.blur(sigmaX: 4, sigmaY: 4);
     }
+    // Without the shader the fallback blur covers only the solid part.
+    final inset = shader == null ? widget.fade : 0.0;
 
     return IgnorePointer(
       child: SizedBox(
@@ -566,8 +584,8 @@ class _VStatusBarBlurState extends State<VStatusBarBlur> {
         child: Stack(
           children: [
             Positioned.fill(
-              // Without the shader the fallback blur stops at the bar.
-              bottom: shader == null ? VStatusBarBlur.fade : 0,
+              top: top ? 0 : inset,
+              bottom: top ? inset : 0,
               child: ClipRect(
                 child: BackdropFilter(
                   filter: filter,
@@ -579,14 +597,14 @@ class _VStatusBarBlurState extends State<VStatusBarBlur> {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+                    begin: top ? Alignment.topCenter : Alignment.bottomCenter,
+                    end: top ? Alignment.bottomCenter : Alignment.topCenter,
                     colors: [
                       paper.withValues(alpha: 0.55),
                       paper.withValues(alpha: 0.25),
                       paper.withValues(alpha: 0),
                     ],
-                    stops: [0, top / height, 1],
+                    stops: [0, widget.solid / height, 1],
                   ),
                 ),
               ),
@@ -596,4 +614,14 @@ class _VStatusBarBlurState extends State<VStatusBarBlur> {
       ),
     );
   }
+}
+
+/// [VEdgeBlur] behind the status bar. Page titles start 16 below the bar,
+/// where the blur is already close to nothing.
+class VStatusBarBlur extends StatelessWidget {
+  const VStatusBarBlur({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      VEdgeBlur(edge: VEdge.top, solid: MediaQuery.paddingOf(context).top);
 }

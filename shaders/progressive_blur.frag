@@ -1,15 +1,18 @@
-// Variable ("progressive") blur for the status bar: the blur radius is
-// largest at the top edge and eases smoothly to zero at uHeight, so there
-// is no seam. Used as a BackdropFilter through ImageFilter.shader.
+// Variable ("progressive") blur for a screen edge: the blur radius is
+// largest at the edge (top or bottom) and eases smoothly to zero uHeight
+// away from it, so there is no seam. Used as a BackdropFilter through
+// ImageFilter.shader, behind the status bar and the tab bar.
 #version 460 core
 #include <flutter/runtime_effect.glsl>
 
 // Set by the engine: the size of the input texture.
 uniform vec2 uSize;
-// Where the blur reaches zero, in physical pixels from the top.
+// Where the blur reaches zero, in physical pixels from the edge.
 uniform float uHeight;
-// Blur radius at the very top, in physical pixels.
+// Blur radius at the edge, in physical pixels.
 uniform float uMaxRadius;
+// 0: the edge is the top; 1: the edge is the bottom.
+uniform float uFromBottom;
 // Set by the engine: what is behind the status bar.
 uniform sampler2D uTexture;
 
@@ -23,8 +26,10 @@ void main() {
 #ifdef IMPELLER_TARGET_OPENGLES
   p.y = uSize.y - p.y;
 #endif
-  // 1 at the top, 0 at uHeight, with a smooth ease so the end has no edge.
-  float t = clamp(1.0 - p.y / uHeight, 0.0, 1.0);
+  // Distance from the edge; 1 at the edge, 0 at uHeight, with a smooth ease
+  // so the end has no visible line.
+  float fromEdge = mix(p.y, uSize.y - p.y, uFromBottom);
+  float t = clamp(1.0 - fromEdge / uHeight, 0.0, 1.0);
   float radius = uMaxRadius * t * t * (3.0 - 2.0 * t);
 
   vec2 uv = p / uSize;
