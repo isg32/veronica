@@ -10,6 +10,7 @@ import '../../core/widgets/v_progress.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
 import '../selectors.dart';
+import '../settings/greyscale_by_hand.dart';
 import 'mode_labels.dart';
 
 /// Full black page while a mode runs: big countdown (or elapsed time), the
@@ -110,6 +111,16 @@ class ActiveModePage extends ConsumerWidget {
                   ),
               ],
             ),
+            // Without the greyscale grant, a one-tap way to the setting.
+            if (mode.greyscale &&
+                !(ref.watch(adbStatusProvider).value?.greyscaleGranted ?? true))
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 18, 24, 0),
+                child: VButton.ghost(
+                  'Turn on greyscale',
+                  onPressed: openColorCorrection,
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 18, 24, 40),
               child: VButton.secondary(

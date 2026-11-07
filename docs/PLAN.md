@@ -242,6 +242,12 @@ Veronica is personal and sideloaded, but it should work for a friend with only t
 
 Shizuku itself has to be restarted after every reboot, but Veronica only needs it for the one-time grant. The computer command stays documented as the fallback. Status: built (`ShizukuChannel.kt`, the Grant with Shizuku card in onboarding and Settings); awaiting the on-device test.
 
+**Order of preference.** Veronica offers the three ways in this order, in onboarding and in *Settings → Permissions & ADB*:
+
+1. **The ADB command, once from a computer** (first choice). Whoever owns the computer plugs in the phone and runs one command; the friend never sees anything technical, and greyscale then switches by itself.
+2. **Shizuku**, if there is no computer: a guided card, but it involves Developer options and Wireless debugging.
+3. **By hand**, with no setup at all. Veronica can't switch greyscale itself, so when a mode or wind-down wants it, a notification opens Android's Color correction setting in one tap ("Turn on greyscale"), and another offers to turn it off when the mode ends. The active mode screen has the same button, and the Color correction quick-settings tile makes it two taps.
+
 ## Data model
 
 Eight drift (SQLite) tables cover v1, and the same shapes are used for the mock data in Phase 0; all timestamps are stored as epoch millis so "added 1 day ago" is a simple subtraction.
@@ -309,7 +315,7 @@ Each later phase is done only when its "Done when" holds on your phone, and Phas
 | --- | --- | --- |
 | Glyph light test | *Settings → Glyph → Test the lights* runs every light in turn (C1–C24, B, A) and then all of them, on the preview and the real Glyphs; the page says whether the Phone (2a) lights were found | Done |
 | Blurred status bar | Pages run edge to edge behind the status bar with an iOS-style progressive blur: strongest at the top, fading out 16 px below the bar, under a soft paper-coloured gradient | Done |
-| Greyscale without ADB | Grant greyscale on the phone alone through Shizuku, so the app can be shared (see *Sharing Veronica*) | Built |
+| Greyscale without ADB | Grant greyscale on the phone alone through Shizuku, or switch it by hand from a one-tap notification, so the app can be shared (see *Sharing Veronica*) | Built |
 | Veronica's voice | Kokoro (kokoro-en-v0_19) downloaded once via sherpa-onnx, lines rendered once and cached, Android speech as the fallback; speaks on Put it down, Time's up, Medicine due, the mantra session and after the alarm | Built |
 | Widgets refresh in the background | Next alarm and Binge Time are rendered ahead as frames and redrawn on schedule with the app closed; screen time updates when Veronica opens | Built |
 | Medicine snooze | "Snooze 15 min" reminds again 15 minutes later | Built |

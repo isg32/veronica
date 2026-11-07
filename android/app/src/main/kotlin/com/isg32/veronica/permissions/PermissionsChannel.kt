@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
+import com.isg32.veronica.modes.PhoneControl
 import com.isg32.veronica.usage.UsageChannel
 import com.isg32.veronica.watcher.WatcherChannel
 import io.flutter.plugin.common.BinaryMessenger
@@ -34,6 +35,11 @@ object PermissionsChannel {
                     result.success(null)
                 }
                 "adb" -> result.success(adb(activity))
+                "greyscaleOn" -> result.success(PhoneControl.isGreyscaleOn(activity))
+                "openColorCorrection" -> {
+                    PhoneControl.openColorCorrection(activity)
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }

@@ -27,6 +27,7 @@ import '../../platform/glyph.dart';
 import '../../platform/voice.dart';
 import '../home_widgets/home_widget_views.dart';
 import 'glyph_frames.dart';
+import 'greyscale_by_hand.dart';
 import 'shizuku_grant.dart';
 import 'widget_glass_pages.dart';
 import 'widget_previews.dart';
@@ -257,8 +258,15 @@ class PermissionsSettingsPage extends ConsumerWidget {
               ),
             ],
           ),
-        if (adb != null && !adb.greyscaleGranted) const ShizukuGrant(),
-        const VFootnote('Re-run both after a factory reset.'),
+        if (adb != null && !adb.greyscaleGranted) ...[
+          const VFootnote(
+            'Greyscale, in order of preference: run the command above once from '
+            'a computer, grant it on the phone with Shizuku, or switch it yourself.',
+          ),
+          const ShizukuGrant(),
+          const GreyscaleByHand(),
+        ],
+        const VFootnote('Re-run the commands after a factory reset.'),
       ],
     );
   }

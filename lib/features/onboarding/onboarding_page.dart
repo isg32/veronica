@@ -18,6 +18,7 @@ import '../care/water_goal_form.dart';
 import '../selectors.dart';
 import '../focus/watch_apps_list.dart';
 import '../settings/settings_pages.dart';
+import '../settings/greyscale_by_hand.dart';
 import '../settings/shizuku_grant.dart';
 
 /// First run: welcome and name, permissions, ADB, apps to watch, water goal
@@ -489,6 +490,8 @@ class _AdbStepState extends ConsumerState<_AdbStep> {
           if (!(adb?.greyscaleGranted ?? false)) ...[
             const SizedBox(height: 12),
             const ShizukuGrant(),
+            const SizedBox(height: 12),
+            const GreyscaleByHand(),
           ],
         ],
       ),

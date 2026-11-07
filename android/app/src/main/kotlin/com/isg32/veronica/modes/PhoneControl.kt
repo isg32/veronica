@@ -1,15 +1,20 @@
 package com.isg32.veronica.modes
 
 import android.Manifest
+import android.app.Notification
+import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.WallpaperManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.media.AudioManager
 import android.provider.Settings
+import com.isg32.veronica.R
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -104,9 +109,65 @@ object PhoneControl {
         context.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) ==
             PackageManager.PERMISSION_GRANTED
 
-    /** Android's "Color correction: Greyscale". Needs the ADB grant. */
+    /** Whether greyscale (Color correction: Greyscale) is on right now. */
+    fun isGreyscaleOn(context: Context): Boolean {
+        val resolver = context.contentResolver
+        return Settings.Secure.getInt(resolver, "accessibility_display_daltonizer_enabled", 0) == 1 &&
+            Settings.Secure.getInt(resolver, "accessibility_display_daltonizer", -1) == 0
+    }
+
+    /** Opens Android's Color correction screen (or Accessibility), for turning greyscale on by hand. */
+    fun openColorCorrection(context: Context) {
+        context.startActivity(colorCorrectionIntent(context))
+    }
+
+    /** The Color correction screen if this phone exposes it, else Accessibility. */
+    private fun colorCorrectionIntent(context: Context): Intent {
+        val candidates = listOf(
+            Intent("android.settings.ACCESSIBILITY_COLOR_SPACE_SETTINGS"),
+            Intent("com.android.settings.ACCESSIBILITY_COLOR_SPACE_SETTINGS"),
+            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
+        )
+        return candidates.first { it.resolveActivity(context.packageManager) != null }
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    /**
+     * Without the grant, Veronica can't switch greyscale itself; a
+     * notification offers a one-tap way to the setting instead.
+     */
+    private fun askForGreyscale(context: Context, on: Boolean) {
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(
+            NotificationChannel("greyscale", "Greyscale", NotificationManager.IMPORTANCE_DEFAULT),
+        )
+        // Opens the setting directly: Android 12+ blocks a notification
+        // from starting an activity through a receiver.
+        val open = PendingIntent.getActivity(
+            context, 61, colorCorrectionIntent(context),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val notification = Notification.Builder(context, "greyscale")
+            .setSmallIcon(R.drawable.ic_launcher_monochrome)
+            .setContentTitle(if (on) "Turn on greyscale" else "Turn greyscale off")
+            .setContentText(
+                if (on) "Your mode uses greyscale. Tap, then switch on Color correction: Greyscale."
+                else "Your mode has ended. Tap, then switch off Color correction.",
+            )
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .build()
+        manager.notify(GREYSCALE_NOTIFICATION, notification)
+    }
+
+    private const val GREYSCALE_NOTIFICATION = 4001
+
+    /** Android's "Color correction: Greyscale". Needs the ADB grant; otherwise asks the user. */
     fun setGreyscale(context: Context, on: Boolean) {
-        if (!hasSecureSettings(context)) return
+        if (!hasSecureSettings(context)) {
+            if (on != isGreyscaleOn(context)) askForGreyscale(context, on)
+            return
+        }
         val resolver = context.contentResolver
         Settings.Secure.putInt(resolver, "accessibility_display_daltonizer_enabled", if (on) 1 else 0)
         if (on) Settings.Secure.putInt(resolver, "accessibility_display_daltonizer", 0)
