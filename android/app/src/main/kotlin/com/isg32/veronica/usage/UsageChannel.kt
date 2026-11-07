@@ -94,9 +94,17 @@ object UsageChannel {
      * off, the keyguard shows or the phone shuts down. Time is split at
      * midnight; an app still open now counts up to now.
      */
-    fun lastSevenDays(context: Context, packages: Set<String>): Map<String, List<Int>> {
-        val days = 7
-        val empty = packages.associateWith { List(days) { 0 } }
+    fun lastSevenDays(context: Context, packages: Set<String>): Map<String, List<Int>> =
+        // Round to the nearest minute, as Digital Wellbeing does.
+        millisPerDay(context, packages, 7)
+            .mapValues { (_, ms) -> ms.map { ((it + 30_000) / 60_000).toInt() } }
+
+    /** Milliseconds [packageName] has been in the foreground today. */
+    fun todayMillis(context: Context, packageName: String): Long =
+        millisPerDay(context, setOf(packageName), 1)[packageName]?.firstOrNull() ?: 0
+
+    private fun millisPerDay(context: Context, packages: Set<String>, days: Int): Map<String, LongArray> {
+        val empty = packages.associateWith { LongArray(days) }
         if (packages.isEmpty() || !hasAccess(context)) return empty
 
         val dayStarts = LongArray(days + 1)
@@ -171,8 +179,6 @@ object UsageChannel {
             }
         }
         closeAll(now)
-
-        // Round to the nearest minute, as Digital Wellbeing does.
-        return totals.mapValues { (_, ms) -> ms.map { ((it + 30_000) / 60_000).toInt() } }
+        return totals
     }
 }

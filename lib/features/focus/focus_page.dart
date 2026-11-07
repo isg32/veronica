@@ -17,7 +17,7 @@ import '../../data/models/models.dart';
 import '../../data/providers.dart';
 import '../selectors.dart';
 import 'mode_labels.dart';
-import 'usage_access_banner.dart';
+import 'setup_banner.dart';
 
 enum _FocusView { usage, modes }
 
@@ -61,10 +61,7 @@ class _UsageView extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 16),
-          child: UsageAccessBanner(),
-        ),
+        const Padding(padding: EdgeInsets.only(top: 16), child: SetupBanner()),
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 24, 4, 16),
           child: Column(

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watcher_label">Veronica watcher</string>
+    <string name="watcher_description">Lets Veronica notice the moment an app you chose to watch opens, so it can nudge you or show "Put it down" at your limit. It only sees which app is in front, never what is on screen.</string>
+    <string name="watcher_nudge_channel">Gentle nudges</string>
+</resources>

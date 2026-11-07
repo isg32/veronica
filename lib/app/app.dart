@@ -7,6 +7,7 @@ import '../core/theme/v_palette.dart';
 import '../core/theme/v_text.dart';
 import '../core/theme/v_theme.dart';
 import '../platform/home_widgets.dart';
+import '../platform/watcher.dart';
 import 'router.dart';
 
 /// Follows the system light/dark setting; there is no in-app toggle.
@@ -15,10 +16,12 @@ class VeronicaApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Native home widgets: keep them rendered and handle their taps.
+    // Native home widgets and the usage watcher.
     ref
       ..watch(homeWidgetSyncProvider)
-      ..watch(homeWidgetLaunchProvider);
+      ..watch(homeWidgetLaunchProvider)
+      ..watch(watcherRulesSyncProvider)
+      ..watch(watcherRoutesProvider);
     final palette = VPalette.of(context);
     return CupertinoApp.router(
       title: 'Veronica',

@@ -180,7 +180,10 @@ GoRouter router(Ref ref) {
         path: '/now/put-it-down/:package',
         pageBuilder: (context, state) => fadePage(
           state,
-          PutItDownPage(packageName: state.pathParameters['package']!),
+          PutItDownPage(
+            packageName: state.pathParameters['package']!,
+            fromWatcher: state.uri.queryParameters['from'] == 'watcher',
+          ),
         ),
       ),
       GoRoute(

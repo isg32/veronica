@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,21 +10,59 @@ import '../../core/widgets/v_breathe.dart';
 import '../../core/widgets/v_buttons.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
+import '../../platform/watcher.dart';
 import 'prompt_widgets.dart';
 
 /// "Put it down": shown over a watched app at its limit. A 5-second breath
 /// before "Close app"; "5 more minutes" while any are left today; with hard
 /// block and none left, a long-press on the headline is the emergency exit.
-class PutItDownPage extends ConsumerWidget {
-  const PutItDownPage({super.key, required this.packageName});
+///
+/// Opened by the watcher ([fromWatcher]), "Close app" goes to the home
+/// screen and the other ways out return to the app with a 5-minute grace;
+/// opened from inside Veronica (the debug preview), they just close the page.
+class PutItDownPage extends ConsumerStatefulWidget {
+  const PutItDownPage({
+    super.key,
+    required this.packageName,
+    this.fromWatcher = false,
+  });
 
   final String packageName;
-
-  void _leave(BuildContext context) =>
-      context.canPop() ? context.pop() : context.go(Routes.today);
+  final bool fromWatcher;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PutItDownPage> createState() => _PutItDownPageState();
+}
+
+class _PutItDownPageState extends ConsumerState<PutItDownPage> {
+  String get packageName => widget.packageName;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.fromWatcher) {
+      unawaited(ref.read(usageRepositoryProvider).recordNudge(packageName));
+    }
+  }
+
+  void _close() => context.canPop() ? context.pop() : context.go(Routes.today);
+
+  /// Back to the watched app, quiet for five minutes.
+  Future<void> _backToApp() async {
+    if (!widget.fromWatcher) return _close();
+    await Watcher.grantGrace(packageName);
+    _close();
+    await Watcher.returnToApp();
+  }
+
+  /// To the home screen: the phone is put down.
+  Future<void> _home() async {
+    if (widget.fromWatcher) await Watcher.goHome();
+    if (mounted) _close();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final apps = ref.watch(watchedAppsProvider).value ?? const <WatchedApp>[];
     final app = apps.where((a) => a.packageName == packageName).firstOrNull;
     final name = ref.watch(profileProvider).value?.name ?? '';
@@ -50,7 +90,7 @@ class PutItDownPage extends ConsumerWidget {
               onLongPress: emergency
                   ? () async {
                       await repo.logOverride(app.packageName);
-                      if (context.mounted) _leave(context);
+                      await _backToApp();
                     }
                   : null,
             ),
@@ -66,7 +106,7 @@ class PutItDownPage extends ConsumerWidget {
                     enabled: left == 0,
                     onPressed: () async {
                       await repo.recordPutDown(app.packageName);
-                      if (context.mounted) _leave(context);
+                      await _home();
                     },
                   ),
                   const SizedBox(height: 10),
@@ -75,7 +115,7 @@ class PutItDownPage extends ConsumerWidget {
                       '5 more minutes · ${app.extensionsLeft} left today',
                       onPressed: () async {
                         await repo.extend(app.packageName);
-                        if (context.mounted) _leave(context);
+                        await _backToApp();
                       },
                     )
                   else
