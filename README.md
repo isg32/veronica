@@ -192,6 +192,15 @@ flutter test
 flutter run                        # with the phone connected over USB debugging
 ```
 
+### Signed releases
+
+Release APKs are signed with a key that never enters the repository.
+
+- **Locally:** copy `.env.example` to `.env`, which is gitignored. Put the keystore in it as base64 (`base64 -w0 release-key.jks`) along with its passwords, then run `./build_signed.sh`. The keystore is decoded to a temporary file for the build and deleted afterwards.
+- **On GitHub:** every push to `main` runs `.github/workflows/release.yml`. It builds, tests and signs the APKs and publishes them as a release. Set `VERONICA_KEYSTORE_BASE64`, `VERONICA_KEYSTORE_PASSWORD`, `VERONICA_KEY_PASSWORD` and, optionally, `VERONICA_KEY_ALIAS` as secrets in a `deployment` environment.
+
+Without these settings, release builds fall back to the debug key.
+
 ### One-time phone setup
 
 Onboarding asks for usage access, accessibility, display over other apps, Do Not Disturb, notifications, exact alarms and unrestricted battery. Greyscale additionally needs one ADB grant:

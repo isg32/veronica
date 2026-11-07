@@ -49,3 +49,11 @@ app.*.map.json
 
 # Local design references (not ours to redistribute)
 /design/reference/
+
+# Release signing: never committed. The keystore lives outside the repo and
+# reaches builds base64-encoded through .env (locally) or repository
+# secrets (CI). See build_signed.sh and .github/workflows/release.yml.
+.env
+*.jks
+*.keystore
+key.properties
