@@ -16,6 +16,7 @@ import '../../core/widgets/v_buttons.dart';
 import '../../core/widgets/v_controls.dart';
 import '../../core/widgets/v_glass.dart';
 import '../../core/widgets/v_glyph_preview.dart';
+import '../../core/widgets/v_ink.dart';
 import '../../core/widgets/v_list.dart';
 import '../../core/widgets/v_page.dart';
 import '../../core/widgets/v_pickers.dart';
@@ -652,6 +653,50 @@ class _WidgetsSettingsPageState extends State<WidgetsSettingsPage> {
 }
 
 /// Data & About: export, import, reset, and licences.
+/// The app's mark, big, leading the Data page: the V on an inked tile,
+/// the name in Doto and the version.
+class _AppMark extends StatelessWidget {
+  const _AppMark();
+
+  @override
+  Widget build(BuildContext context) {
+    final ink = VInk.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        children: [
+          Container(
+            width: 132,
+            height: 132,
+            decoration: BoxDecoration(
+              color: ink,
+              borderRadius: BorderRadius.circular(34),
+            ),
+            child: Image.asset(
+              'assets/icon/monochrome.png',
+              color: VInk.surfaceOf(context),
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text('Veronica', style: VText.doto(40, weight: 700, height: 1)),
+          const SizedBox(height: 8),
+          Text(
+            'Version $kAppVersion · build $kAppBuild',
+            style: VText.inter(13, weight: 300),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Use your phone less. Look after yourself more.',
+            textAlign: TextAlign.center,
+            style: VText.secondary,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class DataSettingsPage extends ConsumerWidget {
   const DataSettingsPage({super.key});
 
@@ -679,6 +724,7 @@ class DataSettingsPage extends ConsumerWidget {
       backLabel: 'Settings',
       title: 'Data',
       children: [
+        const _AppMark(),
         VListSection(
           children: [
             VListRow(
@@ -745,10 +791,6 @@ class DataSettingsPage extends ConsumerWidget {
         VListSection(
           header: const VEyebrow('About'),
           children: [
-            const VListRow(
-              title: 'Veronica',
-              value: '$kAppVersion · build $kAppBuild',
-            ),
             const VListRow(title: 'Licence', value: 'GPL-3.0'),
             for (final (name, licence) in licences)
               VListRow(title: name, value: licence),
@@ -757,7 +799,19 @@ class DataSettingsPage extends ConsumerWidget {
         VListSection(
           header: const VEyebrow('Developer'),
           children: [
-            const VListRow(title: 'Made by', value: 'Sapan Gajjar'),
+            VListRow(
+              leading: ClipOval(
+                child: Image.asset(
+                  'assets/images/developer.jpg',
+                  width: 44,
+                  height: 44,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              title: 'Sapan Gajjar',
+              subtitle: 'Made Veronica',
+              chevron: false,
+            ),
             for (final (title, handle, url) in const [
               ('GitHub', 'isg32', 'https://github.com/isg32'),
               (

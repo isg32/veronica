@@ -41,6 +41,10 @@ flutter:
   assets:
     - assets/fonts/OFL-Doto.txt
     - assets/fonts/OFL-Inter.txt
+    # The V mark (for About) and the developer's picture, bundled so
+    # nothing is fetched.
+    - assets/icon/monochrome.png
+    - assets/images/developer.jpg
 
   shaders:
     - shaders/progressive_blur.frag
