@@ -98,6 +98,15 @@
             </intent-filter>
         </service>
 
+        <!-- Shizuku's client provider (greyscale without a computer). -->
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
         <!-- Home widgets (images rendered by Flutter; see lib/platform/home_widgets.dart). -->
         <!-- Redraws the widgets at their pre-rendered frames' times, also after a reboot. -->
         <receiver
@@ -180,6 +189,8 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- Shizuku, to grant greyscale on the phone. -->
+        <package android:name="moe.shizuku.privileged.api" />
         <!-- List launchable apps so you can pick which to watch. -->
         <intent>
             <action android:name="android.intent.action.MAIN" />

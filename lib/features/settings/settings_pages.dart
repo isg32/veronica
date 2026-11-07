@@ -26,6 +26,7 @@ import '../../mock/seed.dart';
 import '../../platform/glyph.dart';
 import '../home_widgets/home_widget_views.dart';
 import 'glyph_frames.dart';
+import 'shizuku_grant.dart';
 import 'widget_glass_pages.dart';
 import 'widget_previews.dart';
 
@@ -255,6 +256,7 @@ class PermissionsSettingsPage extends ConsumerWidget {
               ),
             ],
           ),
+        if (adb != null && !adb.greyscaleGranted) const ShizukuGrant(),
         const VFootnote('Re-run both after a factory reset.'),
       ],
     );

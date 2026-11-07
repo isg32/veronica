@@ -47,3 +47,10 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Shizuku: grants greyscale's WRITE_SECURE_SETTINGS on the phone itself,
+    // over Wireless debugging, so no computer is needed (see docs/PLAN.md).
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
+}

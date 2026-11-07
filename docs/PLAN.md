@@ -240,7 +240,7 @@ Veronica is personal and sideloaded, but it should work for a friend with only t
 2. In Veronica's ADB step (onboarding and *Settings → Permissions & ADB*), a **Grant with Shizuku** button asks Shizuku for permission and runs `pm grant com.isg32.veronica android.permission.WRITE_SECURE_SETTINGS` through it.
 3. Once granted, the permission stays; Shizuku is not needed again until a factory reset or reinstall.
 
-Shizuku itself has to be restarted after every reboot, but Veronica only needs it for the one-time grant. The computer command stays documented as the fallback. Status: planned (Shizuku API via its Android library and a small platform channel).
+Shizuku itself has to be restarted after every reboot, but Veronica only needs it for the one-time grant. The computer command stays documented as the fallback. Status: built (`ShizukuChannel.kt`, the Grant with Shizuku card in onboarding and Settings); awaiting the on-device test.
 
 ## Data model
 
@@ -309,10 +309,10 @@ Each later phase is done only when its "Done when" holds on your phone, and Phas
 | --- | --- | --- |
 | Glyph light test | *Settings → Glyph → Test the lights* runs every light in turn (C1–C24, B, A) and then all of them, on the preview and the real Glyphs; the page says whether the Phone (2a) lights were found | Done |
 | Blurred status bar | Pages run edge to edge behind the status bar with an iOS-style progressive blur: strongest at the top, fading out 16 px below the bar, under a soft paper-coloured gradient | Done |
-| Greyscale without ADB | Grant greyscale on the phone alone through Shizuku, so the app can be shared (see *Sharing Veronica*) | Planned |
+| Greyscale without ADB | Grant greyscale on the phone alone through Shizuku, so the app can be shared (see *Sharing Veronica*) | Built |
 | Veronica's voice | Kokoro-82M download via sherpa-onnx, pre-rendered lines, Android TTS fallback | Planned (Phase 4) |
-| Widgets refresh in the background | Scheduled widget updates so countdowns and "alarm in" stay current with the app closed | Planned (Phase 4) |
-| Medicine snooze | "Snooze 15 min" re-schedules the dose reminder (today it only closes the page) | Planned |
+| Widgets refresh in the background | Next alarm and Binge Time are rendered ahead as frames and redrawn on schedule with the app closed; screen time updates when Veronica opens | Built |
+| Medicine snooze | "Snooze 15 min" reminds again 15 minutes later | Built |
 
 ## Risks & open questions
 

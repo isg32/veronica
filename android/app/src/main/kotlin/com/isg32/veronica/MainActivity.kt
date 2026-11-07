@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import com.isg32.veronica.modes.ModeChannel
 import com.isg32.veronica.permissions.PermissionsChannel
+import com.isg32.veronica.permissions.ShizukuChannel
 import com.isg32.veronica.reminders.Reminders
 import com.isg32.veronica.usage.UsageChannel
 import com.isg32.veronica.watcher.WatcherChannel
@@ -55,6 +56,7 @@ class MainActivity : FlutterActivity() {
         val messenger = flutterEngine.dartExecutor.binaryMessenger
         UsageChannel.register(this, messenger)
         PermissionsChannel.register(this, messenger)
+        ShizukuChannel.register(this, messenger)
         ModeChannel.register(this, messenger)
         WallpaperChannel.register(this, messenger)
         reminders = MethodChannel(messenger, "veronica/reminders").apply {
