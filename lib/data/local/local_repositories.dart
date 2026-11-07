@@ -546,7 +546,7 @@ class DriftSleepRepository implements SleepRepository {
           .watch()
           .map((rows) => rows.map(_sound).toList());
 
-  /// Where a sound's audio lives, for playback.
+  @override
   Future<String?> soundPath(String id) async => (await (_db.select(
     _db.sounds,
   )..where((t) => t.id.equals(id))).getSingleOrNull())?.path;

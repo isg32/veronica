@@ -8,6 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../data/models/models.dart';
 import '../data/providers.dart';
 import 'android_usage.dart';
+import 'reminders.dart';
 
 part 'mode_engine.g.dart';
 
@@ -62,8 +63,13 @@ void modeEngine(Ref ref) {
     await _channel.invokeMethod<void>('setActive', json);
   }
 
-  Future<void> pushSchedules(List<Mode> modes) async {
+  Future<void> pushSchedules() async {
+    final modes = ref.read(modesProvider).value;
+    final sleep = ref.read(sleepScheduleProvider).value;
+    if (modes == null) return;
     final scheduled = [
+      // Wind-down overrides any mode, every night.
+      ?(sleep == null ? null : windDownSchedule(sleep)),
       for (final m in modes.where((m) => m.schedule != null))
         {
           ..._nativeMode(m),
@@ -103,11 +109,15 @@ void modeEngine(Ref ref) {
 
   ref
     ..listen(activeModeProvider, (_, _) => unawaited(push()))
-    ..listen(modesProvider, (_, next) {
+    ..listen(modesProvider, (_, _) {
       unawaited(push());
-      final modes = next.value;
-      if (modes != null) unawaited(pushSchedules(modes));
-    }, fireImmediately: true);
+      unawaited(pushSchedules());
+    }, fireImmediately: true)
+    ..listen(
+      sleepScheduleProvider,
+      (_, _) => unawaited(pushSchedules()),
+      fireImmediately: true,
+    );
 
   final observer = _ResumeObserver(() => unawaited(reconcile()));
   WidgetsBinding.instance.addObserver(observer);

@@ -68,6 +68,9 @@ class MockSleepRepository implements SleepRepository {
   @override
   Stream<List<AlarmSound>> watchSounds() => _sounds.watch();
 
+  @override
+  Future<String?> soundPath(String id) async => null;
+
   /// The mock "imports" a placeholder; the real one opens the file picker.
   @override
   Future<void> importSound() async => _sounds.update(

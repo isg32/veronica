@@ -36,6 +36,7 @@ object UsageChannel {
                     result.success(null)
                 }
                 "installedApps" -> background(activity, result) { installedApps(activity) }
+                "nights" -> background(activity, result) { nights(activity) }
                 "lastSevenDays" -> {
                     val packages = call.argument<List<String>>("packages").orEmpty().toSet()
                     background(activity, result) { lastSevenDays(activity, packages) }
@@ -180,5 +181,49 @@ object UsageChannel {
         }
         closeAll(now)
         return totals
+    }
+
+    /**
+     * The last seven nights, oldest first: for each evening (from 18:00 to
+     * 14:00 the next day) the longest stretch with the screen off, in
+     * minutes. [{date: evening midnight epoch ms, minutes}].
+     */
+    fun nights(context: Context): List<Map<String, Long>> {
+        if (!hasAccess(context)) return emptyList()
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_YEAR, -7)
+        }
+        val firstEvening = cal.timeInMillis
+        val now = System.currentTimeMillis()
+        // Screen-off stretches: [off, on).
+        val stretches = mutableListOf<Pair<Long, Long>>()
+        val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val events = usm.queryEvents(firstEvening, now)
+        val event = UsageEvents.Event()
+        var offSince: Long? = null
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            when (event.eventType) {
+                UsageEvents.Event.SCREEN_NON_INTERACTIVE -> if (offSince == null) offSince = event.timeStamp
+                UsageEvents.Event.SCREEN_INTERACTIVE -> {
+                    offSince?.let { stretches.add(it to event.timeStamp) }
+                    offSince = null
+                }
+            }
+        }
+        val day = 24 * 60 * 60 * 1000L
+        return (0 until 7).map { i ->
+            val midnight = firstEvening + i * day
+            val from = midnight + 18 * 60 * 60 * 1000L
+            val to = midnight + day + 14 * 60 * 60 * 1000L
+            val longest = stretches.maxOfOrNull { (a, b) ->
+                (minOf(b, to) - maxOf(a, from)).coerceAtLeast(0)
+            } ?: 0
+            mapOf("date" to midnight, "minutes" to longest / 60_000)
+        }
     }
 }

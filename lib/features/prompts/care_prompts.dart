@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,6 +17,7 @@ import '../../core/widgets/v_glass.dart';
 import '../../core/widgets/v_surface.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
+import '../../platform/reminders.dart';
 import '../selectors.dart';
 import 'prompt_widgets.dart';
 
@@ -135,6 +139,54 @@ class AlarmRingingPage extends ConsumerStatefulWidget {
 
 class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
   late final DateTime _started = ref.read(currentTimeProvider);
+  final AudioPlayer _player = AudioPlayer();
+  Timer? _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_play());
+  }
+
+  /// Plays the alarm's sound on a loop, fading in over its fade-in time.
+  Future<void> _play() async {
+    // Read once: the page may close while this is still loading.
+    final repo = ref.read(sleepRepositoryProvider);
+    final alarms = await repo.watchAlarms().first;
+    final alarm = alarms.where((a) => a.id == widget.alarmId).firstOrNull;
+    final soundId = alarm?.soundId;
+    if (!mounted || alarm == null || soundId == null) return;
+    final path = await repo.soundPath(soundId);
+    if (path == null || path.isEmpty || !mounted) return;
+    try {
+      await _player.setFilePath(path);
+      await _player.setLoopMode(LoopMode.one);
+      await _player.setVolume(0);
+      unawaited(_player.play());
+    } on Object {
+      return;
+    }
+    final fade = Duration(minutes: alarm.fadeInMin);
+    final start = DateTime.now();
+    _fade = Timer.periodic(const Duration(seconds: 1), (t) {
+      final p =
+          DateTime.now().difference(start).inMilliseconds / fade.inMilliseconds;
+      unawaited(_player.setVolume(p.clamp(0.05, 1.0)));
+      if (p >= 1) t.cancel();
+    });
+  }
+
+  Future<void> _stop() async {
+    _fade?.cancel();
+    await _player.stop();
+  }
+
+  @override
+  void dispose() {
+    _fade?.cancel();
+    unawaited(_player.dispose());
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -194,13 +246,29 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
           const Spacer(),
           VLink(
             'Tap to snooze · ${alarm?.snoozeMin ?? 9} min',
-            onTap: () => _leave(context),
+            onTap: () async {
+              await _stop();
+              await snoozeAlarm(
+                ref.read(databaseProvider),
+                widget.alarmId,
+                alarm?.snoozeMin ?? 9,
+              );
+              if (context.mounted) _leave(context);
+            },
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 44),
             child: SizedBox(
               width: double.infinity,
-              child: VSlideToStop(onComplete: () => _leave(context)),
+              child: VSlideToStop(
+                onComplete: () async {
+                  await _stop();
+                  await ref
+                      .read(databaseProvider)
+                      .writePref(snoozePrefKey, null);
+                  if (context.mounted) _leave(context);
+                },
+              ),
             ),
           ),
         ],

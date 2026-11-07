@@ -66,4 +66,4 @@ final class ModeEngineProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$modeEngineHash() => r'08f0051035764c81512979eebebf6109beaac0a5';
+String _$modeEngineHash() => r'6c960a69a82167b64f1b4d603e59758f44fce714';

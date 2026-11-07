@@ -6,6 +6,7 @@ import '../core/clock.dart';
 import '../mock/permissions_mock.dart';
 import '../mock/usage_mock.dart';
 import '../platform/android_usage.dart';
+import '../platform/reminders.dart';
 import 'db/database.dart';
 import 'local/local_repositories.dart';
 import 'system/android_permission_repository.dart';
@@ -76,15 +77,15 @@ ModeRepository modeRepository(Ref ref) => DriftModeRepository(
   ref.watch(clockProvider).now,
 );
 
-/// Importing alarm sounds (Phase 3). Returns null until then.
+/// Importing alarm sounds from files (none in tests).
 @Riverpod(keepAlive: true)
 SoundPicker soundPicker(Ref ref) =>
-    () async => null;
+    isAndroid ? pickAlarmSound : () async => null;
 
-/// Sleep estimated from screen-off time (Phase 3). Empty until then.
+/// Sleep estimated from screen-off time (empty in tests).
 @Riverpod(keepAlive: true)
 NightSource nightSource(Ref ref) =>
-    (schedule) async => const [];
+    isAndroid ? androidNights : (schedule) async => const [];
 
 @Riverpod(keepAlive: true)
 SleepRepository sleepRepository(Ref ref) => DriftSleepRepository(

@@ -107,6 +107,9 @@ abstract interface class SleepRepository {
   /// The last seven nights, oldest first.
   Stream<List<NightLog>> watchNights();
   Stream<List<AlarmSound>> watchSounds();
+
+  /// Where a sound's audio lives on the phone, for playback.
+  Future<String?> soundPath(String id);
   Future<void> importSound();
   Future<void> renameSound(String id, String name);
   Future<void> deleteSound(String id);

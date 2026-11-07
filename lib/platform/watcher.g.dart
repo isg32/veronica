@@ -97,7 +97,7 @@ final class WatcherRoutesProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$watcherRoutesHash() => r'cd4d6d18e7d5092599cf5dffc6d781809baf0d26';
+String _$watcherRoutesHash() => r'f1984eee0344be89a746b5f944460b0c328a9a67';
 
 @ProviderFor(watcherSetup)
 final watcherSetupProvider = WatcherSetupProvider._();

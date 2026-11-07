@@ -458,17 +458,17 @@ final class ModeRepositoryProvider
 
 String _$modeRepositoryHash() => r'032e32fe3910d59122f140dd766d72fcd8047d8f';
 
-/// Importing alarm sounds (Phase 3). Returns null until then.
+/// Importing alarm sounds from files (none in tests).
 
 @ProviderFor(soundPicker)
 final soundPickerProvider = SoundPickerProvider._();
 
-/// Importing alarm sounds (Phase 3). Returns null until then.
+/// Importing alarm sounds from files (none in tests).
 
 final class SoundPickerProvider
     extends $FunctionalProvider<SoundPicker, SoundPicker, SoundPicker>
     with $Provider<SoundPicker> {
-  /// Importing alarm sounds (Phase 3). Returns null until then.
+  /// Importing alarm sounds from files (none in tests).
   SoundPickerProvider._()
     : super(
         from: null,
@@ -502,19 +502,19 @@ final class SoundPickerProvider
   }
 }
 
-String _$soundPickerHash() => r'6f5b76fcecc327d6443461d738dbc2aa71e2c123';
+String _$soundPickerHash() => r'1971d4fa228e33663ecf8e7d307e4137b1ddee5a';
 
-/// Sleep estimated from screen-off time (Phase 3). Empty until then.
+/// Sleep estimated from screen-off time (empty in tests).
 
 @ProviderFor(nightSource)
 final nightSourceProvider = NightSourceProvider._();
 
-/// Sleep estimated from screen-off time (Phase 3). Empty until then.
+/// Sleep estimated from screen-off time (empty in tests).
 
 final class NightSourceProvider
     extends $FunctionalProvider<NightSource, NightSource, NightSource>
     with $Provider<NightSource> {
-  /// Sleep estimated from screen-off time (Phase 3). Empty until then.
+  /// Sleep estimated from screen-off time (empty in tests).
   NightSourceProvider._()
     : super(
         from: null,
@@ -548,7 +548,7 @@ final class NightSourceProvider
   }
 }
 
-String _$nightSourceHash() => r'621e39c909e3e71fef5c4436f927fc213ff5ae7f';
+String _$nightSourceHash() => r'3c1c79a7e33e9643b164eafeec4ab3805cf564b8';
 
 @ProviderFor(sleepRepository)
 final sleepRepositoryProvider = SleepRepositoryProvider._();
