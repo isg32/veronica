@@ -21,6 +21,7 @@ The canvas also shows the widgets over two wallpapers (`wallpaper-dark.png` and 
 | Surface | Fill | Blur | Border |
 | --- | --- | --- | --- |
 | Tab bar | white @ 0.10 (light: black @ 0.06) | 18 | 1 px ink |
+| Status bar | paper @ 0.6 fading to 0, over a progressive blur (strongest at the top, none 16 px below the bar) | up to ~11 | none |
 | Overlay card (Mantra time) | white @ 0.08 (light: black @ 0.05) | 16 | 1 px ink |
 | Bottom sheet | black @ 0.55 (light: white @ 0.60) | 14 | 1 px ink, top only |
 | Widget, dark set | black @ 0.40 | 30* | none |

@@ -5,6 +5,7 @@ import 'v_ink.dart';
 import '../theme/v_text.dart';
 import '../theme/v_tokens.dart';
 import 'v_buttons.dart';
+import 'v_glass.dart';
 
 /// Page title row: large Doto title with an optional trailing action, and an
 /// optional eyebrow above it (the date on Today).
@@ -107,10 +108,10 @@ class VTabPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       backgroundColor: VInk.surfaceOf(context),
-      child: SafeArea(
-        bottom: false,
+      child: _UnderStatusBar(
         child: CustomScrollView(
           slivers: [
+            const _StatusBarSpace(),
             SliverToBoxAdapter(
               child: VPageTitle(
                 title,
@@ -166,9 +167,11 @@ class VDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       backgroundColor: VInk.surfaceOf(context),
-      child: SafeArea(
+      child: _UnderStatusBar(
+        bottomSafe: true,
         child: CustomScrollView(
           slivers: [
+            const _StatusBarSpace(),
             SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,6 +205,36 @@ class VDetailPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Lets [child] run under the status bar, with [VStatusBarBlur] over it.
+class _UnderStatusBar extends StatelessWidget {
+  const _UnderStatusBar({required this.child, this.bottomSafe = false});
+
+  final Widget child;
+  final bool bottomSafe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: SafeArea(top: false, bottom: bottomSafe, child: child),
+        ),
+        const Positioned(left: 0, right: 0, top: 0, child: VStatusBarBlur()),
+      ],
+    );
+  }
+}
+
+/// Room for the status bar at the start of a scroll view.
+class _StatusBarSpace extends StatelessWidget {
+  const _StatusBarSpace();
+
+  @override
+  Widget build(BuildContext context) => SliverToBoxAdapter(
+    child: SizedBox(height: MediaQuery.paddingOf(context).top),
+  );
 }
 
 List<Widget> _gapped(List<Widget> children) => [
