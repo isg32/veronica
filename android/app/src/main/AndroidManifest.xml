@@ -6,6 +6,10 @@
         tools:ignore="ProtectedPermissions" />
     <!-- Only to download the offline voice model, once. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Mantras keep playing in the background as a media service. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- The voice model's small files download without their own notification. -->
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
     <!-- Permissions asked for in onboarding (see PermissionsChannel.kt). -->
@@ -118,6 +122,25 @@
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
 
         <!-- Home widgets (images rendered by Flutter; see lib/platform/home_widgets.dart). -->
+        <!-- Mantra listening sessions: playback with the screen off, with a
+             notification, lock-screen controls and headset buttons. -->
+        <service
+            android:name="com.ryanheise.audioservice.AudioService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback"
+            tools:ignore="Instantiatable">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+        <receiver
+            android:name="com.ryanheise.audioservice.MediaButtonReceiver"
+            android:exported="true"
+            tools:ignore="Instantiatable">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
         <!-- Widget taps that act without opening the app (+1 glass, modes, tasks). -->
         <receiver
             android:name=".widgets.WidgetActionReceiver"

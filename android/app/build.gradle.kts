@@ -21,6 +21,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // NewPipeExtractor uses newer Java APIs than Android 7 has.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -79,4 +81,10 @@ dependencies {
     // over Wireless debugging, so no computer is needed (see docs/PLAN.md).
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
+
+    // YouTube mantras: NewPipe's extractor (GPL-3.0, like Veronica) finds
+    // a stream when the Dart extractor can't (see YouTubeChannel.kt).
+    implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.27.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }

@@ -6,12 +6,14 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import '../core/ids.dart';
 import '../data/models/models.dart';
 import '../data/providers.dart';
+import 'mantra_service.dart';
+
+export 'mantra_service.dart' show ListeningState;
 
 part 'mantra_audio.g.dart';
 
@@ -54,9 +56,6 @@ Future<List<(String, String, Duration)>> pickMantraFiles() async {
   }
   return out;
 }
-
-/// YouTube clients whose audio links Android's player can stream.
-const _clients = [YoutubeApiClient.androidVr, YoutubeApiClient.androidSdkless];
 
 /// Looks up YouTube [links]: (title, link, length) for each video; a
 /// playlist link adds every video in it. Links that aren't YouTube are
@@ -125,137 +124,33 @@ Future<List<YouTubeResult>> searchYouTube(String query) async {
   }
 }
 
-/// The audio-only stream of a YouTube video, for streaming.
-Future<Uri> youTubeAudio(String link) async {
-  final yt = YoutubeExplode();
-  try {
-    final manifest = await yt.videos.streamsClient.getManifest(
-      VideoId(link),
-      ytClients: _clients,
-    );
-    return manifest.audioOnly.withHighestBitrate().url;
-  } finally {
-    yt.close();
-  }
-}
+/// The media service playing listening sessions; [initMantraAudio] makes
+/// it in main(), which overrides this.
+@Riverpod(keepAlive: true)
+MantraAudioHandler mantraHandler(Ref ref) => MantraAudioHandler();
 
-/// Where the listening session is.
-class ListeningState {
-  const ListeningState({
-    this.queue = const [],
-    this.index = 0,
-    this.loading = false,
-    this.finished = false,
-  });
-
-  final List<AudioMantra> queue;
-  final int index;
-
-  /// Opening the current mantra (resolving a YouTube stream).
-  final bool loading;
-
-  /// Every mantra in the queue has played.
-  final bool finished;
-
-  AudioMantra? get current => index < queue.length ? queue[index] : null;
-  bool get hasNext => index + 1 < queue.length;
-}
-
-/// Plays a listening session: the chosen mantra, or all of them in order.
-///
-/// Files play from the phone. YouTube videos stream as audio only; when a
-/// video can't be streamed, it opens in the YouTube app instead and the
-/// session moves on.
+/// The listening session, for the pages (see [MantraAudioHandler]).
 @Riverpod(keepAlive: true)
 class MantraPlayer extends _$MantraPlayer {
-  final AudioPlayer player = AudioPlayer();
-  StreamSubscription<PlayerState>? _done;
+  MantraAudioHandler get _handler => ref.read(mantraHandlerProvider);
+
+  AudioPlayer get player => _handler.player;
 
   @override
   ListeningState build() {
-    _done = player.playerStateStream.listen((s) {
-      if (s.processingState == ProcessingState.completed) unawaited(next());
-    });
-    ref.onDispose(() {
-      unawaited(_done?.cancel());
-      unawaited(player.dispose());
-    });
-    return const ListeningState();
+    final handler = ref.watch(mantraHandlerProvider);
+    final repo = ref.read(listeningRepositoryProvider);
+    handler.onLength = (id, length) => unawaited(repo.setLength(id, length));
+    void changed() => state = handler.session.value;
+    handler.session.addListener(changed);
+    ref.onDispose(() => handler.session.removeListener(changed));
+    return handler.session.value;
   }
 
-  /// Starts a session of [queue] from the first mantra.
-  Future<void> start(List<AudioMantra> queue) async {
-    if (queue.isEmpty) return;
-    state = ListeningState(queue: queue);
-    await _open();
-  }
-
-  Future<void> _open() async {
-    final mantra = state.current;
-    if (mantra == null) return;
-    state = ListeningState(
-      queue: state.queue,
-      index: state.index,
-      loading: true,
-    );
-    try {
-      final Duration? length;
-      if (mantra.youTube) {
-        length = await player.setAudioSource(
-          AudioSource.uri(await youTubeAudio(mantra.source)),
-        );
-      } else {
-        length = await player.setFilePath(mantra.source);
-      }
-      if (length != null && mantra.length == Duration.zero) {
-        unawaited(
-          ref.read(listeningRepositoryProvider).setLength(mantra.id, length),
-        );
-      }
-      state = ListeningState(queue: state.queue, index: state.index);
-      unawaited(player.play());
-    } on Object catch (e) {
-      debugPrint('Mantra playback failed: $e');
-      if (mantra.youTube) {
-        // Can't stream it: hand it to YouTube, then carry on.
-        await launchUrl(
-          Uri.parse(mantra.source),
-          mode: LaunchMode.externalApplication,
-        );
-      }
-      await next();
-    }
-  }
-
-  Future<void> toggle() async {
-    if (player.playing) {
-      await player.pause();
-    } else if (state.finished) {
-      await start(state.queue);
-    } else {
-      unawaited(player.play());
-    }
-  }
-
-  /// The next mantra, or the end of the session.
-  Future<void> next() async {
-    if (state.hasNext) {
-      state = ListeningState(queue: state.queue, index: state.index + 1);
-      await _open();
-    } else {
-      await player.stop();
-      state = ListeningState(
-        queue: state.queue,
-        index: state.index,
-        finished: true,
-      );
-    }
-  }
-
-  Future<void> stop() async {
-    await player.stop();
-    state = const ListeningState();
-  }
+  Future<void> start(List<AudioMantra> queue) => _handler.start(queue);
+  Future<void> toggle() => _handler.toggle();
+  Future<void> next() => _handler.skipToNext();
+  Future<void> stop() => _handler.stop();
 }
 
 /// What a session plays: the chosen mantra, or all in the order added.

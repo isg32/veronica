@@ -15,12 +15,17 @@ import com.isg32.veronica.usage.UsageChannel
 import com.isg32.veronica.voice.VoiceDownload
 import com.isg32.veronica.watcher.WatcherChannel
 import com.isg32.veronica.widgets.WallpaperChannel
-import io.flutter.embedding.android.FlutterActivity
+import com.isg32.veronica.youtube.YouTubeChannel
+import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONArray
 
-class MainActivity : FlutterActivity() {
+/**
+ * The app's activity. It extends audio_service's activity so the mantra
+ * media service and the app share one Flutter engine.
+ */
+class MainActivity : AudioServiceActivity() {
     companion object {
         /** A route to open, e.g. "/now/put-it-down/<package>" from the watcher. */
         const val EXTRA_ROUTE = "com.isg32.veronica.ROUTE"
@@ -63,6 +68,7 @@ class MainActivity : FlutterActivity() {
         WallpaperChannel.register(this, messenger)
         VoiceDownload.register(this, messenger)
         DeviceSounds.register(this, messenger)
+        YouTubeChannel.register(messenger)
         reminders = MethodChannel(messenger, "veronica/reminders").apply {
             setMethodCallHandler { call, result ->
                 when (call.method) {

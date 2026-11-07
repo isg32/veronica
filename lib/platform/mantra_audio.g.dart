@@ -8,27 +8,70 @@ part of 'mantra_audio.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Plays a listening session: the chosen mantra, or all of them in order.
-///
-/// Files play from the phone. YouTube videos stream as audio only; when a
-/// video can't be streamed, it opens in the YouTube app instead and the
-/// session moves on.
+/// The media service playing listening sessions; [initMantraAudio] makes
+/// it in main(), which overrides this.
+
+@ProviderFor(mantraHandler)
+final mantraHandlerProvider = MantraHandlerProvider._();
+
+/// The media service playing listening sessions; [initMantraAudio] makes
+/// it in main(), which overrides this.
+
+final class MantraHandlerProvider
+    extends
+        $FunctionalProvider<
+          MantraAudioHandler,
+          MantraAudioHandler,
+          MantraAudioHandler
+        >
+    with $Provider<MantraAudioHandler> {
+  /// The media service playing listening sessions; [initMantraAudio] makes
+  /// it in main(), which overrides this.
+  MantraHandlerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'mantraHandlerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$mantraHandlerHash();
+
+  @$internal
+  @override
+  $ProviderElement<MantraAudioHandler> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  MantraAudioHandler create(Ref ref) {
+    return mantraHandler(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(MantraAudioHandler value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<MantraAudioHandler>(value),
+    );
+  }
+}
+
+String _$mantraHandlerHash() => r'f8ad7e0258189bfea376aaf2ecb1c77b7e94db90';
+
+/// The listening session, for the pages (see [MantraAudioHandler]).
 
 @ProviderFor(MantraPlayer)
 final mantraPlayerProvider = MantraPlayerProvider._();
 
-/// Plays a listening session: the chosen mantra, or all of them in order.
-///
-/// Files play from the phone. YouTube videos stream as audio only; when a
-/// video can't be streamed, it opens in the YouTube app instead and the
-/// session moves on.
+/// The listening session, for the pages (see [MantraAudioHandler]).
 final class MantraPlayerProvider
     extends $NotifierProvider<MantraPlayer, ListeningState> {
-  /// Plays a listening session: the chosen mantra, or all of them in order.
-  ///
-  /// Files play from the phone. YouTube videos stream as audio only; when a
-  /// video can't be streamed, it opens in the YouTube app instead and the
-  /// session moves on.
+  /// The listening session, for the pages (see [MantraAudioHandler]).
   MantraPlayerProvider._()
     : super(
         from: null,
@@ -56,13 +99,9 @@ final class MantraPlayerProvider
   }
 }
 
-String _$mantraPlayerHash() => r'2768af074d5f63da591d0eb87677f84a8e89bf51';
+String _$mantraPlayerHash() => r'7528d19a6718ef02ee312043b37e8701f45899c0';
 
-/// Plays a listening session: the chosen mantra, or all of them in order.
-///
-/// Files play from the phone. YouTube videos stream as audio only; when a
-/// video can't be streamed, it opens in the YouTube app instead and the
-/// session moves on.
+/// The listening session, for the pages (see [MantraAudioHandler]).
 
 abstract class _$MantraPlayer extends $Notifier<ListeningState> {
   ListeningState build();

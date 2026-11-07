@@ -1,15 +1,26 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
+import 'platform/mantra_audio.dart';
+import 'platform/mantra_service.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _registerFontLicences();
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  runApp(const ProviderScope(child: VeronicaApp()));
+  unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
+  // Mantras play as a media service, so they carry on in the background.
+  final mantras = await initMantraAudio();
+  runApp(
+    ProviderScope(
+      overrides: [mantraHandlerProvider.overrideWithValue(mantras)],
+      child: const VeronicaApp(),
+    ),
+  );
 }
 
 /// Doto and Inter are bundled under the SIL Open Font License.
