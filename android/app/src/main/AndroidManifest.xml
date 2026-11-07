@@ -50,6 +50,12 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Home widgets open the app with veronica:// links, which the
+                 app handles itself (lib/platform/home_widgets.dart); they
+                 are not routes. -->
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="false" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -110,6 +116,19 @@
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
 
         <!-- Home widgets (images rendered by Flutter; see lib/platform/home_widgets.dart). -->
+        <!-- Widget taps that act without opening the app (+1 glass, modes, tasks). -->
+        <receiver
+            android:name=".widgets.WidgetActionReceiver"
+            android:exported="false" />
+        <!-- The small task card over the home screen (add, done, remove). -->
+        <activity
+            android:name=".widgets.TaskWidgetActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity="com.isg32.veronica.widget"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize" />
         <!-- Redraws the widgets at their pre-rendered frames' times, also after a reboot. -->
         <receiver
             android:name="es.antonborri.home_widget.HomeWidgetScheduledUpdateReceiver"

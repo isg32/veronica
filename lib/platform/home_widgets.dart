@@ -11,8 +11,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../app/router.dart';
 import '../app/routes.dart';
 import '../data/models/models.dart';
+import '../core/theme/v_colors.dart';
+import '../core/widgets/v_ink.dart';
 import '../data/providers.dart';
 import '../features/home_widgets/home_widget_views.dart';
+import 'mode_engine.dart';
 import 'wallpaper.dart';
 
 part 'home_widgets.g.dart';
@@ -58,6 +61,72 @@ List<DateTime> frameTimes(
       break;
   }
   return times.toList()..sort();
+}
+
+/// The pictures a widget needs, as (state, data): the state is the suffix
+/// Android picks by (see `VeronicaWidgets.kt`), so a tap shows its result
+/// at once, with the app closed:
+/// - water: `_w0`…`_w4`, one to four glasses more than now;
+/// - mode switch: `_none` and `_m0`…`_m2`, which mode is running;
+/// - the rest: a single state, `""`.
+List<(String, HomeWidgetSnapshot)> widgetStates(
+  HomeWidgetKind kind,
+  HomeWidgetSnapshot data,
+) => switch (kind) {
+  HomeWidgetKind.water => [
+    for (var k = 0; k <= 4; k++) ('_w$k', data.variant(water: data.water + k)),
+  ],
+  HomeWidgetKind.modeSwitch => [
+    ('_none', data.variant(active: -1)),
+    for (var i = 0; i < data.modes.length; i++)
+      ('_m$i', data.variant(active: i)),
+  ],
+  _ => [('', data)],
+};
+
+/// What the native widgets need to act on a tap by themselves.
+Future<void> _saveTapData(HomeWidgetSnapshot data, List<Mode> modes) async {
+  await HomeWidget.saveWidgetData<int>('widget_water_base', data.water);
+  for (var i = 0; i < 3; i++) {
+    final widgetMode = i < data.modes.length ? data.modes[i] : null;
+    final mode = modes.where((m) => m.id == widgetMode?.id).firstOrNull;
+    await HomeWidget.saveWidgetData<String>('widget_mode_${i}_id', mode?.id);
+    await HomeWidget.saveWidgetData<String>(
+      'widget_mode_${i}_json',
+      mode == null
+          ? null
+          : jsonEncode({
+              ...nativeMode(mode),
+              if (mode.timer == ModeTimer.fixed) 'timerMin': mode.timerMin,
+            }),
+    );
+  }
+  for (var i = 0; i < TaskRows.rendered; i++) {
+    final task = i < data.tasks.length ? data.tasks[i] : null;
+    await HomeWidget.saveWidgetData<String>('widget_task_${i}_id', task?.id);
+    await HomeWidget.saveWidgetData<String>(
+      'widget_task_${i}_title',
+      task?.title,
+    );
+  }
+}
+
+/// Each task row as its own transparent picture, in both inks.
+Future<void> _renderTaskRows(HomeWidgetSnapshot data, double ratio) async {
+  for (final (i, task) in data.tasks.indexed) {
+    for (final light in const [false, true]) {
+      final variant = light ? 'light' : 'dark';
+      await HomeWidget.renderFlutterWidget(
+        VInkScope(
+          ink: light ? VColors.black : VColors.white,
+          child: HomeWidgetTaskRow(task: task),
+        ),
+        key: 'widget_task_${i}_${variant}_image',
+        logicalSize: Size(HomeWidgetKind.oldestTasks.size.width, TaskRows.row),
+        pixelRatio: ratio,
+      );
+    }
+  }
 }
 
 /// Keeps the six native home widgets in step with the app.
@@ -111,16 +180,8 @@ void homeWidgetSync(Ref ref) {
       final ratio =
           PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 3;
 
-      for (var i = 0; i < 3; i++) {
-        await HomeWidget.saveWidgetData<String>(
-          'widget_task_${i}_id',
-          i < data.tasks.length ? data.tasks[i].id : null,
-        );
-        await HomeWidget.saveWidgetData<String>(
-          'widget_mode_${i}_id',
-          i < data.modes.length ? data.modes[i].id : null,
-        );
-      }
+      await _saveTapData(data, ref.read(modesProvider).value ?? const []);
+
       for (final kind in HomeWidgetKind.values) {
         final backdrop = wallpaper == null || screen == null
             ? null
@@ -131,37 +192,42 @@ void homeWidgetSync(Ref ref) {
                     .positionOf(kind)
                     .scale(screen.width, screen.height),
               );
-        final times = frameTimes(kind, data, DateTime.now());
-        for (final light in const [false, true]) {
-          final frames = <Map<String, Object>>[];
-          for (final (n, t) in times.indexed) {
-            final path = await HomeWidget.renderFlutterWidget(
-              HomeWidgetView(
-                kind: kind,
-                data: data,
-                light: light,
-                backdrop: backdrop,
-                now: t,
-              ),
-              key: n == 0
-                  ? kind.imageKey(light: light)
-                  : '${kind.imageKey(light: light)}_$n',
-              logicalSize: kind.size,
-              pixelRatio: ratio,
+        for (final (state, snapshot) in widgetStates(kind, data)) {
+          final times = frameTimes(kind, snapshot, DateTime.now());
+          for (final light in const [false, true]) {
+            final variant = light ? 'light' : 'dark';
+            final frames = <Map<String, Object>>[];
+            for (final (n, t) in times.indexed) {
+              final path = await HomeWidget.renderFlutterWidget(
+                HomeWidgetView(
+                  kind: kind,
+                  data: snapshot,
+                  light: light,
+                  backdrop: backdrop,
+                  now: t,
+                  tasksBackgroundOnly: true,
+                ),
+                key: 'widget_${kind.name}${state}_${variant}_$n',
+                logicalSize: kind.size,
+                pixelRatio: ratio,
+              );
+              frames.add({'at': t.millisecondsSinceEpoch, 'path': path});
+            }
+            await HomeWidget.saveWidgetData<String>(
+              'widget_${kind.name}${state}_${variant}_frames',
+              jsonEncode(frames),
             );
-            frames.add({'at': t.millisecondsSinceEpoch, 'path': path});
           }
-          await HomeWidget.saveWidgetData<String>(
-            'widget_${kind.name}_${light ? 'light' : 'dark'}_frames',
-            jsonEncode(frames),
-          );
+          // Android redraws at each later frame, with the app closed.
+          if (times.length > 1) {
+            await HomeWidget.scheduleWidgetUpdates(
+              times.skip(1).toList(),
+              qualifiedAndroidName: kind.qualifiedAndroidName,
+            );
+          }
         }
-        // Android redraws at each later frame, with the app closed.
-        if (times.length > 1) {
-          await HomeWidget.scheduleWidgetUpdates(
-            times.skip(1).toList(),
-            qualifiedAndroidName: kind.qualifiedAndroidName,
-          );
+        if (kind == HomeWidgetKind.oldestTasks) {
+          await _renderTaskRows(data, ratio);
         }
         await HomeWidget.updateWidget(
           qualifiedAndroidName: kind.qualifiedAndroidName,
@@ -221,56 +287,31 @@ class _LifecycleObserver with WidgetsBindingObserver {
   }
 }
 
-/// Turns taps on the home widgets (`veronica://…` links) into actions.
+/// Opens the app where a home widget points (`veronica://…` links). Taps
+/// that change something (+1 glass, a mode, a task) are handled by Android
+/// without opening the app (see `WidgetActions.kt`).
 ///
-/// | Link | Action |
+/// | Link | Opens |
 /// | --- | --- |
-/// | `veronica://focus` | open Focus |
-/// | `veronica://water/add` | log a glass, open Care |
-/// | `veronica://sleep` | open Sleep |
-/// | `veronica://mode/<id>` | start that mode |
-/// | `veronica://tasks` | open Tasks |
-/// | `veronica://task/<id>` | open the task |
-/// | `veronica://task/<id>/done` | complete the task |
-/// | `veronica://mantra` | start the mantra session |
+/// | `veronica://focus` | Focus |
+/// | `veronica://care` | Care |
+/// | `veronica://sleep` | Sleep |
+/// | `veronica://mantra` | the mantra session |
 @Riverpod(keepAlive: true)
 void homeWidgetLaunch(Ref ref) {
   if (!_supported) return;
 
-  Future<void> handle(Uri? uri) async {
+  void handle(Uri? uri) {
     if (uri == null || uri.scheme != 'veronica') return;
     final router = ref.read(routerProvider);
-    final parts = [uri.host, ...uri.pathSegments];
-
-    switch (parts) {
-      case ['focus']:
+    switch (uri.host) {
+      case 'focus':
         router.go(Routes.focus);
-      case ['water', 'add']:
-        await ref.read(waterRepositoryProvider).logGlass();
+      case 'care':
         router.go(Routes.care);
-      case ['sleep']:
+      case 'sleep':
         router.go(Routes.sleep);
-      case ['mode', final id]:
-        final modes = await ref.read(modeRepositoryProvider).watchModes().first;
-        final mode = modes.where((m) => m.id == id).firstOrNull;
-        if (mode == null) return;
-        await ref
-            .read(modeRepositoryProvider)
-            .start(
-              id,
-              minutes: mode.timer == ModeTimer.fixed ? mode.timerMin : null,
-            );
-        router.go(Routes.today);
-        unawaited(router.push(Routes.activeMode));
-      case ['tasks']:
-        router.go(Routes.tasks);
-      case ['task', final id, 'done']:
-        await ref.read(taskRepositoryProvider).setDone(id, done: true);
-        router.go(Routes.tasks);
-      case ['task', final id]:
-        router.go(Routes.tasks);
-        unawaited(router.push(Routes.task(id)));
-      case ['mantra']:
+      case 'mantra':
         router.go(Routes.today);
         unawaited(router.push(Routes.mantraSession));
     }
@@ -278,7 +319,7 @@ void homeWidgetLaunch(Ref ref) {
 
   // Launched cold from a widget: wait for the first frame so the router is up.
   WidgetsBinding.instance.addPostFrameCallback((_) async {
-    await handle(await HomeWidget.initiallyLaunchedFromHomeWidget());
+    handle(await HomeWidget.initiallyLaunchedFromHomeWidget());
   });
   final sub = HomeWidget.widgetClicked.listen(handle);
   ref.onDispose(sub.cancel);

@@ -75,52 +75,46 @@ final class HomeWidgetSyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$homeWidgetSyncHash() => r'3a1e6ce60a568c596e2373a0414c408d135969fe';
+String _$homeWidgetSyncHash() => r'779089db524bf4e70792e1ac1be3863fd0ff89e4';
 
-/// Turns taps on the home widgets (`veronica://…` links) into actions.
+/// Opens the app where a home widget points (`veronica://…` links). Taps
+/// that change something (+1 glass, a mode, a task) are handled by Android
+/// without opening the app (see `WidgetActions.kt`).
 ///
-/// | Link | Action |
+/// | Link | Opens |
 /// | --- | --- |
-/// | `veronica://focus` | open Focus |
-/// | `veronica://water/add` | log a glass, open Care |
-/// | `veronica://sleep` | open Sleep |
-/// | `veronica://mode/<id>` | start that mode |
-/// | `veronica://tasks` | open Tasks |
-/// | `veronica://task/<id>` | open the task |
-/// | `veronica://task/<id>/done` | complete the task |
-/// | `veronica://mantra` | start the mantra session |
+/// | `veronica://focus` | Focus |
+/// | `veronica://care` | Care |
+/// | `veronica://sleep` | Sleep |
+/// | `veronica://mantra` | the mantra session |
 
 @ProviderFor(homeWidgetLaunch)
 final homeWidgetLaunchProvider = HomeWidgetLaunchProvider._();
 
-/// Turns taps on the home widgets (`veronica://…` links) into actions.
+/// Opens the app where a home widget points (`veronica://…` links). Taps
+/// that change something (+1 glass, a mode, a task) are handled by Android
+/// without opening the app (see `WidgetActions.kt`).
 ///
-/// | Link | Action |
+/// | Link | Opens |
 /// | --- | --- |
-/// | `veronica://focus` | open Focus |
-/// | `veronica://water/add` | log a glass, open Care |
-/// | `veronica://sleep` | open Sleep |
-/// | `veronica://mode/<id>` | start that mode |
-/// | `veronica://tasks` | open Tasks |
-/// | `veronica://task/<id>` | open the task |
-/// | `veronica://task/<id>/done` | complete the task |
-/// | `veronica://mantra` | start the mantra session |
+/// | `veronica://focus` | Focus |
+/// | `veronica://care` | Care |
+/// | `veronica://sleep` | Sleep |
+/// | `veronica://mantra` | the mantra session |
 
 final class HomeWidgetLaunchProvider
     extends $FunctionalProvider<void, void, void>
     with $Provider<void> {
-  /// Turns taps on the home widgets (`veronica://…` links) into actions.
+  /// Opens the app where a home widget points (`veronica://…` links). Taps
+  /// that change something (+1 glass, a mode, a task) are handled by Android
+  /// without opening the app (see `WidgetActions.kt`).
   ///
-  /// | Link | Action |
+  /// | Link | Opens |
   /// | --- | --- |
-  /// | `veronica://focus` | open Focus |
-  /// | `veronica://water/add` | log a glass, open Care |
-  /// | `veronica://sleep` | open Sleep |
-  /// | `veronica://mode/<id>` | start that mode |
-  /// | `veronica://tasks` | open Tasks |
-  /// | `veronica://task/<id>` | open the task |
-  /// | `veronica://task/<id>/done` | complete the task |
-  /// | `veronica://mantra` | start the mantra session |
+  /// | `veronica://focus` | Focus |
+  /// | `veronica://care` | Care |
+  /// | `veronica://sleep` | Sleep |
+  /// | `veronica://mantra` | the mantra session |
   HomeWidgetLaunchProvider._()
     : super(
         from: null,
@@ -154,4 +148,4 @@ final class HomeWidgetLaunchProvider
   }
 }
 
-String _$homeWidgetLaunchHash() => r'6f48f81527ca1e2579f5080d66c6963ebbf365e6';
+String _$homeWidgetLaunchHash() => r'e5718c5bafa2448810e056118cd95a62556f568e';

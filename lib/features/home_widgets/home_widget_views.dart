@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/format.dart';
+import '../../core/icons/v_icons.dart';
 import '../../core/theme/v_colors.dart';
 import '../../core/theme/v_text.dart';
 import '../../core/widgets/v_ink.dart';
@@ -133,6 +134,32 @@ class HomeWidgetSnapshot {
   final List<WidgetTask> tasks;
   final String? mantra;
 
+  /// The same moment with [water] glasses, or [active] as the running
+  /// mode (its index, or -1 for none): states the widget can reach from a
+  /// tap before the app has drawn it again.
+  HomeWidgetSnapshot variant({int? water, int? active}) => HomeWidgetSnapshot(
+    usedMin: usedMin,
+    limitMin: limitMin,
+    water: water ?? this.water,
+    waterGoal: waterGoal,
+    alarmTime: alarmTime,
+    alarmAt: alarmAt,
+    modes: active == null
+        ? modes
+        : [
+            for (final (i, m) in modes.indexed)
+              WidgetMode(
+                id: m.id,
+                label: m.label,
+                active: i == active,
+                // Only the mode really running knows when it ends.
+                endsAt: i == active && m.active ? m.endsAt : null,
+              ),
+          ],
+    tasks: tasks,
+    mantra: mantra,
+  );
+
   /// Compared to decide whether the widgets need re-rendering.
   String get signature => [
     usedMin,
@@ -175,7 +202,8 @@ HomeWidgetSnapshot homeWidgetSnapshot(Ref ref) {
         ),
     ],
     tasks: [
-      for (final t in ref.watch(openTasksOldestFirstProvider).take(3))
+      for (final t
+          in ref.watch(openTasksOldestFirstProvider).take(TaskRows.rendered))
         WidgetTask(id: t.id, title: t.title, ageDays: t.ageDays(now)),
     ],
     mantra: ref.watch(todayMantraProvider)?.text,
@@ -213,7 +241,13 @@ class HomeWidgetView extends StatelessWidget {
     required this.light,
     this.backdrop,
     this.now,
+    this.tasksBackgroundOnly = false,
   });
+
+  /// Oldest tasks without its rows: Android lays the rows (rendered one by
+  /// one with [HomeWidgetTaskRow]) over it, so finishing a task from the
+  /// widget can hide its row straight away.
+  final bool tasksBackgroundOnly;
 
   final HomeWidgetKind kind;
   final HomeWidgetSnapshot data;
@@ -233,6 +267,8 @@ class HomeWidgetView extends StatelessWidget {
       child: SizedBox.fromSize(size: kind.size, child: _content()),
     );
   }
+
+  Color get _ink => light ? VColors.black : VColors.white;
 
   Color get _tint => light ? VColors.widgetLight : VColors.widgetDark;
 
@@ -420,34 +456,55 @@ class HomeWidgetView extends StatelessWidget {
         return _box(
           44,
           Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'OLDEST TASKS',
-                style: VText.inter(10, weight: 500, letterSpacing: 1),
+              SizedBox(
+                height: TaskRows.header,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 20, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'OLDEST TASKS',
+                          style: VText.inter(10, weight: 500, letterSpacing: 1),
+                        ),
+                      ),
+                      // Add a task, from the widget.
+                      Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: _ink),
+                        ),
+                        alignment: Alignment.center,
+                        child: const VIconView(
+                          VIcon.plus,
+                          size: 14,
+                          strokeWidth: 1.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               if (data.tasks.isEmpty)
-                Text('Nothing waiting.', style: VText.inter(14)),
-              for (final t in data.tasks)
-                Row(
-                  children: [
-                    VTaskCheck(ageDays: t.ageDays, size: 18),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        t.title,
-                        style: VText.inter(14, weight: 500),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                SizedBox(
+                  height: TaskRows.row,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Nothing waiting.', style: VText.inter(14)),
                     ),
-                    Text(VFormat.ageShort(t.ageDays), style: VText.doto(15)),
-                  ],
+                  ),
                 ),
+              if (!tasksBackgroundOnly)
+                for (final t in data.tasks.take(TaskRows.shown))
+                  HomeWidgetTaskRow(task: t),
             ],
           ),
-          padding: const EdgeInsets.fromLTRB(24, 18, 24, 18),
         );
 
       case HomeWidgetKind.mantra:
@@ -474,4 +531,49 @@ class HomeWidgetView extends StatelessWidget {
         );
     }
   }
+}
+
+/// The geometry of the oldest-tasks widget (4×2, 160 tall): a header band,
+/// three rows and a bottom margin. The native layout uses the same
+/// proportions to place the rows and their tap areas.
+abstract final class TaskRows {
+  static const double header = 40;
+  static const double row = 36;
+  static const double footer = 12;
+  static const int shown = 3;
+
+  /// Rows rendered for Android: when some are finished from the widget, the
+  /// next ones move up without waiting for the app.
+  static const int rendered = 6;
+}
+
+/// One task row of the oldest-tasks widget, on a transparent background.
+class HomeWidgetTaskRow extends StatelessWidget {
+  const HomeWidgetTaskRow({super.key, required this.task});
+
+  final WidgetTask task;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: HomeWidgetKind.oldestTasks.size.width,
+    height: TaskRows.row,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: [
+          VTaskCheck(ageDays: task.ageDays, size: 18),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              task.title,
+              style: VText.inter(14, weight: 500),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(VFormat.ageShort(task.ageDays), style: VText.doto(15)),
+        ],
+      ),
+    ),
+  );
 }

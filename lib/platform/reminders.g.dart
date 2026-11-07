@@ -152,6 +152,64 @@ final class ReminderPlanProvider
 
 String _$reminderPlanHash() => r'f9d1805d2bb1dd27c2c0c5bb4217fe5571755b42';
 
+/// Counts changes Android made while the app was running or away.
+
+@ProviderFor(ExternalChanges)
+final externalChangesProvider = ExternalChangesProvider._();
+
+/// Counts changes Android made while the app was running or away.
+final class ExternalChangesProvider
+    extends $NotifierProvider<ExternalChanges, int> {
+  /// Counts changes Android made while the app was running or away.
+  ExternalChangesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'externalChangesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$externalChangesHash();
+
+  @$internal
+  @override
+  ExternalChanges create() => ExternalChanges();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$externalChangesHash() => r'ab6b6f5eb8a54d18a544719d3aa9333b2be12d84';
+
+/// Counts changes Android made while the app was running or away.
+
+abstract class _$ExternalChanges extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// Sends the plan to Android whenever it changes, and refreshes the screens
 /// when "+1 glass" was logged from a notification.
 
@@ -198,4 +256,4 @@ final class ReminderSyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$reminderSyncHash() => r'03813e5f1122ac3dc2e885a09f0035ae3cc3beb1';
+String _$reminderSyncHash() => r'5c6ec42938e0ef3f1785128c70cd96dc397ba6cf';

@@ -283,6 +283,15 @@ List<PlannedReminder> reminderPlan(Ref ref) {
   return plan..sort((a, b) => a.at.compareTo(b.at));
 }
 
+/// Counts changes Android made while the app was running or away.
+@Riverpod(keepAlive: true)
+class ExternalChanges extends _$ExternalChanges {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
 /// Sends the plan to Android whenever it changes, and refreshes the screens
 /// when "+1 glass" was logged from a notification.
 @Riverpod(keepAlive: true)
@@ -305,14 +314,21 @@ void reminderSync(Ref ref) {
     debounce = Timer(const Duration(seconds: 1), push);
   }, fireImmediately: true);
 
-  void refreshWater() => ref.read(databaseProvider).notifyUpdates({
-    TableUpdate.onTable(ref.read(databaseProvider).waterLogs),
-  });
+  // Android wrote to the database (a notification or home widget action):
+  // re-read what it may have touched, and adopt a mode it started or ended.
+  void refresh() {
+    final db = ref.read(databaseProvider);
+    db.notifyUpdates({
+      TableUpdate.onTable(db.waterLogs),
+      TableUpdate.onTable(db.tasks),
+    });
+    ref.read(externalChangesProvider.notifier).bump();
+  }
 
   _reminders.setMethodCallHandler((call) async {
-    if (call.method == 'dataChanged') refreshWater();
+    if (call.method == 'dataChanged') refresh();
   });
-  final observer = _Resume(refreshWater);
+  final observer = _Resume(refresh);
   WidgetsBinding.instance.addObserver(observer);
   ref.onDispose(() {
     debounce?.cancel();

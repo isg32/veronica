@@ -25,7 +25,8 @@ Map<String, Object?> modeConfig(Mode mode) => {
   'blackWallpaper': mode.blackWallpaper,
 };
 
-Map<String, Object?> _nativeMode(Mode mode, {ActiveMode? active}) => {
+/// The native copy of [mode] (see `ModeState.kt`), running when [active].
+Map<String, Object?> nativeMode(Mode mode, {ActiveMode? active}) => {
   'id': mode.id,
   'name': mode.name,
   'started': ?active?.startedAt.millisecondsSinceEpoch,
@@ -56,7 +57,7 @@ void modeEngine(Ref ref) {
         : modes.where((m) => m.id == active.modeId).firstOrNull;
     final json = mode == null
         ? null
-        : jsonEncode(_nativeMode(mode, active: active));
+        : jsonEncode(nativeMode(mode, active: active));
     final signature = json ?? 'none';
     if (signature == lastSent) return;
     lastSent = signature;
@@ -72,7 +73,7 @@ void modeEngine(Ref ref) {
       ?(sleep == null ? null : windDownSchedule(sleep)),
       for (final m in modes.where((m) => m.schedule != null))
         {
-          ..._nativeMode(m),
+          ...nativeMode(m),
           'days': m.schedule!.days.toList(),
           'start': m.schedule!.start.label,
           'end': m.schedule!.end?.label,
@@ -119,6 +120,7 @@ void modeEngine(Ref ref) {
       fireImmediately: true,
     );
 
+  ref.listen(externalChangesProvider, (_, _) => unawaited(reconcile()));
   final observer = _ResumeObserver(() => unawaited(reconcile()));
   WidgetsBinding.instance.addObserver(observer);
   unawaited(reconcile());

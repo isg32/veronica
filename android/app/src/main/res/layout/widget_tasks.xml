@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Oldest tasks: the header opens Tasks; each row's check completes that
-     task and the rest of the row opens it. -->
+<!-- Oldest tasks: the glass with its header, and up to three task rows laid
+     over it, each its own picture so a task finished here disappears at
+     once. The weights match TaskRows in home_widget_views.dart (40 header,
+     36 per row, 12 below, of 160). -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -28,65 +30,150 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingTop="40dp"
-        android:paddingBottom="10dp">
+        android:orientation="vertical">
 
-        <LinearLayout
+        <!-- The header: tap to add a task. -->
+        <FrameLayout
+            android:id="@+id/tap_add"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal">
+            android:layout_weight="40" />
 
-            <FrameLayout
-                android:id="@+id/tap_check_0"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
-
-            <FrameLayout
-                android:id="@+id/tap_task_0"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="4" />
-        </LinearLayout>
-
-        <LinearLayout
+        <!-- Row 0: its own picture; the check finishes the task, the rest
+             opens the small task card. -->
+        <FrameLayout
+            android:id="@+id/row_0"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal">
+            android:layout_weight="36"
+            android:visibility="invisible">
 
-            <FrameLayout
-                android:id="@+id/tap_check_1"
-                android:layout_width="0dp"
+            <ImageView
+                android:id="@+id/row_0_dark"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1" />
+                android:contentDescription="@string/widget_image_description"
+                android:scaleType="fitCenter"
+                android:visibility="@integer/widget_dark_visibility" />
 
-            <FrameLayout
-                android:id="@+id/tap_task_1"
-                android:layout_width="0dp"
+            <ImageView
+                android:id="@+id/row_0_light"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="4" />
-        </LinearLayout>
+                android:contentDescription="@string/widget_image_description"
+                android:scaleType="fitCenter"
+                android:visibility="@integer/widget_light_visibility" />
 
-        <LinearLayout
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:id="@+id/tap_check_0"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <FrameLayout
+                    android:id="@+id/tap_task_0"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Row 1: its own picture; the check finishes the task, the rest
+             opens the small task card. -->
+        <FrameLayout
+            android:id="@+id/row_1"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal">
+            android:layout_weight="36"
+            android:visibility="invisible">
 
-            <FrameLayout
-                android:id="@+id/tap_check_2"
-                android:layout_width="0dp"
+            <ImageView
+                android:id="@+id/row_1_dark"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1" />
+                android:contentDescription="@string/widget_image_description"
+                android:scaleType="fitCenter"
+                android:visibility="@integer/widget_dark_visibility" />
 
-            <FrameLayout
-                android:id="@+id/tap_task_2"
-                android:layout_width="0dp"
+            <ImageView
+                android:id="@+id/row_1_light"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="4" />
-        </LinearLayout>
+                android:contentDescription="@string/widget_image_description"
+                android:scaleType="fitCenter"
+                android:visibility="@integer/widget_light_visibility" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:id="@+id/tap_check_1"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <FrameLayout
+                    android:id="@+id/tap_task_1"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Row 2: its own picture; the check finishes the task, the rest
+             opens the small task card. -->
+        <FrameLayout
+            android:id="@+id/row_2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="36"
+            android:visibility="invisible">
+
+            <ImageView
+                android:id="@+id/row_2_dark"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/widget_image_description"
+                android:scaleType="fitCenter"
+                android:visibility="@integer/widget_dark_visibility" />
+
+            <ImageView
+                android:id="@+id/row_2_light"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/widget_image_description"
+                android:scaleType="fitCenter"
+                android:visibility="@integer/widget_light_visibility" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:id="@+id/tap_check_2"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <FrameLayout
+                    android:id="@+id/tap_task_2"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="12" />
     </LinearLayout>
 </FrameLayout>

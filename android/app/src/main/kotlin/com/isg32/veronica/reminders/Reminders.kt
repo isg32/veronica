@@ -6,16 +6,15 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import com.isg32.veronica.MainActivity
 import com.isg32.veronica.R
+import com.isg32.veronica.data.AppDatabase
+import com.isg32.veronica.widgets.VeronicaWidgets
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
 
 /**
  * Reminders planned by the app for the next two days, armed as exact alarms
@@ -159,33 +158,20 @@ object Reminders {
 
     /** Logs a glass straight into the app's database (from the notification). */
     fun logWater(context: Context, reminderId: String?) {
-        val file = File(context.dataDir, "app_flutter/veronica.sqlite")
-        if (!file.exists()) return
-        val db = SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE)
-        try {
-            val ml = db.rawQuery("SELECT value FROM prefs WHERE key = 'water'", null).use { c ->
-                if (c.moveToFirst()) JSONObject(c.getString(0)).optInt("glass", 250) else 250
-            }
-            val now = System.currentTimeMillis()
-            db.insert(
-                "water_logs", null,
-                ContentValues().apply {
-                    put("id", "water-n${now.toString(36)}")
-                    put("at", now)
-                    put("ml", ml)
-                },
-            )
-        } finally {
-            db.close()
-        }
+        AppDatabase.logWater(context)
         reminderId?.let {
             context.getSystemService(NotificationManager::class.java).cancel(it.hashCode())
         }
-        // Tell the app (if it is open) to re-read.
-        context.sendBroadcast(Intent(ACTION_DATA_CHANGED).setPackage(context.packageName))
+        dataChanged(context)
     }
 
     const val ACTION_DATA_CHANGED = "com.isg32.veronica.DATA_CHANGED"
+
+    /** Tells the app (if it is running) to re-read, and redraws the widgets. */
+    fun dataChanged(context: Context) {
+        context.sendBroadcast(Intent(ACTION_DATA_CHANGED).setPackage(context.packageName))
+        VeronicaWidgets.refresh(context)
+    }
 }
 
 class ReminderReceiver : BroadcastReceiver() {
