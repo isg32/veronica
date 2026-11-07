@@ -75,7 +75,7 @@ final class HomeWidgetSyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$homeWidgetSyncHash() => r'e9cd18ca8487632851e8adc010600d74e87440ec';
+String _$homeWidgetSyncHash() => r'3a1e6ce60a568c596e2373a0414c408d135969fe';
 
 /// Turns taps on the home widgets (`veronica://…` links) into actions.
 ///

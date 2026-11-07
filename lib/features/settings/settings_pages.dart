@@ -24,6 +24,7 @@ import '../../data/providers.dart';
 import '../selectors.dart';
 import '../../mock/seed.dart';
 import '../../platform/glyph.dart';
+import '../../platform/voice.dart';
 import '../home_widgets/home_widget_views.dart';
 import 'glyph_frames.dart';
 import 'shizuku_grant.dart';
@@ -436,16 +437,7 @@ class VoiceSettingsPage extends ConsumerWidget {
                 onChanged: (on) => save(v.copyWith(enabled: on)),
               ),
             ),
-            VListRow(
-              title: 'Voice model',
-              subtitle: 'Kokoro-82M, downloaded once and kept offline',
-              value: switch (v.modelState) {
-                VoiceModelState.ready => 'Ready',
-                VoiceModelState.downloading =>
-                  '${(v.downloadProgress * 100).round()}%',
-                VoiceModelState.notDownloaded => 'Download',
-              },
-            ),
+            const _VoiceModelRow(),
           ],
         ),
         VListSection(
@@ -493,11 +485,46 @@ class VoiceSettingsPage extends ConsumerWidget {
               ),
           ],
         ),
-        VFootnote(
-          '${v.linesRendered} of ${v.linesTotal} fixed lines pre-rendered. '
-          'Lines with numbers use Piper.',
+        const VFootnote(
+          'Lines are made once with Kokoro and kept, so they play instantly. '
+          'Until a line is ready, or without the model, Android\'s own voice '
+          'says it.',
         ),
       ],
+    );
+  }
+}
+
+/// The Kokoro model: download it (once, about 300 MB), see progress.
+class _VoiceModelRow extends ConsumerWidget {
+  const _VoiceModelRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final model = ref.watch(voiceModelProvider).value;
+    final state = model?.state ?? VoiceModelState.notDownloaded;
+    return VListRow(
+      title: 'Voice model',
+      subtitle: switch (state) {
+        VoiceModelState.ready => 'Kokoro-82M, on this phone and offline',
+        VoiceModelState.downloading =>
+          'Downloading Kokoro-82M, keep Veronica open',
+        VoiceModelState.notDownloaded =>
+          'Kokoro-82M, about 300 MB, downloaded once. The only thing Veronica '
+              'fetches.',
+      },
+      trailing: switch (state) {
+        VoiceModelState.ready => Text('Ready', style: VText.inter(13)),
+        VoiceModelState.downloading => Text(
+          '${((model?.progress ?? 0) * 100).round()}%',
+          style: VText.inter(13),
+        ),
+        VoiceModelState.notDownloaded => VPill(
+          'Download',
+          style: VText.inter(12, weight: 600),
+          onTap: () => ref.read(voiceModelProvider.notifier).download(),
+        ),
+      },
     );
   }
 }

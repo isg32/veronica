@@ -21,6 +21,9 @@ dependencies:
   just_audio: ^0.10.6
   path_provider: ^2.1.6
   nothing_glyph_interface: ^0.0.10
+  sherpa_onnx: ^2.0.1
+  flutter_tts: ^4.2.5
+  archive: ^4.6.0
 
 dev_dependencies:
   flutter_test:

@@ -57,7 +57,7 @@ enum VoiceMoment {
 
 /// A Kokoro voice to audition.
 enum KokoroVoice {
-  afHeart('af_heart', 'Warm, soft'),
+  afHeart('af', 'Warm, soft (default)'),
   afBella('af_bella', 'Bright'),
   afNicole('af_nicole', 'Very soft, near-whisper'),
   bfEmma('bf_emma', 'British');

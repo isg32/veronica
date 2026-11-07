@@ -62,4 +62,4 @@ final class HomeWidgetSnapshotProvider
 }
 
 String _$homeWidgetSnapshotHash() =>
-    r'1f8789f48b53cb3a7a263413cd3da2d5c8b5869b';
+    r'53d8f09f1c8a361435fb2ae18b6c360d44507e2e';

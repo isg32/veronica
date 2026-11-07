@@ -7,6 +7,7 @@ import '../mock/permissions_mock.dart';
 import '../mock/usage_mock.dart';
 import '../platform/android_usage.dart';
 import '../platform/reminders.dart';
+import '../platform/voice.dart';
 import 'db/database.dart';
 import 'local/local_repositories.dart';
 import 'system/android_permission_repository.dart';
@@ -104,10 +105,12 @@ MantraRepository mantraRepository(Ref ref) => DriftMantraRepository(
   ref.watch(clockProvider).now,
 );
 
-/// Whether the offline voice model is on the phone (Phase 4).
+/// Whether the offline voice model is on the phone.
 @Riverpod(keepAlive: true)
-Stream<VoiceModelState> voiceModelState(Ref ref) =>
-    Stream.value(VoiceModelState.notDownloaded);
+Stream<VoiceModelState> voiceModelState(Ref ref) async* {
+  final model = await ref.watch(voiceModelProvider.future);
+  yield model.state;
+}
 
 @Riverpod(keepAlive: true)
 SettingsRepository settingsRepository(Ref ref) => DriftSettingsRepository(

@@ -78,6 +78,10 @@ class _PutItDownPageState extends ConsumerState<PutItDownPage> {
         'This app';
     final repo = ref.read(usageRepositoryProvider);
     return PromptScaffold(
+      speak: (
+        text: 'Put it down${name.isEmpty ? '' : ', $name'}.',
+        moment: VoiceMoment.putItDown,
+      ),
       child: Countdown(
         seconds: 5,
         builder: (context, left) => Column(
@@ -137,6 +141,12 @@ class _PutItDownPageState extends ConsumerState<PutItDownPage> {
     final over = app.minutesToday >= app.dailyLimitMin;
 
     return PromptScaffold(
+      speak: widget.fromWatcher
+          ? (
+              text: 'Put it down${name.isEmpty ? '' : ', $name'}.',
+              moment: VoiceMoment.putItDown,
+            )
+          : null,
       child: Countdown(
         seconds: 5,
         builder: (context, left) => Column(
@@ -212,6 +222,10 @@ class TimesUpPage extends ConsumerWidget {
         : active!.endsAt!.difference(active.startedAt).inMinutes;
 
     return PromptScaffold(
+      speak: (
+        text: "Time's up. That was your Binge Time.",
+        moment: VoiceMoment.timesUp,
+      ),
       child: Countdown(
         seconds: 5,
         builder: (context, left) => Column(

@@ -1,18 +1,32 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/widgets/v_ink.dart';
 import '../../core/theme/v_text.dart';
+import '../../data/models/models.dart';
+import '../../platform/voice.dart';
 
 /// Black full-screen frame shared by every prompt.
 class PromptScaffold extends StatelessWidget {
-  const PromptScaffold({super.key, required this.child});
+  const PromptScaffold({super.key, required this.child, this.speak});
 
   final Widget child;
 
+  /// What Veronica says when the page appears, if voice is on for it.
+  final ({String text, VoiceMoment moment})? speak;
+
   @override
   Widget build(BuildContext context) {
+    final line = speak;
+    if (line != null) {
+      return SpeakOnShow(
+        text: line.text,
+        moment: line.moment,
+        child: PromptScaffold(child: child),
+      );
+    }
     return CupertinoPageScaffold(
       backgroundColor: VInk.surfaceOf(context),
       child: SafeArea(child: child),
@@ -110,4 +124,41 @@ String splitForHeadline(String text, {int maxLine = 6}) {
         return '${w.substring(0, half)}\n${w.substring(half)}';
       })
       .join('\n');
+}
+
+/// Veronica says [text] once when this appears (if voice is on for
+/// [moment]), and stops when it goes away.
+class SpeakOnShow extends ConsumerStatefulWidget {
+  const SpeakOnShow({
+    super.key,
+    required this.text,
+    required this.moment,
+    required this.child,
+  });
+
+  final String text;
+  final VoiceMoment moment;
+  final Widget child;
+
+  @override
+  ConsumerState<SpeakOnShow> createState() => _SpeakOnShowState();
+}
+
+class _SpeakOnShowState extends ConsumerState<SpeakOnShow> {
+  late final VeronicaVoice _voice = ref.read(veronicaVoiceProvider);
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_voice.say(widget.text, widget.moment));
+  }
+
+  @override
+  void dispose() {
+    unawaited(_voice.stop());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

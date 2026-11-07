@@ -638,12 +638,12 @@ final class MantraRepositoryProvider
 
 String _$mantraRepositoryHash() => r'2e3a9bd5ad6d1753658291ce4562b5bf8ec76bbd';
 
-/// Whether the offline voice model is on the phone (Phase 4).
+/// Whether the offline voice model is on the phone.
 
 @ProviderFor(voiceModelState)
 final voiceModelStateProvider = VoiceModelStateProvider._();
 
-/// Whether the offline voice model is on the phone (Phase 4).
+/// Whether the offline voice model is on the phone.
 
 final class VoiceModelStateProvider
     extends
@@ -653,7 +653,7 @@ final class VoiceModelStateProvider
           Stream<VoiceModelState>
         >
     with $FutureModifier<VoiceModelState>, $StreamProvider<VoiceModelState> {
-  /// Whether the offline voice model is on the phone (Phase 4).
+  /// Whether the offline voice model is on the phone.
   VoiceModelStateProvider._()
     : super(
         from: null,
@@ -680,7 +680,7 @@ final class VoiceModelStateProvider
   }
 }
 
-String _$voiceModelStateHash() => r'c54d1ecbad70b14b55c7fceb68ffa7aaa98d2b79';
+String _$voiceModelStateHash() => r'296ed3be998557c0f42addbee73873f0ec3bf2d3';
 
 @ProviderFor(settingsRepository)
 final settingsRepositoryProvider = SettingsRepositoryProvider._();

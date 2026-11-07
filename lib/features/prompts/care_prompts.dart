@@ -18,6 +18,7 @@ import '../../core/widgets/v_surface.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
 import '../../platform/reminders.dart';
+import '../../platform/voice.dart';
 import '../selectors.dart';
 import 'prompt_widgets.dart';
 
@@ -52,6 +53,7 @@ class MedicineDuePage extends ConsumerWidget {
     final time = due?.scheduledAt ?? now;
 
     return PromptScaffold(
+      speak: (text: 'Time for your ${med.name}.', moment: VoiceMoment.medicine),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -277,6 +279,17 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
                   await ref
                       .read(databaseProvider)
                       .writePref(snoozePrefKey, null);
+                  // The wake-up greeting, once the sound has stopped.
+                  unawaited(
+                    ref
+                        .read(veronicaVoiceProvider)
+                        .say(
+                          name.isEmpty
+                              ? 'Good morning.'
+                              : 'Good morning, $name.',
+                          VoiceMoment.wakeUp,
+                        ),
+                  );
                   if (context.mounted) _leave(context);
                 },
               ),
@@ -335,6 +348,7 @@ class MantraSessionPage extends ConsumerWidget {
     final text = (mantra?.text ?? '').replaceAll('. ', '.\n');
 
     return PromptScaffold(
+      speak: (text: mantra?.text ?? '', moment: VoiceMoment.mantra),
       child: Countdown(
         seconds: 60,
         builder: (context, left) => Column(
