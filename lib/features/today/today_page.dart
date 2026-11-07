@@ -342,7 +342,7 @@ class _MantraStrip extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("TODAY'S MANTRA", style: VText.eyebrow),
+                Text("TODAY'S QUOTE", style: VText.eyebrow),
                 const SizedBox(height: 3),
                 Text(mantra.text, style: VText.inter(15)),
               ],

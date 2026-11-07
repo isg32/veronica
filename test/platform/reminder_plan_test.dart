@@ -37,11 +37,29 @@ void main() {
     return value;
   }
 
-  test('the plan covers water, medicine and the mantra', () async {
+  test('the plan covers water and medicine', () async {
     // (The sample alarms may fall outside the next 48 hours, depending on
     // the weekday, so they are not asserted here.)
     final kinds = (await plan()).map((r) => r.kind).toSet();
-    expect(kinds, containsAll(['water', 'medicine', 'mantra']));
+    expect(kinds, containsAll(['water', 'medicine']));
+  });
+
+  test('a mantra session is planned once there is a mantra', () async {
+    expect((await plan()).where((r) => r.kind == 'mantra'), isEmpty);
+    await db
+        .into(db.audioMantras)
+        .insert(
+          AudioMantrasCompanion.insert(
+            id: 'listen-1',
+            title: 'Om chanting',
+            source: '/x.flac',
+            addedAt: 0,
+          ),
+        );
+    final mantra = (await plan()).where((r) => r.kind == 'mantra');
+    expect(mantra, isNotEmpty);
+    expect(mantra.first.body, 'Om chanting');
+    expect(mantra.first.route, '/now/mantra-time');
   });
 
   test(

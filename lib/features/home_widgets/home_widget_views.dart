@@ -515,12 +515,12 @@ class HomeWidgetView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'MANTRA',
+                "TODAY'S QUOTE",
                 style: VText.inter(10, weight: 500, letterSpacing: 1),
               ),
               const SizedBox(height: 3),
               Text(
-                data.mantra ?? 'Add a mantra in Care',
+                data.mantra ?? 'Add a quote in Care',
                 style: VText.inter(16),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

@@ -6,6 +6,7 @@ import '../core/clock.dart';
 import '../mock/permissions_mock.dart';
 import '../mock/usage_mock.dart';
 import '../platform/android_usage.dart';
+import '../platform/mantra_audio.dart';
 import '../platform/reminders.dart';
 import '../platform/voice.dart';
 import 'db/database.dart';
@@ -103,6 +104,18 @@ SleepRepository sleepRepository(Ref ref) => DriftSleepRepository(
 MantraRepository mantraRepository(Ref ref) => DriftMantraRepository(
   ref.watch(databaseProvider),
   ref.watch(clockProvider).now,
+);
+
+@Riverpod(keepAlive: true)
+ListeningRepository listeningRepository(Ref ref) => DriftListeningRepository(
+  ref.watch(databaseProvider),
+  ref.watch(clockProvider).now,
+  pickFiles: isAndroid ? pickMantraFiles : () async => const [],
+  lookUp: lookUpYouTube,
+  deleteFile: (path) async {
+    final file = File(path);
+    if (file.existsSync()) await file.delete();
+  },
 );
 
 /// Whether the offline voice model is on the phone.
@@ -213,6 +226,14 @@ Stream<List<Mantra>> mantras(Ref ref) =>
 @riverpod
 Stream<MantraSettings> mantraSettings(Ref ref) =>
     ref.watch(mantraRepositoryProvider).watchSettings();
+
+@riverpod
+Stream<List<AudioMantra>> audioMantras(Ref ref) =>
+    ref.watch(listeningRepositoryProvider).watchAudio();
+
+@riverpod
+Stream<ListeningSettings> listeningSettings(Ref ref) =>
+    ref.watch(listeningRepositoryProvider).watchSettings();
 
 @riverpod
 Stream<VoiceSettings> voiceSettings(Ref ref) =>

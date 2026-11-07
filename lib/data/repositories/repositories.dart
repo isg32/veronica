@@ -119,6 +119,23 @@ abstract interface class SleepRepository {
   Future<void> deleteSound(String id);
 }
 
+/// Audio mantras and the daily listening session.
+abstract interface class ListeningRepository {
+  Stream<List<AudioMantra>> watchAudio();
+
+  /// Copies audio files picked from the phone into the app.
+  Future<void> importFiles();
+
+  /// Adds YouTube videos (or every video of a playlist) from [links];
+  /// returns how many were added.
+  Future<int> addYouTube(List<String> links);
+  Future<void> rename(String id, String title);
+  Future<void> setLength(String id, Duration length);
+  Future<void> delete(String id);
+  Stream<ListeningSettings> watchSettings();
+  Future<void> saveSettings(ListeningSettings settings);
+}
+
 abstract interface class MantraRepository {
   Stream<List<Mantra>> watchMantras();
   Future<void> save(Mantra mantra);

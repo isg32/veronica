@@ -638,6 +638,54 @@ final class MantraRepositoryProvider
 
 String _$mantraRepositoryHash() => r'2e3a9bd5ad6d1753658291ce4562b5bf8ec76bbd';
 
+@ProviderFor(listeningRepository)
+final listeningRepositoryProvider = ListeningRepositoryProvider._();
+
+final class ListeningRepositoryProvider
+    extends
+        $FunctionalProvider<
+          ListeningRepository,
+          ListeningRepository,
+          ListeningRepository
+        >
+    with $Provider<ListeningRepository> {
+  ListeningRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'listeningRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$listeningRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<ListeningRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ListeningRepository create(Ref ref) {
+    return listeningRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ListeningRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ListeningRepository>(value),
+    );
+  }
+}
+
+String _$listeningRepositoryHash() =>
+    r'928d7ed82971e51be9ce66c0e8373b6853599dec';
+
 /// Whether the offline voice model is on the phone.
 
 @ProviderFor(voiceModelState)
@@ -1571,6 +1619,88 @@ final class MantraSettingsProvider
 }
 
 String _$mantraSettingsHash() => r'fece3a64e74a2467a0eae2dc6a913ee3160cc7e5';
+
+@ProviderFor(audioMantras)
+final audioMantrasProvider = AudioMantrasProvider._();
+
+final class AudioMantrasProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AudioMantra>>,
+          List<AudioMantra>,
+          Stream<List<AudioMantra>>
+        >
+    with
+        $FutureModifier<List<AudioMantra>>,
+        $StreamProvider<List<AudioMantra>> {
+  AudioMantrasProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'audioMantrasProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$audioMantrasHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<AudioMantra>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<AudioMantra>> create(Ref ref) {
+    return audioMantras(ref);
+  }
+}
+
+String _$audioMantrasHash() => r'6283ca7cff122e1f5bf3149059183414b9181fc4';
+
+@ProviderFor(listeningSettings)
+final listeningSettingsProvider = ListeningSettingsProvider._();
+
+final class ListeningSettingsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<ListeningSettings>,
+          ListeningSettings,
+          Stream<ListeningSettings>
+        >
+    with
+        $FutureModifier<ListeningSettings>,
+        $StreamProvider<ListeningSettings> {
+  ListeningSettingsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'listeningSettingsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$listeningSettingsHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<ListeningSettings> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<ListeningSettings> create(Ref ref) {
+    return listeningSettings(ref);
+  }
+}
+
+String _$listeningSettingsHash() => r'04901a8a861d7a360da354c025cb67a7a50daeca';
 
 @ProviderFor(voiceSettings)
 final voiceSettingsProvider = VoiceSettingsProvider._();

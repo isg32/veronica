@@ -3999,6 +3999,413 @@ class MantrasCompanion extends UpdateCompanion<MantraRow> {
   }
 }
 
+class $AudioMantrasTable extends AudioMantras
+    with TableInfo<$AudioMantrasTable, AudioMantraRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AudioMantrasTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _youTubeMeta = const VerificationMeta(
+    'youTube',
+  );
+  @override
+  late final GeneratedColumn<bool> youTube = GeneratedColumn<bool>(
+    'you_tube',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("you_tube" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _lengthMsMeta = const VerificationMeta(
+    'lengthMs',
+  );
+  @override
+  late final GeneratedColumn<int> lengthMs = GeneratedColumn<int>(
+    'length_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final GeneratedColumn<int> addedAt = GeneratedColumn<int>(
+    'added_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    source,
+    youTube,
+    lengthMs,
+    addedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'audio_mantras';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AudioMantraRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('you_tube')) {
+      context.handle(
+        _youTubeMeta,
+        youTube.isAcceptableOrUnknown(data['you_tube']!, _youTubeMeta),
+      );
+    }
+    if (data.containsKey('length_ms')) {
+      context.handle(
+        _lengthMsMeta,
+        lengthMs.isAcceptableOrUnknown(data['length_ms']!, _lengthMsMeta),
+      );
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_addedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AudioMantraRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AudioMantraRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      youTube: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}you_tube'],
+      )!,
+      lengthMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}length_ms'],
+      )!,
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}added_at'],
+      )!,
+    );
+  }
+
+  @override
+  $AudioMantrasTable createAlias(String alias) {
+    return $AudioMantrasTable(attachedDatabase, alias);
+  }
+}
+
+class AudioMantraRow extends DataClass implements Insertable<AudioMantraRow> {
+  final String id;
+  final String title;
+
+  /// The file's path in the app, or the YouTube link.
+  final String source;
+  final bool youTube;
+  final int lengthMs;
+  final int addedAt;
+  const AudioMantraRow({
+    required this.id,
+    required this.title,
+    required this.source,
+    required this.youTube,
+    required this.lengthMs,
+    required this.addedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    map['source'] = Variable<String>(source);
+    map['you_tube'] = Variable<bool>(youTube);
+    map['length_ms'] = Variable<int>(lengthMs);
+    map['added_at'] = Variable<int>(addedAt);
+    return map;
+  }
+
+  AudioMantrasCompanion toCompanion(bool nullToAbsent) {
+    return AudioMantrasCompanion(
+      id: Value(id),
+      title: Value(title),
+      source: Value(source),
+      youTube: Value(youTube),
+      lengthMs: Value(lengthMs),
+      addedAt: Value(addedAt),
+    );
+  }
+
+  factory AudioMantraRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AudioMantraRow(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      source: serializer.fromJson<String>(json['source']),
+      youTube: serializer.fromJson<bool>(json['youTube']),
+      lengthMs: serializer.fromJson<int>(json['lengthMs']),
+      addedAt: serializer.fromJson<int>(json['addedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'source': serializer.toJson<String>(source),
+      'youTube': serializer.toJson<bool>(youTube),
+      'lengthMs': serializer.toJson<int>(lengthMs),
+      'addedAt': serializer.toJson<int>(addedAt),
+    };
+  }
+
+  AudioMantraRow copyWith({
+    String? id,
+    String? title,
+    String? source,
+    bool? youTube,
+    int? lengthMs,
+    int? addedAt,
+  }) => AudioMantraRow(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    source: source ?? this.source,
+    youTube: youTube ?? this.youTube,
+    lengthMs: lengthMs ?? this.lengthMs,
+    addedAt: addedAt ?? this.addedAt,
+  );
+  AudioMantraRow copyWithCompanion(AudioMantrasCompanion data) {
+    return AudioMantraRow(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      source: data.source.present ? data.source.value : this.source,
+      youTube: data.youTube.present ? data.youTube.value : this.youTube,
+      lengthMs: data.lengthMs.present ? data.lengthMs.value : this.lengthMs,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AudioMantraRow(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('source: $source, ')
+          ..write('youTube: $youTube, ')
+          ..write('lengthMs: $lengthMs, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, title, source, youTube, lengthMs, addedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AudioMantraRow &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.source == this.source &&
+          other.youTube == this.youTube &&
+          other.lengthMs == this.lengthMs &&
+          other.addedAt == this.addedAt);
+}
+
+class AudioMantrasCompanion extends UpdateCompanion<AudioMantraRow> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String> source;
+  final Value<bool> youTube;
+  final Value<int> lengthMs;
+  final Value<int> addedAt;
+  final Value<int> rowid;
+  const AudioMantrasCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.source = const Value.absent(),
+    this.youTube = const Value.absent(),
+    this.lengthMs = const Value.absent(),
+    this.addedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AudioMantrasCompanion.insert({
+    required String id,
+    required String title,
+    required String source,
+    this.youTube = const Value.absent(),
+    this.lengthMs = const Value.absent(),
+    required int addedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       title = Value(title),
+       source = Value(source),
+       addedAt = Value(addedAt);
+  static Insertable<AudioMantraRow> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? source,
+    Expression<bool>? youTube,
+    Expression<int>? lengthMs,
+    Expression<int>? addedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (source != null) 'source': source,
+      if (youTube != null) 'you_tube': youTube,
+      if (lengthMs != null) 'length_ms': lengthMs,
+      if (addedAt != null) 'added_at': addedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AudioMantrasCompanion copyWith({
+    Value<String>? id,
+    Value<String>? title,
+    Value<String>? source,
+    Value<bool>? youTube,
+    Value<int>? lengthMs,
+    Value<int>? addedAt,
+    Value<int>? rowid,
+  }) {
+    return AudioMantrasCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      source: source ?? this.source,
+      youTube: youTube ?? this.youTube,
+      lengthMs: lengthMs ?? this.lengthMs,
+      addedAt: addedAt ?? this.addedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (youTube.present) {
+      map['you_tube'] = Variable<bool>(youTube.value);
+    }
+    if (lengthMs.present) {
+      map['length_ms'] = Variable<int>(lengthMs.value);
+    }
+    if (addedAt.present) {
+      map['added_at'] = Variable<int>(addedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AudioMantrasCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('source: $source, ')
+          ..write('youTube: $youTube, ')
+          ..write('lengthMs: $lengthMs, ')
+          ..write('addedAt: $addedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$VeronicaDatabase extends GeneratedDatabase {
   _$VeronicaDatabase(QueryExecutor e) : super(e);
   $VeronicaDatabaseManager get managers => $VeronicaDatabaseManager(this);
@@ -4014,6 +4421,7 @@ abstract class _$VeronicaDatabase extends GeneratedDatabase {
   late final $AlarmsTable alarms = $AlarmsTable(this);
   late final $SoundsTable sounds = $SoundsTable(this);
   late final $MantrasTable mantras = $MantrasTable(this);
+  late final $AudioMantrasTable audioMantras = $AudioMantrasTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4031,6 +4439,7 @@ abstract class _$VeronicaDatabase extends GeneratedDatabase {
     alarms,
     sounds,
     mantras,
+    audioMantras,
   ];
 }
 
@@ -6353,6 +6762,240 @@ typedef $$MantrasTableProcessedTableManager =
       MantraRow,
       PrefetchHooks Function()
     >;
+typedef $$AudioMantrasTableCreateCompanionBuilder =
+    AudioMantrasCompanion Function({
+      required String id,
+      required String title,
+      required String source,
+      Value<bool> youTube,
+      Value<int> lengthMs,
+      required int addedAt,
+      Value<int> rowid,
+    });
+typedef $$AudioMantrasTableUpdateCompanionBuilder =
+    AudioMantrasCompanion Function({
+      Value<String> id,
+      Value<String> title,
+      Value<String> source,
+      Value<bool> youTube,
+      Value<int> lengthMs,
+      Value<int> addedAt,
+      Value<int> rowid,
+    });
+
+class $$AudioMantrasTableFilterComposer
+    extends Composer<_$VeronicaDatabase, $AudioMantrasTable> {
+  $$AudioMantrasTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get youTube => $composableBuilder(
+    column: $table.youTube,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lengthMs => $composableBuilder(
+    column: $table.lengthMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AudioMantrasTableOrderingComposer
+    extends Composer<_$VeronicaDatabase, $AudioMantrasTable> {
+  $$AudioMantrasTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get youTube => $composableBuilder(
+    column: $table.youTube,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lengthMs => $composableBuilder(
+    column: $table.lengthMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AudioMantrasTableAnnotationComposer
+    extends Composer<_$VeronicaDatabase, $AudioMantrasTable> {
+  $$AudioMantrasTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<bool> get youTube =>
+      $composableBuilder(column: $table.youTube, builder: (column) => column);
+
+  GeneratedColumn<int> get lengthMs =>
+      $composableBuilder(column: $table.lengthMs, builder: (column) => column);
+
+  GeneratedColumn<int> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+}
+
+class $$AudioMantrasTableTableManager
+    extends
+        RootTableManager<
+          _$VeronicaDatabase,
+          $AudioMantrasTable,
+          AudioMantraRow,
+          $$AudioMantrasTableFilterComposer,
+          $$AudioMantrasTableOrderingComposer,
+          $$AudioMantrasTableAnnotationComposer,
+          $$AudioMantrasTableCreateCompanionBuilder,
+          $$AudioMantrasTableUpdateCompanionBuilder,
+          (
+            AudioMantraRow,
+            BaseReferences<
+              _$VeronicaDatabase,
+              $AudioMantrasTable,
+              AudioMantraRow
+            >,
+          ),
+          AudioMantraRow,
+          PrefetchHooks Function()
+        > {
+  $$AudioMantrasTableTableManager(
+    _$VeronicaDatabase db,
+    $AudioMantrasTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AudioMantrasTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AudioMantrasTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AudioMantrasTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<bool> youTube = const Value.absent(),
+                Value<int> lengthMs = const Value.absent(),
+                Value<int> addedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AudioMantrasCompanion(
+                id: id,
+                title: title,
+                source: source,
+                youTube: youTube,
+                lengthMs: lengthMs,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String title,
+                required String source,
+                Value<bool> youTube = const Value.absent(),
+                Value<int> lengthMs = const Value.absent(),
+                required int addedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => AudioMantrasCompanion.insert(
+                id: id,
+                title: title,
+                source: source,
+                youTube: youTube,
+                lengthMs: lengthMs,
+                addedAt: addedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AudioMantrasTable, AudioMantraRow>(table),
+                  BaseReferences<
+                    _$VeronicaDatabase,
+                    $AudioMantrasTable,
+                    AudioMantraRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AudioMantrasTableProcessedTableManager =
+    ProcessedTableManager<
+      _$VeronicaDatabase,
+      $AudioMantrasTable,
+      AudioMantraRow,
+      $$AudioMantrasTableFilterComposer,
+      $$AudioMantrasTableOrderingComposer,
+      $$AudioMantrasTableAnnotationComposer,
+      $$AudioMantrasTableCreateCompanionBuilder,
+      $$AudioMantrasTableUpdateCompanionBuilder,
+      (
+        AudioMantraRow,
+        BaseReferences<_$VeronicaDatabase, $AudioMantrasTable, AudioMantraRow>,
+      ),
+      AudioMantraRow,
+      PrefetchHooks Function()
+    >;
 
 class $VeronicaDatabaseManager {
   final _$VeronicaDatabase _db;
@@ -6381,4 +7024,6 @@ class $VeronicaDatabaseManager {
       $$SoundsTableTableManager(_db, _db.sounds);
   $$MantrasTableTableManager get mantras =>
       $$MantrasTableTableManager(_db, _db.mantras);
+  $$AudioMantrasTableTableManager get audioMantras =>
+      $$AudioMantrasTableTableManager(_db, _db.audioMantras);
 }

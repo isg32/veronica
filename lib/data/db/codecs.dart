@@ -90,19 +90,38 @@ abstract final class Codecs {
 
   // Mantra settings.
 
-  static String mantraSettings(MantraSettings s) => encode({
-    'time': _time(s.time),
-    'rotate': s.rotate,
-    'fixed': s.fixedMantraId,
-  });
+  static String mantraSettings(MantraSettings s) =>
+      encode({'rotate': s.rotate, 'fixed': s.fixedMantraId});
 
   static MantraSettings parseMantraSettings(String json) {
     final m = decode(json);
     const d = MantraSettings();
     return MantraSettings(
-      time: _parseTime(m['time']) ?? d.time,
       rotate: m['rotate'] as bool? ?? d.rotate,
       fixedMantraId: m['fixed'] as String?,
+    );
+  }
+
+  // Listening.
+
+  static String listening(ListeningSettings s) => encode({
+    'enabled': s.enabled,
+    'time': _time(s.time),
+    'days': s.days.toList()..sort(),
+    'play': s.playId,
+  });
+
+  static ListeningSettings parseListening(String json) {
+    final m = decode(json);
+    const d = ListeningSettings();
+    return ListeningSettings(
+      enabled: m['enabled'] as bool? ?? d.enabled,
+      time: _parseTime(m['time']) ?? d.time,
+      days: {
+        for (final x in (m['days'] as List<Object?>?) ?? d.days.toList())
+          (x! as num).toInt(),
+      },
+      playId: m['play'] as String?,
     );
   }
 

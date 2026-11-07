@@ -248,7 +248,7 @@ final class NextUpProvider
   }
 }
 
-String _$nextUpHash() => r'660bb74cb87c9065fa1556f20ee2840c3eafb3be';
+String _$nextUpHash() => r'8bfe42f46e5fe69e1ffc795c366843e88a6f35ce';
 
 /// The next alarm that will ring, if any.
 

@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../core/theme/v_tokens.dart';
 import '../data/providers.dart';
 import '../features/care/care_page.dart';
+import '../features/care/listening_pages.dart';
 import '../features/care/mantra_library_page.dart';
 import '../features/care/medicine_pages.dart';
 import '../features/focus/active_mode_page.dart';
@@ -165,6 +166,21 @@ GoRouter router(Ref ref) {
         path: Routes.mantras,
         pageBuilder: (context, state) =>
             slidePage(state, const MantraLibraryPage()),
+      ),
+      GoRoute(
+        path: Routes.listening,
+        pageBuilder: (context, state) =>
+            slidePage(state, const ListeningLibraryPage()),
+      ),
+      GoRoute(
+        path: Routes.listen,
+        pageBuilder: (context, state) => fadePage(
+          state,
+          const GlyphWhileShown(
+            signal: GlyphSignal.mantra,
+            child: ListeningSessionPage(),
+          ),
+        ),
       ),
       GoRoute(
         path: '/alarm/:id',

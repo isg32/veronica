@@ -13,7 +13,7 @@ import '../../data/models/models.dart';
 import '../../data/providers.dart';
 import '../selectors.dart';
 
-/// Your mantras plus a starter list; choose rotate daily or one fixed.
+/// Today's quote: your lines plus a starter list, rotating daily or fixed.
 class MantraLibraryPage extends ConsumerWidget {
   const MantraLibraryPage({super.key});
 
@@ -36,7 +36,7 @@ class MantraLibraryPage extends ConsumerWidget {
 
     return VDetailPage(
       backLabel: 'Care',
-      title: 'Mantras',
+      title: 'Quotes',
       children: [
         VSegmented<bool>(
           segments: const {true: 'Rotate daily', false: 'Fixed'},
@@ -65,7 +65,7 @@ class MantraLibraryPage extends ConsumerWidget {
               onTap: () async {
                 final text = await showTextSheet(
                   context,
-                  title: 'New mantra',
+                  title: 'New quote',
                   placeholder: 'A line to come back to',
                   action: 'Add',
                 );
@@ -76,31 +76,13 @@ class MantraLibraryPage extends ConsumerWidget {
             ),
           ],
         ),
-        VListSection(
-          children: [
-            VListRow(
-              title: 'Shown at',
-              value: settings.time.label,
-              onTap: () async {
-                final t = await showTimePickerSheet(
-                  context,
-                  title: 'Mantra time',
-                  initial: settings.time,
-                );
-                if (t != null) {
-                  await repo.saveSettings(settings.copyWith(time: t));
-                }
-              },
-            ),
-          ],
-        ),
-        VFootnote(
-          'Tap a mantra to keep it fixed. Shown at ${settings.time.label}. '
-          'Veronica reads it aloud if voice is on.',
+        const VFootnote(
+          "Tap a quote to keep it fixed. Today's quote shows on Today, in "
+          'Care and on the home widget.',
         ),
         if (today != null && !today.isStarter)
           VButton.ghost(
-            'Delete today\'s mantra',
+            'Delete today\'s quote',
             onPressed: () => repo.delete(today.id),
           ),
       ],

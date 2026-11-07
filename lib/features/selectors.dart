@@ -88,11 +88,12 @@ List<NextUpItem> nextUp(Ref ref) {
   }
   if (alarm != null) items.add(alarm);
 
-  final mantra = ref.watch(mantraSettingsProvider).value;
-  if (mantra != null) {
-    items.add(
-      NextUpItem('Mantra', _nextOccurrence(now, [mantra.time], Weekdays.all)!),
-    );
+  // The mantra listening session, once there is something to listen to.
+  final listening = ref.watch(listeningSettingsProvider).value;
+  final audio = ref.watch(audioMantrasProvider).value ?? const <AudioMantra>[];
+  if (listening != null && listening.enabled && audio.isNotEmpty) {
+    final at = _nextOccurrence(now, [listening.time], listening.days);
+    if (at != null) items.add(NextUpItem('Mantra', at));
   }
   return items;
 }

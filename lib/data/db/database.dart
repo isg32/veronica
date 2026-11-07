@@ -166,6 +166,22 @@ class Mantras extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// Audio mantras: files copied into the app, or YouTube links.
+@DataClassName('AudioMantraRow')
+class AudioMantras extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+
+  /// The file's path in the app, or the YouTube link.
+  TextColumn get source => text()();
+  BoolColumn get youTube => boolean().withDefault(const Constant(false))();
+  IntColumn get lengthMs => integer().withDefault(const Constant(0))();
+  IntColumn get addedAt => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// Veronica's on-device database (see docs/PLAN.md, "Data model").
 @DriftDatabase(
   tables: [
@@ -181,6 +197,7 @@ class Mantras extends Table {
     Alarms,
     Sounds,
     Mantras,
+    AudioMantras,
   ],
 )
 class VeronicaDatabase extends _$VeronicaDatabase {
@@ -188,7 +205,7 @@ class VeronicaDatabase extends _$VeronicaDatabase {
     : super(executor ?? driftDatabase(name: 'veronica'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -210,6 +227,8 @@ class VeronicaDatabase extends _$VeronicaDatabase {
           await m.createTable(table);
         }
       }
+      // 2 → 3: audio mantras.
+      if (from < 3) await m.createTable(audioMantras);
     },
   );
 

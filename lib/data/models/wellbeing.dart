@@ -15,28 +15,72 @@ class Mantra {
   final DateTime? lastShownAt;
 }
 
-/// When the mantra shows and how it is chosen.
+/// How today's quote is chosen.
 class MantraSettings {
-  const MantraSettings({
-    this.time = const DayTime(7, 15),
-    this.rotate = true,
-    this.fixedMantraId,
-  });
-
-  final DayTime time;
+  const MantraSettings({this.rotate = true, this.fixedMantraId});
 
   /// Rotate daily, or always show [fixedMantraId].
   final bool rotate;
   final String? fixedMantraId;
 
-  MantraSettings copyWith({
+  MantraSettings copyWith({bool? rotate, String? fixedMantraId}) =>
+      MantraSettings(
+        rotate: rotate ?? this.rotate,
+        fixedMantraId: fixedMantraId ?? this.fixedMantraId,
+      );
+}
+
+/// An audio mantra to listen to: a file on the phone (MP3, FLAC, …) or a
+/// YouTube video, streamed as audio.
+class AudioMantra {
+  const AudioMantra({
+    required this.id,
+    required this.title,
+    required this.source,
+    required this.addedAt,
+    this.youTube = false,
+    this.length = Duration.zero,
+  });
+
+  final String id;
+  final String title;
+
+  /// The file's path in the app, or the YouTube video's link.
+  final String source;
+  final bool youTube;
+
+  /// Zero when not known yet (a YouTube video before it first plays).
+  final Duration length;
+  final DateTime addedAt;
+}
+
+/// The daily mantra listening session.
+class ListeningSettings {
+  const ListeningSettings({
+    this.enabled = true,
+    this.time = const DayTime(7, 15),
+    this.days = Weekdays.all,
+    this.playId,
+  });
+
+  /// Whether Veronica reminds you at [time] on [days].
+  final bool enabled;
+  final DayTime time;
+  final Set<int> days;
+
+  /// The one mantra a session plays, or null to play them all in order.
+  final String? playId;
+
+  ListeningSettings copyWith({
+    bool? enabled,
     DayTime? time,
-    bool? rotate,
-    String? fixedMantraId,
-  }) => MantraSettings(
+    Set<int>? days,
+    String? Function()? playId,
+  }) => ListeningSettings(
+    enabled: enabled ?? this.enabled,
     time: time ?? this.time,
-    rotate: rotate ?? this.rotate,
-    fixedMantraId: fixedMantraId ?? this.fixedMantraId,
+    days: days ?? this.days,
+    playId: playId == null ? this.playId : playId(),
   );
 }
 

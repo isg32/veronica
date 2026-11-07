@@ -27,6 +27,7 @@ abstract final class Routes {
   static const newId = 'new';
   static const doses = '/doses';
   static const mantras = '/mantras';
+  static const listening = '/listening';
   static String alarm(String id) => '/alarm/$id';
   static const sounds = '/sounds';
 
@@ -39,4 +40,5 @@ abstract final class Routes {
   static String alarmRinging(String alarmId) => '/now/alarm/$alarmId';
   static const mantraSession = '/now/mantra';
   static const mantraTime = '/now/mantra-time';
+  static const listen = '/now/listen';
 }

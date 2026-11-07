@@ -14,6 +14,7 @@ abstract final class PrefKeys {
   static const water = 'water';
   static const sleep = 'sleep';
   static const mantra = 'mantra';
+  static const listening = 'listening';
   static const voice = 'voice';
   static const glyph = 'glyph';
   static const medicineEnabled = 'medicine.enabled';
@@ -741,4 +742,115 @@ class DriftSettingsRepository implements SettingsRepository {
   @override
   Future<void> saveGlyph(GlyphSettings settings) =>
       _db.writePref(PrefKeys.glyph, Codecs.glyph(settings));
+}
+
+// Audio mantras.
+
+/// Picks audio files and copies them into the app: (title, path, length).
+typedef MantraFilePicker = Future<List<(String, String, Duration)>> Function();
+
+/// Looks up YouTube links: (title, link, length) per video, a playlist
+/// expanded to its videos.
+typedef YouTubeLookup = Future<List<(String, String, Duration)>> Function(
+  List<String> links,
+);
+
+class DriftListeningRepository implements ListeningRepository {
+  DriftListeningRepository(
+    this._db,
+    this._now, {
+    required this.pickFiles,
+    required this.lookUp,
+    required this.deleteFile,
+  });
+
+  final VeronicaDatabase _db;
+  final DateTime Function() _now;
+  final MantraFilePicker pickFiles;
+  final YouTubeLookup lookUp;
+  final Future<void> Function(String path) deleteFile;
+
+  static AudioMantra _mantra(AudioMantraRow r) => AudioMantra(
+    id: r.id,
+    title: r.title,
+    source: r.source,
+    youTube: r.youTube,
+    length: Duration(milliseconds: r.lengthMs),
+    addedAt: DateTime.fromMillisecondsSinceEpoch(r.addedAt),
+  );
+
+  @override
+  Stream<List<AudioMantra>> watchAudio() =>
+      (_db.select(_db.audioMantras)
+            ..orderBy([(t) => OrderingTerm.asc(t.addedAt)]))
+          .watch()
+          .map((rows) => rows.map(_mantra).toList());
+
+  Future<void> _add(
+    List<(String, String, Duration)> items, {
+    required bool youTube,
+  }) async {
+    final base = _now().microsecondsSinceEpoch;
+    for (final (i, (title, source, length)) in items.indexed) {
+      await _db
+          .into(_db.audioMantras)
+          .insert(
+            AudioMantrasCompanion.insert(
+              id: 'listen-${(base + i).toRadixString(36)}',
+              title: title,
+              source: source,
+              youTube: Value(youTube),
+              lengthMs: Value(length.inMilliseconds),
+              // In the order they were picked.
+              addedAt: base ~/ 1000 + i,
+            ),
+          );
+    }
+  }
+
+  @override
+  Future<void> importFiles() async => _add(await pickFiles(), youTube: false);
+
+  @override
+  Future<int> addYouTube(List<String> links) async {
+    final videos = await lookUp(links);
+    await _add(videos, youTube: true);
+    return videos.length;
+  }
+
+  @override
+  Future<void> rename(String id, String title) =>
+      (_db.update(_db.audioMantras)..where((t) => t.id.equals(id))).write(
+        AudioMantrasCompanion(title: Value(title)),
+      );
+
+  @override
+  Future<void> setLength(String id, Duration length) =>
+      (_db.update(_db.audioMantras)..where((t) => t.id.equals(id))).write(
+        AudioMantrasCompanion(lengthMs: Value(length.inMilliseconds)),
+      );
+
+  @override
+  Future<void> delete(String id) async {
+    final row = await (_db.select(
+      _db.audioMantras,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    await (_db.delete(_db.audioMantras)..where((t) => t.id.equals(id))).go();
+    if (row != null && !row.youTube) await deleteFile(row.source);
+    final settings = await watchSettings().first;
+    if (settings.playId == id) {
+      await saveSettings(settings.copyWith(playId: () => null));
+    }
+  }
+
+  @override
+  Stream<ListeningSettings> watchSettings() => _db
+      .watchPref(PrefKeys.listening)
+      .map(
+        (j) => j == null ? const ListeningSettings() : Codecs.parseListening(j),
+      );
+
+  @override
+  Future<void> saveSettings(ListeningSettings settings) =>
+      _db.writePref(PrefKeys.listening, Codecs.listening(settings));
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/routes.dart';
+import 'listening_pages.dart';
 import '../../core/format.dart';
 import '../../core/icons/v_icons.dart';
 import '../../core/theme/v_text.dart';
@@ -18,7 +19,7 @@ import '../../data/providers.dart';
 import '../selectors.dart';
 import 'water_goal_form.dart';
 
-/// Tab 4: water, medicine and the daily mantra.
+/// Tab 4: water, medicine, the mantra listening session and today's quote.
 class CarePage extends StatelessWidget {
   const CarePage({super.key});
 
@@ -26,7 +27,7 @@ class CarePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const VTabPage(
       title: 'Care',
-      children: [_WaterCard(), _MedicineCard(), _MantraCard()],
+      children: [_WaterCard(), _MedicineCard(), ListeningCard(), _MantraCard()],
     );
   }
 }
@@ -347,7 +348,7 @@ class _MantraCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           VEyebrow(
-            'Mantra · ${settings.time.label}',
+            "Today's quote",
             trailing: VEyebrowNote(settings.rotate ? 'Rotate daily' : 'Fixed'),
           ),
           const SizedBox(height: 12),

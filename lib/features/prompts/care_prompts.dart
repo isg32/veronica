@@ -17,6 +17,7 @@ import '../../core/widgets/v_glass.dart';
 import '../../core/widgets/v_surface.dart';
 import '../../data/models/models.dart';
 import '../../data/providers.dart';
+import '../../platform/mantra_audio.dart';
 import '../../platform/reminders.dart';
 import '../../platform/voice.dart';
 import '../selectors.dart';
@@ -481,14 +482,17 @@ AudioSource audioSourceFor(String path) => path.startsWith('content://')
     ? AudioSource.uri(Uri.parse(path))
     : AudioSource.file(path);
 
-/// "Mantra time": a gentle glass card with Start or Later.
+/// "Mantra time": a gentle glass card for the listening session, Start
+/// or Later.
 class MantraTimePage extends ConsumerWidget {
   const MantraTimePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mantra = ref.watch(todayMantraProvider);
-    final settings = ref.watch(mantraSettingsProvider).value;
+    final s = ref.watch(listeningSettingsProvider).value;
+    final audio =
+        ref.watch(audioMantrasProvider).value ?? const <AudioMantra>[];
+    final queue = s == null ? audio : sessionQueue(audio, s);
     final name = ref.watch(profileProvider).value?.name ?? '';
 
     return PromptScaffold(
@@ -506,25 +510,26 @@ class MantraTimePage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    '${settings?.time.label ?? ''} · MANTRA TIME',
+                    '${s?.time.label ?? ''} · MANTRA TIME',
                     style: VText.eyebrow,
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    name.isEmpty
-                        ? 'One minute for yourself.'
-                        : 'One minute for yourself, $name.',
+                    name.isEmpty ? 'Time to listen.' : 'Time to listen, $name.',
                     style: VText.inter(22, weight: 300, height: 1.3),
                   ),
                   const SizedBox(height: 18),
                   const VDivider(),
                   const SizedBox(height: 16),
-                  Text(mantra?.text ?? '', style: VText.inter(16)),
+                  Text(switch (queue.length) {
+                    0 => '',
+                    1 => queue.single.title,
+                    final n => '$n mantras · ${queue.first.title} first',
+                  }, style: VText.inter(16)),
                   const SizedBox(height: 18),
                   VButton.primary(
                     'Start',
-                    onPressed: () =>
-                        context.pushReplacement(Routes.mantraSession),
+                    onPressed: () => context.pushReplacement(Routes.listen),
                   ),
                   const SizedBox(height: 10),
                   VButton.secondary('Later', onPressed: () => _leave(context)),

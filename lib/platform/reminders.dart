@@ -18,6 +18,7 @@ import '../data/models/models.dart';
 import '../data/providers.dart';
 import '../features/selectors.dart';
 import 'android_usage.dart';
+import 'mantra_audio.dart';
 
 part 'reminders.g.dart';
 
@@ -236,21 +237,25 @@ List<PlannedReminder> reminderPlan(Ref ref) {
     }
   }
 
-  // The daily mantra.
-  final mantra = ref.watch(mantraSettingsProvider).value;
-  if (mantra != null) {
-    final at = days
-        .map(mantra.time.on)
-        .firstWhere(inWindow, orElse: () => days[1]);
-    if (inWindow(at)) {
+  // The mantra listening session, once there is something to listen to.
+  final listening = ref.watch(listeningSettingsProvider).value;
+  final audio = ref.watch(audioMantrasProvider).value ?? const <AudioMantra>[];
+  if (listening != null && listening.enabled && audio.isNotEmpty) {
+    final queue = sessionQueue(audio, listening);
+    for (final day in days) {
+      if (!listening.days.contains(day.weekday)) continue;
+      final at = listening.time.on(day);
+      if (!inWindow(at)) continue;
       plan.add(
         PlannedReminder(
           id: 'mantra-${at.millisecondsSinceEpoch}',
           at: at,
           kind: 'mantra',
           title: 'Mantra time',
-          body: ref.watch(todayMantraProvider)?.text ?? '',
-          route: '/now/mantra-time',
+          body: queue.length == 1
+              ? queue.single.title
+              : '${queue.length} mantras · ${queue.first.title} first',
+          route: Routes.mantraTime,
         ),
       );
     }
