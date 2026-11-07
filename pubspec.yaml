@@ -1,7 +1,7 @@
 name: veronica
 description: "A calm Android companion for using your phone less and looking after yourself more."
 publish_to: 'none'
-version: 0.4.0+5
+version: 1.0.0+6
 
 environment:
   sdk: ^3.13.7
