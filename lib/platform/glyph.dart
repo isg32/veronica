@@ -93,6 +93,11 @@ class GlyphPlayer {
   }
 }
 
+/// Whether this phone has Glyph lights Veronica can drive.
+final glyphAvailableProvider = FutureProvider<bool>(
+  (ref) => GlyphPlayer.instance.available,
+);
+
 /// Plays [signal] on the Glyph lights while this widget is on screen,
 /// except during the Glyph quiet hours.
 class GlyphWhileShown extends ConsumerStatefulWidget {

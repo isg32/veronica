@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/routes.dart';
@@ -96,7 +97,9 @@ class SettingsPage extends ConsumerWidget {
             ),
             VListRow(
               title: 'Glyph',
-              subtitle: 'Test patterns, brightness, quiet hours',
+              subtitle: ref.watch(glyphAvailableProvider).value == false
+                  ? 'Glyph not supported on this phone'
+                  : 'Test patterns, brightness, quiet hours',
               value: glyph == null
                   ? null
                   : '${(glyph.brightness * 100).round()}%',
@@ -412,7 +415,8 @@ class _GlyphStatus extends StatelessWidget {
           null => 'Looking for the Glyph lights…',
           true =>
             'Phone (2a) Glyph lights connected. Patterns play on the back.',
-          false => 'No Glyph lights found. Patterns show here only.',
+          false =>
+            'Glyph not supported on this phone. Patterns show here only.',
         },
         textAlign: TextAlign.center,
         style: VText.secondary,
@@ -733,6 +737,33 @@ class DataSettingsPage extends ConsumerWidget {
             const VListRow(title: 'Licence', value: 'GPL-3.0'),
             for (final (name, licence) in licences)
               VListRow(title: name, value: licence),
+          ],
+        ),
+        VListSection(
+          header: const VEyebrow('Developer'),
+          children: [
+            const VListRow(title: 'Made by', value: 'Sapan Gajjar'),
+            for (final (title, handle, url) in const [
+              ('GitHub', 'isg32', 'https://github.com/isg32'),
+              (
+                'LinkedIn',
+                'sapangajjar101105',
+                'https://www.linkedin.com/in/sapangajjar101105/',
+              ),
+              (
+                'Source code',
+                'isg32/veronica',
+                'https://github.com/isg32/veronica',
+              ),
+            ])
+              VListRow(
+                title: title,
+                value: handle,
+                onTap: () => launchUrl(
+                  Uri.parse(url),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
           ],
         ),
         const VFootnote(
