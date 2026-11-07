@@ -45,6 +45,7 @@ flutter:
     # The V mark (for About) and the developer's picture, bundled so
     # nothing is fetched.
     - assets/icon/monochrome.png
+    - assets/icon/icon.png
     - assets/images/developer.jpg
 
   shaders:

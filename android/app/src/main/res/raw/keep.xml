@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources found by name at runtime (getIdentifier), which the release
+     build's resource shrinker can't see: audio_service's media controls,
+     and the notification icons. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/audio_service_*,@drawable/ic_notify_*" />

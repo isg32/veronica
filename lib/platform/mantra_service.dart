@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -138,6 +140,7 @@ class MantraAudioHandler extends BaseAudioHandler with SeekHandler {
         album: 'Veronica',
         artist: m.youTube ? 'Mantra · YouTube' : 'Mantra',
         duration: m.length > Duration.zero ? m.length : null,
+        artUri: await _artFor(m),
       ),
     );
     try {
@@ -228,6 +231,18 @@ class MantraAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> seek(Duration position) => player.seek(position);
 
+  /// Back to the start, or (in the first seconds) the mantra before, as
+  /// Android's players do.
+  @override
+  Future<void> skipToPrevious() async {
+    if (player.position > const Duration(seconds: 3) || _s.index == 0) {
+      await player.seek(Duration.zero);
+      return;
+    }
+    _s = _s.copyWith(index: _s.index - 1);
+    await _open();
+  }
+
   /// The next mantra, or the end of the session.
   @override
   Future<void> skipToNext() async {
@@ -249,12 +264,17 @@ class MantraAudioHandler extends BaseAudioHandler with SeekHandler {
 
   PlaybackState _state() => PlaybackState(
     controls: [
+      MediaControl.skipToPrevious,
       if (player.playing) MediaControl.pause else MediaControl.play,
       if (_s.hasNext) MediaControl.skipToNext,
       MediaControl.stop,
     ],
-    systemActions: const {MediaAction.seek},
-    androidCompactActionIndices: _s.hasNext ? const [0, 1] : const [0],
+    systemActions: const {
+      MediaAction.seek,
+      MediaAction.seekForward,
+      MediaAction.seekBackward,
+    },
+    androidCompactActionIndices: _s.hasNext ? const [0, 1, 2] : const [0, 1],
     processingState: switch (player.processingState) {
       ProcessingState.idle => AudioProcessingState.idle,
       ProcessingState.loading => AudioProcessingState.loading,
@@ -267,6 +287,29 @@ class MantraAudioHandler extends BaseAudioHandler with SeekHandler {
     bufferedPosition: player.bufferedPosition,
     speed: player.speed,
   );
+}
+
+/// Artwork for Android's player: a YouTube video's thumbnail, else the
+/// Veronica mark (copied out of the app once, as Android needs a file).
+Future<Uri?> _artFor(AudioMantra m) async {
+  if (m.youTube) {
+    final id = VideoId.parseVideoId(m.source);
+    if (id != null) {
+      return Uri.parse('https://i.ytimg.com/vi/$id/hqdefault.jpg');
+    }
+  }
+  try {
+    final file = File(
+      '${(await getApplicationSupportDirectory()).path}/mantra_art.png',
+    );
+    if (!file.existsSync()) {
+      final data = await rootBundle.load('assets/icon/icon.png');
+      await file.writeAsBytes(data.buffer.asUint8List(), flush: true);
+    }
+    return file.uri;
+  } on Object {
+    return null;
+  }
 }
 
 /// Starts the media service (Android only) and returns its handler; other
