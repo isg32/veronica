@@ -129,6 +129,9 @@ abstract interface class ListeningRepository {
   /// Adds YouTube videos (or every video of a playlist) from [links];
   /// returns how many were added.
   Future<int> addYouTube(List<String> links);
+
+  /// Adds YouTube videos already looked up: (title, link, length).
+  Future<void> addVideos(List<(String, String, Duration)> videos);
   Future<void> rename(String id, String title);
   Future<void> setLength(String id, Duration length);
   Future<void> delete(String id);

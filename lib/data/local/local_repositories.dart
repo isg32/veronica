@@ -819,6 +819,10 @@ class DriftListeningRepository implements ListeningRepository {
   }
 
   @override
+  Future<void> addVideos(List<(String, String, Duration)> videos) =>
+      _add(videos, youTube: true);
+
+  @override
   Future<void> rename(String id, String title) =>
       (_db.update(_db.audioMantras)..where((t) => t.id.equals(id))).write(
         AudioMantrasCompanion(title: Value(title)),

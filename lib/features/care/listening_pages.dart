@@ -42,19 +42,21 @@ class _ListeningLibraryPageState extends ConsumerState<ListeningLibraryPage> {
     }
   }
 
+  /// Search YouTube (or paste links) and add any number of videos.
   Future<void> _addYouTube() async {
-    final text = await showVSheet<String>(
+    final picked = await showVSheet<_YouTubePick>(
       context,
       title: 'Add from YouTube',
-      builder: (_) => const _LinksPrompt(),
+      builder: (_) => const _YouTubeSearch(),
     );
-    if (text == null) return;
-    final links = text.split(RegExp(r'[\s,]+'));
+    if (picked == null) return;
+    final repo = ref.read(listeningRepositoryProvider);
     await _busy(() async {
-      final added = await ref
-          .read(listeningRepositoryProvider)
-          .addYouTube(links);
-      if (added == 0 && mounted) {
+      await repo.addVideos(picked.videos);
+      final added = picked.links.isEmpty
+          ? 0
+          : await repo.addYouTube(picked.links);
+      if (picked.videos.isEmpty && added == 0 && mounted) {
         await showVSheet<void>(
           context,
           title: 'Nothing added',
@@ -153,9 +155,9 @@ class _ListeningLibraryPageState extends ConsumerState<ListeningLibraryPage> {
           VButton.secondary('Add from YouTube', onPressed: _addYouTube),
         ],
         const VFootnote(
-          'MP3, FLAC, M4A, OGG or WAV from your phone, or YouTube videos and '
-          'playlists, played as audio. A video that can\'t be streamed opens '
-          'in YouTube instead.',
+          'MP3, FLAC, M4A, OGG or WAV from your phone (long-press a file to '
+          'pick several), or YouTube videos and playlists, streamed here as '
+          'audio. A video that can\'t be streamed opens in YouTube instead.',
         ),
       ],
     );
@@ -217,43 +219,123 @@ class _ListeningLibraryPageState extends ConsumerState<ListeningLibraryPage> {
   }
 }
 
-/// One or more YouTube links, one per line.
-class _LinksPrompt extends StatefulWidget {
-  const _LinksPrompt();
+/// What the YouTube sheet returns: videos chosen from search results, and
+/// pasted links (looked up after).
+typedef _YouTubePick = ({
+  List<(String, String, Duration)> videos,
+  List<String> links,
+});
+
+/// Search YouTube and tick any number of results, or paste links.
+class _YouTubeSearch extends StatefulWidget {
+  const _YouTubeSearch();
 
   @override
-  State<_LinksPrompt> createState() => _LinksPromptState();
+  State<_YouTubeSearch> createState() => _YouTubeSearchState();
 }
 
-class _LinksPromptState extends State<_LinksPrompt> {
-  final _text = TextEditingController();
+class _YouTubeSearchState extends State<_YouTubeSearch> {
+  final _query = TextEditingController();
+  List<YouTubeResult> _results = const [];
+  final Map<String, YouTubeResult> _chosen = {};
+  bool _searching = false;
+  String? _error;
+
+  static bool _isLink(String text) =>
+      text.contains('youtube.com/') || text.contains('youtu.be/');
 
   @override
   void dispose() {
-    _text.dispose();
+    _query.dispose();
     super.dispose();
   }
 
+  Future<void> _search() async {
+    final q = _query.text.trim();
+    if (q.isEmpty || _isLink(q)) return;
+    setState(() {
+      _searching = true;
+      _error = null;
+    });
+    try {
+      final results = await searchYouTube(q);
+      if (mounted) setState(() => _results = results);
+    } on Object {
+      if (mounted) setState(() => _error = 'Couldn\'t reach YouTube.');
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
+  }
+
+  void _done() {
+    final text = _query.text.trim();
+    Navigator.of(context).pop((
+      videos: [for (final r in _chosen.values) (r.title, r.link, r.length)],
+      links: _isLink(text) ? text.split(RegExp(r'[\s,]+')) : const <String>[],
+    ));
+  }
+
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      VTextField(
-        controller: _text,
-        placeholder: 'Paste video or playlist links',
-        maxLines: 4,
-        autofocus: true,
-      ),
-      const SizedBox(height: 8),
-      const VFootnote('One link per line. A playlist adds all its videos.'),
-      const SizedBox(height: 14),
-      VButton.primary(
-        'Add',
-        onPressed: () => Navigator.of(context).pop(_text.text),
-      ),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final links = _isLink(_query.text);
+    final count = _chosen.length;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        VTextField(
+          controller: _query,
+          placeholder: 'Search, or paste links',
+          autofocus: true,
+          onSubmitted: (_) => _search(),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 10),
+        if (!links)
+          VButton.secondary(
+            _searching ? 'Searching…' : 'Search',
+            onPressed: _searching ? null : _search,
+          ),
+        if (_error != null) ...[const SizedBox(height: 10), VFootnote(_error!)],
+        if (_results.isNotEmpty && !links) ...[
+          const SizedBox(height: 14),
+          VListSection(
+            children: [
+              for (final r in _results)
+                VListRow(
+                  title: r.title,
+                  subtitle: [
+                    r.channel,
+                    if (r.length > Duration.zero) VFormat.length(r.length),
+                  ].join(' · '),
+                  trailing: _chosen.containsKey(r.link)
+                      ? const VCircleButton(
+                          icon: VIcon.check,
+                          filled: true,
+                          size: 26,
+                        )
+                      : const VCircleButton(icon: VIcon.plus, size: 26),
+                  chevron: false,
+                  onTap: () => setState(() {
+                    _chosen.remove(r.link) ?? (_chosen[r.link] = r);
+                  }),
+                ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 14),
+        VButton.primary(
+          links ? 'Add these links' : (count == 0 ? 'Add' : 'Add $count'),
+          onPressed: links || count > 0 ? _done : null,
+        ),
+        const SizedBox(height: 8),
+        const VFootnote(
+          'Tick as many as you like. A pasted playlist link adds all its '
+          'videos. They play here as audio.',
+        ),
+      ],
+    );
+  }
 }
 
 /// The listening session: what plays, how far along, play and next.

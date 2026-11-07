@@ -98,6 +98,33 @@ Future<List<(String, String, Duration)>> lookUpYouTube(
   return out;
 }
 
+/// A YouTube video found by search: (title, channel, link, length).
+typedef YouTubeResult = ({
+  String title,
+  String channel,
+  String link,
+  Duration length,
+});
+
+/// Searches YouTube for videos matching [query] (the first page).
+Future<List<YouTubeResult>> searchYouTube(String query) async {
+  final yt = YoutubeExplode();
+  try {
+    final results = await yt.search.search(query);
+    return [
+      for (final v in results)
+        (
+          title: v.title,
+          channel: v.author,
+          link: 'https://www.youtube.com/watch?v=${v.id}',
+          length: v.duration ?? Duration.zero,
+        ),
+    ];
+  } finally {
+    yt.close();
+  }
+}
+
 /// The audio-only stream of a YouTube video, for streaming.
 Future<Uri> youTubeAudio(String link) async {
   final yt = YoutubeExplode();
