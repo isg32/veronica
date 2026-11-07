@@ -809,7 +809,7 @@ class DataSettingsPage extends ConsumerWidget {
                 ),
               ),
               title: 'Sapan Gajjar',
-              subtitle: 'Made Veronica',
+              subtitle: "You've probably guessed who made this app",
               chevron: false,
             ),
             for (final (title, handle, url) in const [
