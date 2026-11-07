@@ -224,11 +224,23 @@ Veronica is a Flutter app using Cupertino widgets only, built for Android only f
 | Detect an app opening instantly | `AccessibilityService` (fine since it's not on the Play Store), with usage-event polling as backup | Turn on Veronica in Accessibility |
 | Full-screen prompts | `SYSTEM_ALERT_WINDOW`, `USE_FULL_SCREEN_INTENT` | Allow "Display over other apps" |
 | Do Not Disturb | `ACCESS_NOTIFICATION_POLICY` | Grant DND access |
-| Greyscale | `WRITE_SECURE_SETTINGS`; set `accessibility_display_daltonizer_enabled` = 1 and `accessibility_display_daltonizer` = 0 | `adb shell pm grant com.isg32.veronica android.permission.WRITE_SECURE_SETTINGS` |
+| Greyscale | `WRITE_SECURE_SETTINGS`; set `accessibility_display_daltonizer_enabled` = 1 and `accessibility_display_daltonizer` = 0 | `adb shell pm grant com.isg32.veronica android.permission.WRITE_SECURE_SETTINGS`, or on the phone alone through Shizuku (see *Sharing Veronica*) |
 | Glyphs | `com.nothing.ketchum.permission.ENABLE` | Glyph debug ADB command (see Glyph section) |
 | Exact alarms | `USE_EXACT_ALARM` | None |
 | Background watcher | `FOREGROUND_SERVICE`, battery unrestricted | Set battery to Unrestricted |
 | Notifications, reboot | `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED` | Allow notifications |
+
+## Sharing Veronica (greyscale without a computer)
+
+Veronica is personal and sideloaded, but it should work for a friend with only their phone. Everything except greyscale is granted on the phone already. Greyscale needs `WRITE_SECURE_SETTINGS`, which Android only lets ADB (or root) grant; there is no on-device prompt for it.
+
+**Plan: Shizuku.** [Shizuku](https://shizuku.rikka.app/) is a free app that starts an ADB-level service using Android's own **Wireless debugging** (Android 11+), so no computer is needed:
+
+1. The friend installs Shizuku and starts it once from *Developer options → Wireless debugging* (Shizuku walks through pairing).
+2. In Veronica's ADB step (onboarding and *Settings → Permissions & ADB*), a **Grant with Shizuku** button asks Shizuku for permission and runs `pm grant com.isg32.veronica android.permission.WRITE_SECURE_SETTINGS` through it.
+3. Once granted, the permission stays; Shizuku is not needed again until a factory reset or reinstall.
+
+Shizuku itself has to be restarted after every reboot, but Veronica only needs it for the one-time grant. The computer command stays documented as the fallback. Status: planned (Shizuku API via its Android library and a small platform channel).
 
 ## Data model
 
@@ -291,6 +303,17 @@ The build number after `+` goes up by one with every bump and never resets.
 
 Each later phase is done only when its "Done when" holds on your phone, and Phase 1 starts with the usage watcher because everything else depends on it.
 
+## Additions (7 Nov 2026)
+
+| Addition | What it does | Status |
+| --- | --- | --- |
+| Glyph light test | *Settings → Glyph → Test the lights* runs every light in turn (C1–C24, B, A) and then all of them, on the preview and the real Glyphs; the page says whether the Phone (2a) lights were found | Done |
+| Blurred status bar | Pages run edge to edge behind the status bar with an iOS-style progressive blur: strongest at the top, fading out 16 px below the bar, under a soft paper-coloured gradient | Done |
+| Greyscale without ADB | Grant greyscale on the phone alone through Shizuku, so the app can be shared (see *Sharing Veronica*) | Planned |
+| Veronica's voice | Kokoro-82M download via sherpa-onnx, pre-rendered lines, Android TTS fallback | Planned (Phase 4) |
+| Widgets refresh in the background | Scheduled widget updates so countdowns and "alarm in" stay current with the app closed | Planned (Phase 4) |
+| Medicine snooze | "Snooze 15 min" re-schedules the dose reminder (today it only closes the page) | Planned |
+
 ## Risks & open questions
 
 Since this is a personal, sideloaded app, the Play Store risks are gone; what's left is mostly Android and Nothing OS limits.
@@ -302,7 +325,8 @@ Since this is a personal, sideloaded app, the Play Store risks are gone; what's 
 | Kokoro is slow on the 2a | Voice lags | Pre-render fixed lines; Piper for live lines; system TTS fallback |
 | Home widgets can't blur live | Glass looks flat | Tinted glass first, fake-blur as an experiment |
 | Cupertino default colours leak in | A blue switch or red button breaks the two-colour rule | One `VColors` class + a build test that bans other colours |
-| ADB grants reset after a factory reset | Greyscale and Glyph stop | Permissions page shows status and the commands to re-run |
+| ADB grants reset after a factory reset | Greyscale and Glyph stop | Permissions page shows status and the commands to re-run; Shizuku can re-grant on the phone |
+| A shared copy has no computer for ADB | Greyscale can't be granted | Shizuku grant (see *Sharing Veronica*) |
 
 **Decided:** personal use only with ADB · no Play Store · Phone (2a) only for Glyph · you supply the alarm sounds · Kokoro voice via sherpa-onnx.
 
