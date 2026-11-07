@@ -15,6 +15,7 @@ import android.graphics.Color
 import android.media.AudioManager
 import android.provider.Settings
 import com.isg32.veronica.R
+import com.isg32.veronica.notifications.NotificationIcons
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -147,8 +148,7 @@ object PhoneControl {
             context, 61, colorCorrectionIntent(context),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val notification = Notification.Builder(context, "greyscale")
-            .setSmallIcon(R.drawable.ic_launcher_monochrome)
+        val notification = NotificationIcons.apply(Notification.Builder(context, "greyscale"), context, "focus")
             .setContentTitle(if (on) "Turn on greyscale" else "Turn greyscale off")
             .setContentText(
                 if (on) "Your mode uses greyscale. Tap, then switch on Color correction: Greyscale."

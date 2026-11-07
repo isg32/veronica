@@ -61,4 +61,21 @@ void main() {
       expect(reminders.where((r) => r.id.startsWith('med-snooze')), isEmpty);
     },
   );
+
+  test('a task due tomorrow reminds at 9:00, until it is done', () async {
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    final tasks = container.read(taskRepositoryProvider);
+    await tasks.add(title: 'Call the bank', dueAt: tomorrow);
+
+    var reminders = await plan();
+    final task = reminders.where((r) => r.kind == 'task').single;
+    expect(task.title, 'Call the bank');
+    expect(task.at, tomorrow.add(const Duration(hours: 9)));
+    expect(task.task, isNotNull);
+
+    await tasks.setDone(task.task!, done: true);
+    reminders = await plan();
+    expect(reminders.where((r) => r.kind == 'task'), isEmpty);
+  });
 }

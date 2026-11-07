@@ -11,6 +11,7 @@ import android.content.Intent
 import android.os.Build
 import com.isg32.veronica.MainActivity
 import com.isg32.veronica.R
+import com.isg32.veronica.notifications.NotificationIcons
 import com.isg32.veronica.data.AppDatabase
 import com.isg32.veronica.widgets.VeronicaWidgets
 import org.json.JSONArray
@@ -21,7 +22,8 @@ import org.json.JSONObject
  * so they fire with the app closed.
  *
  * Plan JSON: [{id, at (epoch ms), kind ("water" | "medicine" | "mantra" |
- * "alarm" | "refill"), title, body, route?}]. Water reminders are a
+ * "alarm" | "refill" | "task"), title, body, route?, task?}]. Tasks get a
+ * "Done" action. Water reminders are a
  * notification with a "+1 glass" action that writes straight into the app's
  * database. Medicine, mantra and alarms open their full-screen page, over the
  * lock screen if needed.
@@ -33,6 +35,8 @@ object Reminders {
 
     const val ACTION_FIRE = "com.isg32.veronica.REMINDER"
     const val ACTION_LOG_WATER = "com.isg32.veronica.LOG_WATER"
+    const val ACTION_TASK_DONE = "com.isg32.veronica.TASK_DONE"
+    const val EXTRA_TASK = "task"
     const val EXTRA_ID = "id"
 
     private fun prefs(context: Context) =
@@ -113,6 +117,23 @@ object Reminders {
         )
         val builder: Notification.Builder
         when (kind) {
+            "task" -> {
+                // A task finished from elsewhere stays quiet.
+                val taskId = r.optString("task")
+                if (taskId.isNotEmpty() && !AppDatabase.isTaskOpen(context, taskId)) return
+                channel(context, "tasks", "Tasks", NotificationManager.IMPORTANCE_DEFAULT)
+                val done = PendingIntent.getBroadcast(
+                    context, ("done" + id).hashCode(),
+                    Intent(context, ReminderReceiver::class.java)
+                        .setAction(ACTION_TASK_DONE)
+                        .putExtra(EXTRA_ID, id)
+                        .putExtra(EXTRA_TASK, taskId),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                )
+                builder = Notification.Builder(context, "tasks")
+                    .setContentIntent(open)
+                    .addAction(Notification.Action.Builder(null, "Done", done).build())
+            }
             "water", "refill" -> {
                 channel(context, "care", "Care reminders", NotificationManager.IMPORTANCE_DEFAULT)
                 builder = Notification.Builder(context, "care").setContentIntent(open)
@@ -147,8 +168,7 @@ object Reminders {
                 }
             }
         }
-        val notification = builder
-            .setSmallIcon(R.drawable.ic_launcher_monochrome)
+        val notification = NotificationIcons.apply(builder, context, kind)
             .setContentTitle(r.getString("title"))
             .setContentText(r.optString("body"))
             .setAutoCancel(true)
@@ -159,6 +179,16 @@ object Reminders {
     /** Logs a glass straight into the app's database (from the notification). */
     fun logWater(context: Context, reminderId: String?) {
         AppDatabase.logWater(context)
+        reminderId?.let {
+            context.getSystemService(NotificationManager::class.java).cancel(it.hashCode())
+        }
+        dataChanged(context)
+    }
+
+    /** Finishes a task from its notification. */
+    fun completeTask(context: Context, reminderId: String?, taskId: String?) {
+        if (taskId.isNullOrEmpty()) return
+        AppDatabase.completeTask(context, taskId)
         reminderId?.let {
             context.getSystemService(NotificationManager::class.java).cancel(it.hashCode())
         }
@@ -178,6 +208,11 @@ class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Reminders.ACTION_FIRE -> intent.getStringExtra(Reminders.EXTRA_ID)?.let { Reminders.fire(context, it) }
+            Reminders.ACTION_TASK_DONE -> Reminders.completeTask(
+                context,
+                intent.getStringExtra(Reminders.EXTRA_ID),
+                intent.getStringExtra(Reminders.EXTRA_TASK),
+            )
             Reminders.ACTION_LOG_WATER ->
                 Reminders.logWater(context, intent.getStringExtra(Reminders.EXTRA_ID))
             Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> Reminders.rearm(context)

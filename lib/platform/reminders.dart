@@ -10,6 +10,8 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../app/routes.dart';
+import '../core/format.dart';
 import '../core/ids.dart';
 import '../data/db/database.dart';
 import '../data/models/models.dart';
@@ -31,16 +33,20 @@ class PlannedReminder {
     required this.title,
     this.body = '',
     this.route,
+    this.task,
   });
 
   final String id;
   final DateTime at;
 
-  /// water, medicine, mantra, alarm or refill.
+  /// water, medicine, mantra, alarm, refill or task.
   final String kind;
   final String title;
   final String body;
   final String? route;
+
+  /// The task a "task" reminder is about, for its "Done" action.
+  final String? task;
 
   Map<String, Object?> toJson() => {
     'id': id,
@@ -49,6 +55,7 @@ class PlannedReminder {
     'title': title,
     'body': body,
     'route': ?route,
+    'task': ?task,
   };
 }
 
@@ -247,6 +254,31 @@ List<PlannedReminder> reminderPlan(Ref ref) {
         ),
       );
     }
+  }
+
+  // Every task with a due date, on its day: at its time, or at 9:00 when
+  // it has a date only.
+  for (final t in ref.watch(openTasksOldestFirstProvider)) {
+    final due = t.dueAt;
+    if (due == null) continue;
+    final dateOnly = due.hour == 0 && due.minute == 0;
+    final at = dateOnly ? const DayTime(9, 0).on(due) : due;
+    if (!inWindow(at)) continue;
+    final age = t.ageDays(now);
+    plan.add(
+      PlannedReminder(
+        id: 'task-${t.id}-${at.millisecondsSinceEpoch}',
+        at: at,
+        kind: 'task',
+        title: t.title,
+        body: [
+          dateOnly ? 'Due today' : 'Due now',
+          VFormat.added(age),
+        ].join(' · '),
+        route: Routes.task(t.id),
+        task: t.id,
+      ),
+    );
   }
 
   // Calm alarms, and a snoozed one.

@@ -12,6 +12,7 @@ import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import com.isg32.veronica.MainActivity
 import com.isg32.veronica.R
+import com.isg32.veronica.notifications.NotificationIcons
 import com.isg32.veronica.modes.ModeState
 import com.isg32.veronica.usage.UsageChannel
 
@@ -175,8 +176,7 @@ class WatcherService : AccessibilityService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val left = (rule.limitMin - usedMin).coerceAtLeast(0)
-        val notification = Notification.Builder(this, NUDGE_CHANNEL)
-            .setSmallIcon(R.drawable.ic_launcher_monochrome)
+        val notification = NotificationIcons.apply(Notification.Builder(this, NUDGE_CHANNEL), this, "focus")
             .setContentTitle("$usedMin min on ${rule.name}")
             .setContentText(
                 if (modeName != null) {
